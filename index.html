@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbww-SsawRAYoS9P8ZIs0B2tEPeqotlO5k_U3uoCwnzg7GgzaKghoE-mm8dK07SK8RE4/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwaTgAQ0z67rZgEP3aEiPJ-Nl7b7q3d_CCzMLXc3JZoLZIbuzJ75DYxl4j-vmTuBs/exec";
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -80,6 +80,13 @@ table.t tr:hover td{background:#faf6ec}
 .tp{display:inline-grid;place-items:center;min-width:34px;height:28px;border-radius:8px;font-weight:800;color:#fff;font-size:13px;padding:0 6px}
 .tp1{background:var(--tp1)}.tp2{background:var(--tp2)}.tp3{background:var(--tp3);color:#4a3a00}.tp4{background:var(--tp4)}.tp5{background:var(--tp5)}.tp6{background:var(--tp6)}.tp0{background:#ddd;color:#777}
 select.tpsel{padding:6px;border-radius:8px;border:1px solid var(--line);font-weight:700;width:64px;text-align:center}
+select.tpsel.auto{animation:tpflash .75s ease-out}
+@keyframes tpflash{0%{box-shadow:0 0 0 0 rgba(201,150,43,.6)}100%{box-shadow:0 0 0 9px rgba(201,150,43,0)}}
+.tpx{margin-top:5px;font-size:10px;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center;white-space:nowrap}
+.tptag{font-size:9px;font-weight:800;letter-spacing:.5px;padding:1px 6px;border-radius:99px;background:var(--brand-soft);color:var(--brand)}
+.tptag.m{background:var(--gold-soft);color:#8a6312}
+.tpsync{border:1px solid var(--line);background:#fff;border-radius:99px;width:18px;height:18px;line-height:1;font-size:11px;cursor:pointer;padding:0;color:var(--brand)}
+.tpsync:hover{background:var(--brand-soft)}
 .empty{padding:40px;text-align:center;color:var(--muted)}
 .toast{position:fixed;right:20px;bottom:20px;background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;box-shadow:var(--shadow);z-index:99;opacity:0;transform:translateY(10px);transition:.25s;max-width:420px}
 .toast.show{opacity:1;transform:none}.toast.err{background:var(--danger)}
@@ -1002,23 +1009,62 @@ V.markah = () => {
   const mps=subjects(true); if(!S.mpSel || !mps.find(m=>m.KOD_MP===S.mpSel)) S.mpSel=(subjects()[0]||mps[0]||{}).KOD_MP;
   const mp=mps.find(m=>m.KOD_MP===S.mpSel); const cs=mp?comps(mp):[]; const st=students(); const dis=isAdmin()?'':'disabled';
   const opt=v=>['',1,2,3,4,5,6].map(o=>`<option value="${o}" ${String(tpNum(v)||'')===String(o)?'selected':''}>${o?o:'–'}</option>`).join('');
-  $('#view').innerHTML = head('Rekod Prestasi Murid','Isi Tahap Penguasaan (TP) bagi setiap bidang/komponen dan TP keseluruhan.', isAdmin()?`<button class="btn pri" onclick="saveMarkah(this)">💾 Simpan Rekod</button>`:'')+lockNote()+
+  $('#view').innerHTML = head('Rekod Prestasi Murid','Isi TP bagi setiap bidang/komponen — TP keseluruhan dikira sendiri daripada purata bidang, dan masih boleh anda tukar.', isAdmin()?`<button class="btn pri" onclick="saveMarkah(this)">💾 Simpan Rekod</button>`:'')+lockNote()+
   `<div class="card" style="margin-bottom:16px"><div class="row"><div style="min-width:280px;flex:1"><label class="l">Mata pelajaran</label><select class="f" onchange="S.mpSel=this.value;render()">
    ${mps.map(m=>`<option value="${m.KOD_MP}" ${m.KOD_MP===S.mpSel?'selected':''}>${esc(m.NAMA_MATA_PELAJARAN)}${String(m.AKTIF).toUpperCase()==='Y'?'':' (tidak aktif)'}</option>`).join('')}</select></div>
    <div><label class="l">Guru mata pelajaran</label><b>${esc(mp&&mp.NAMA_GURU_MP||'—')}</b></div>
-   ${isAdmin()?`<div><label class="l">&nbsp;</label><button class="btn" onclick="autoTP()">✨ Cadang TP keseluruhan</button></div>`:''}</div></div>
+   ${isAdmin()?`<div><label class="l">&nbsp;</label><button class="btn" onclick="autoTP()">↺ Guna purata semua bidang</button></div>`:''}</div></div>
   ${mp?`<div class="card"><div class="tw"><table class="t" id="tbK"><thead><tr><th>Bil</th><th style="min-width:220px">Nama Murid</th>${cs.map((c,i)=>`<th title="${esc(c)}" style="min-width:80px">${esc(c)}</th>`).join('')}<th style="background:var(--gold)">TP KESELURUHAN</th><th style="min-width:260px">Ulasan Guru MP (jika perlu)</th></tr></thead><tbody>
   ${st.map((s,i)=>{const r=mk(s.ID_MURID,mp.KOD_MP)||{}; return `<tr data-id="${s.ID_MURID}"><td>${i+1}</td><td><b>${esc(s.NAMA_MURID)}</b><br><span class="lock">${esc(s.NO_MYKID)} • ${esc(s.JANTINA)}</span></td>
    ${cs.map((c,j)=>`<td><select class="tpsel" data-k="K${j+1}" ${dis}>${opt(r['K'+(j+1)])}</select></td>`).join('')}
-   <td><select class="tpsel" data-k="TP_KESELURUHAN" style="border-color:var(--gold)" ${dis}>${opt(r.TP_KESELURUHAN)}</select></td>
+   <td class="tpk"><select class="tpsel" data-k="TP_KESELURUHAN" style="border-color:var(--gold)" ${dis}>${opt(r.TP_KESELURUHAN)}</select><div class="tpx" data-tpx></div></td>
    <td><textarea class="f" rows="2" data-k="ULASAN_GURU_MP" ${dis}>${esc(r.ULASAN_GURU_MP)}</textarea></td></tr>`}).join('')}
-  </tbody></table></div></div>`:'<div class="card empty">Tiada mata pelajaran.</div>'}`;
+  </tbody></table></div><div class="hint" style="margin-top:12px">💡 <b>TP keseluruhan dikira sendiri</b> sebagai purata bidang (dibundarkan). Anda masih boleh pilih TP lain — ia akan ditanda <b>MANUAL</b>. Tekan <b>↺</b> untuk kembali kepada purata.</div></div>`:'<div class="card empty">Tiada mata pelajaran.</div>'}`;
+  bindTP();
 };
-function autoTP(){ // cadangan: purata komponen dibundarkan (guru boleh ubah)
-  document.querySelectorAll('#tbK tbody tr').forEach(tr=>{
-    const v=[...tr.querySelectorAll('select[data-k^="K"]')].map(s=>+s.value).filter(Boolean);
-    if(v.length) tr.querySelector('[data-k="TP_KESELURUHAN"]').value=Math.round(v.reduce((a,b)=>a+b,0)/v.length);
-  }); toast('TP keseluruhan dicadang berdasarkan purata bidang. Semak & simpan.');
+
+/* ---- TP keseluruhan: auto purata, masih boleh diubah manual ---- */
+const tpIsK = k => /^K\d+$/.test(String(k||''));
+function tpAvg(tr){
+  const v=[...tr.querySelectorAll('select[data-k^="K"]')].map(s=>tpNum(s.value)).filter(Boolean);
+  if(!v.length) return null;
+  const raw=v.reduce((a,b)=>a+b,0)/v.length;
+  return {raw, tp:Math.max(1,Math.min(6,Math.round(raw)))};
+}
+function tpFmt(n){ return String(n.toFixed(2).replace(/\.?0+$/,'')); }
+function syncTP(tr, flash){
+  const sel=tr.querySelector('select[data-k="TP_KESELURUHAN"]'); if(!sel) return;
+  const a=tpAvg(tr), manual=tr.dataset.tpManual==='1';
+  if(!manual){
+    const want=a?String(a.tp):'';
+    if(sel.value!==want){ sel.value=want; if(flash){ sel.classList.remove('auto'); void sel.offsetWidth; sel.classList.add('auto'); } }
+  }
+  const box=tr.querySelector('[data-tpx]'); if(!box) return;
+  const purat = a?`purata ${tpFmt(a.raw)} → TP ${a.tp}`:'isi bidang dulu';
+  box.innerHTML = manual
+    ? `<span class="tptag m">MANUAL</span>${a?`<span>${purat}</span><button class="tpsync" title="Guna purata semula" onclick="tpAuto(this.closest('tr'))">↺</button>`:''}`
+    : `<span class="tptag">AUTO</span><span>${purat}</span>`;
+}
+function bindTP(){
+  const tb=document.getElementById('tbK'); if(!tb) return;
+  [...tb.querySelectorAll('tbody tr')].forEach(tr=>{
+    const sel=tr.querySelector('select[data-k="TP_KESELURUHAN"]'); const a=tpAvg(tr);
+    // nilai tersimpan yang berbeza daripada purata = guru pernah ubah manual
+    tr.dataset.tpManual = (sel && tpNum(sel.value) && a && tpNum(sel.value)!==a.tp) ? '1' : '0';
+    syncTP(tr);
+  });
+  tb.addEventListener('change', e=>{
+    const el=e.target; if(!el || !el.dataset) return;
+    const tr=el.closest('tr'); if(!tr) return;
+    if(tpIsK(el.dataset.k)) syncTP(tr, true);
+    else if(el.dataset.k==='TP_KESELURUHAN'){ tr.dataset.tpManual = el.value?'1':'0'; syncTP(tr); }
+  });
+}
+function tpAuto(tr){ tr.dataset.tpManual='0'; syncTP(tr,true); }
+function autoTP(){
+  const tb=document.getElementById('tbK'); if(!tb) return;
+  [...tb.querySelectorAll('tbody tr')].forEach(tr=>{ tr.dataset.tpManual='0'; syncTP(tr,true); });
+  toast('TP keseluruhan diselaraskan kepada purata bidang. Semak & simpan.');
 }
 function saveMarkah(btn){
   const mp=S.data.mp.find(m=>m.KOD_MP===S.mpSel); const n=comps(mp).length;
