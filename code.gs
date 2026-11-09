@@ -754,15 +754,29 @@ function aiUlasan_(b) {
   if (!model) throw new Error('AI bermasalah. Kod: AI-06');
   const nama = String(b.nama || 'Murid').slice(0, 40);
   const mp = String(b.mp || '').slice(0, 120);
-  const bid = (Array.isArray(b.bidang) ? b.bidang : []).slice(0, 12)
-    .map(x => '- ' + String(x.nama || '').slice(0, 80) + ': TP' + (Number(x.tp) || '-')).join('\n');
+  const senarai = (Array.isArray(b.bidang) ? b.bidang : []).slice(0, 12)
+    .map(x => ({ nama: String(x.nama || '').slice(0, 80), tp: Number(x.tp) || 0 })).filter(x => x.nama);
+  const bid = senarai.map(x => '- ' + x.nama + ': TP' + (x.tp || '-')).join('\n');
   const tp = Number(b.tp) || '-';
-  const prompt = 'Murid: ' + nama + '\nMata pelajaran: ' + mp + '\nTP keseluruhan: TP' + tp + '\nTP setiap bidang:\n' + bid +
-    '\n\nTulis ulasan guru mata pelajaran untuk ibu bapa dalam Bahasa Melayu. RINGKAS DAN PADAT: tepat 2 ayat pendek, maksimum 30 patah perkataan. ' +
-    'Ayat 1: sebut nama murid, tahap TP dan bidang paling kuat (sebut bidang lemah jika ada TP rendah). Ayat 2: satu cadangan ringkas di rumah. ' +
-    'Jangan ulang nama mata pelajaran, jangan guna frasa panjang seperti "menunjukkan pencapaian" atau "untuk meningkatkan lagi kemahiran". ' +
-    'Skala: TP1 sangat terhad, TP2 terhad, TP3 memuaskan, TP4 baik, TP5 sangat baik, TP6 cemerlang. ' +
-    'Contoh gaya: Ali mencapai TP4 (baik), terutama dalam menggambar; corak dan rekaan perlu bimbingan. Galakkan Ali melukis 15 minit sehari di rumah. ' +
+  const fokus = fokusIntervensi_(senarai, Number(b.tp) || 0);
+  // Ingat cadangan terdahulu (sekolah + mata pelajaran yang sama) supaya murid lain tidak dapat cadangan serupa.
+  const kunciIngat = 'AIUL_' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, String(b.sekolah || '') + '|' + mp));
+  let lalu = []; try { lalu = JSON.parse(CacheService.getScriptCache().get(kunciIngat) || '[]'); } catch (e) {}
+  const SUASANA = ['semasa memasak atau mengemas di dapur', 'semasa membeli-belah di kedai', 'melalui permainan ringkas', 'melalui lagu, gambar atau video pendek',
+    'semasa rutin harian seperti berpakaian atau makan', 'menggunakan barang terpakai di rumah', 'semasa berjalan-jalan di luar rumah', 'bersama adik-beradik',
+    'menggunakan kad bergambar atau buku cerita', 'semasa menolong kerja rumah yang mudah'];
+  const suasana = SUASANA[Math.floor(Math.random() * SUASANA.length)];
+  const prompt = 'Murid: ' + nama + '\nMata pelajaran: ' + mp + '\nTP keseluruhan: TP' + tp + '\nTP setiap bidang:\n' + (bid || '- (tiada butiran bidang)') +
+    '\n\nFOKUS INTERVENSI: ' + fokus.teks +
+    '\nCara bantuan ikut tahap: ' + fokus.cara +
+    '\nIdea suasana (guna jika logik untuk bidang ini; jika tidak, pilih cara lain yang lebih sesuai): ' + suasana + '.' +
+    (lalu.length ? '\nCadangan ini SUDAH diberi kepada murid lain, jadi JANGAN ulang atau guna aktiviti yang serupa:\n' + lalu.map(x => '- ' + x).join('\n') : '') +
+    '\n\nTulis ulasan untuk ibu bapa dalam Bahasa Melayu yang SANTAI, mesra dan mudah difahami, macam cikgu bercakap dengan mak ayah. ' +
+    'Tepat 2 ayat pendek, maksimum 40 patah perkataan. ' +
+    'Ayat 1: puji kekuatan ' + nama + ' secara ikhlas dan sebut tahap TP dengan ringkas. ' +
+    'Ayat 2: SATU intervensi yang khusus, logik dan boleh terus dibuat untuk bidang dalam FOKUS INTERVENSI — sebut aktiviti sebenar yang berkait dengan kemahiran bidang itu (apa, guna apa, bagaimana), bukan nasihat umum. ' +
+    'DILARANG: cadangan umum seperti "berlatih setiap hari", "luangkan masa", "15 minit sehari", "teruskan usaha", "untuk meningkatkan lagi kemahiran", "menunjukkan pencapaian". ' +
+    'Jangan ulang nama mata pelajaran. Boleh guna sapaan seperti "mak ayah boleh cuba..." atau "jom...". ' +
     'Jawab dengan ulasan sahaja tanpa tajuk atau tanda petik.';
   // Tetapan khas ikut jenis model: model "berfikir" (gpt-oss, qwen3, deepseek) perlu ruang token lebih
   // dan pemikirannya disembunyikan, jika tidak jawapan kosong (AI-03).
@@ -771,8 +785,8 @@ function aiUlasan_(b) {
   const fetchAI = (m, tambahan) => { let r; try { r = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'post', contentType: 'application/json', muteHttpExceptions: true,
     headers: { Authorization: 'Bearer ' + key },
-    payload: JSON.stringify(Object.assign({ model: m, temperature: 0.5, max_tokens: 1500, messages: [
-      { role: 'system', content: 'Anda guru Program Pendidikan Khas Integrasi di Malaysia yang menulis ulasan Pentaksiran Bilik Darjah. Jawab terus dengan ulasan sahaja, ringkas dan padat.' },
+    payload: JSON.stringify(Object.assign({ model: m, temperature: 0.85, max_tokens: 1500, messages: [
+      { role: 'system', content: 'Anda guru Program Pendidikan Khas Integrasi (PPKI) di Malaysia yang mesra dan berpengalaman. Anda menulis ulasan Pentaksiran Bilik Darjah yang santai untuk ibu bapa, dengan cadangan intervensi yang praktikal, sesuai untuk murid berkeperluan khas, dan berbeza bagi setiap murid. Jawab terus dengan ulasan sahaja.' },
       { role: 'user', content: prompt }] }, tambahan))
   }); } catch (e) { console.error(e); throw new Error(/permission|kebenaran/i.test(String(e)) ? 'AI bermasalah. Kod: AI-04' : 'AI bermasalah. Kod: AI-05'); }
     let j = {}; try { j = JSON.parse(r.getContentText()); } catch (e) {}
@@ -796,6 +810,11 @@ function aiUlasan_(b) {
   }
   if (res.t) {
     res.t = ringkas_(res.t);
+    try { // simpan ayat cadangan (ayat ke-2) untuk 6 jam; maksimum 8 cadangan terkini
+      const ay = res.t.match(/[^.!?]+[.!?]+/g) || [res.t];
+      lalu = [String(ay[ay.length - 1] || '').trim().slice(0, 200)].concat(lalu).slice(0, 8);
+      CacheService.getScriptCache().put(kunciIngat, JSON.stringify(lalu), 21600);
+    } catch (e) {}
     if (guna !== model) { try { sh.getRange('B1').setValue(guna); sh.getRange('C1').setValue('Model "' + model + '" tidak berfungsi. Ditukar automatik ke "' + guna + '" pada ' + new Date()); } catch (e) {} }
     return res.t;
   }
@@ -804,17 +823,33 @@ function aiUlasan_(b) {
   if (res.code !== 200) throw new Error('AI bermasalah. Kod: AI-' + res.code + (SEBAB[res.code] ? ' (' + SEBAB[res.code] + ')' : (res.code >= 500 ? ' (pelayan Groq sibuk — cuba sebentar lagi)' : '')));
   throw new Error('AI bermasalah. Kod: AI-03 (semua model AI tidak memberi jawapan — cuba sebentar lagi)');
 }
-/* Pastikan ulasan ringkas: maksimum 2 ayat, ~35 patah perkataan (tidak memotong di tengah ayat jika boleh). */
+/* Pastikan ulasan ringkas: maksimum 2 ayat, ~45 patah perkataan. Ayat cadangan (ke-2) dikekalkan sebab ia paling penting. */
 function ringkas_(t) {
   t = String(t || '').replace(/\s+/g, ' ').trim();
-  const ayat = t.match(/[^.!?]+[.!?]+/g) || [t];
-  let hasil = ayat.slice(0, 2).map(a => a.trim()).join(' ');
-  const kata = hasil.split(' ');
-  if (kata.length > 35) {
-    hasil = ayat[0].trim();
-    if (hasil.split(' ').length > 35) hasil = hasil.split(' ').slice(0, 35).join(' ').replace(/[,;:]$/, '') + '.';
+  const ayat = (t.match(/[^.!?]+[.!?]+/g) || [t]).map(a => a.trim());
+  const n = x => x.split(' ').length;
+  if (ayat.length < 2) return n(t) > 45 ? t.split(' ').slice(0, 45).join(' ').replace(/[,;:]$/, '') + '.' : t;
+  let a1 = ayat[0], a2 = ayat[1];
+  if (n(a1) + n(a2) > 45) { // pendekkan ayat 1 dahulu (potong pada koma), cadangan dikekalkan
+    const pendek = a1.split(/[,;]/)[0].trim();
+    if (pendek.length > 10) a1 = pendek.replace(/[.!?]?$/, '.');
   }
-  return hasil;
+  if (n(a1) + n(a2) > 55) return a2;
+  return a1 + ' ' + a2;
+}
+/* Tentukan bidang yang paling perlu dibantu dan cara bantuan yang sesuai dengan tahap TP murid. */
+function fokusIntervensi_(senarai, tpAll) {
+  const ada = senarai.filter(x => x.tp > 0);
+  const caraTP = t => t <= 2 ? 'TP' + t + ' — bantuan penuh langkah demi langkah: tunjuk cara dulu, pegang tangan atau guna objek sebenar, satu langkah kecil sahaja, puji setiap cubaan.'
+    : t <= 4 ? 'TP' + t + ' — latihan berpandu dalam situasi harian: beri sedikit bantuan, kemudian biar murid cuba sendiri.'
+    : 'TP' + t + ' — pengayaan: beri cabaran baharu, minta murid buat sendiri, ajar ahli keluarga atau terangkan semula.';
+  if (!ada.length) { const t = tpAll || 3; return { teks: 'tiada butiran bidang; pilih satu kemahiran asas yang logik untuk mata pelajaran ini pada tahap TP' + t + '.', cara: caraTP(t) }; }
+  const min = Math.min.apply(null, ada.map(x => x.tp)), max = Math.max.apply(null, ada.map(x => x.tp));
+  const lemah = ada.filter(x => x.tp === min);
+  const pilih = lemah[Math.floor(Math.random() * lemah.length)];
+  const kuat = ada.filter(x => x.tp === max).map(x => x.nama).slice(0, 2).join(', ');
+  if (min === max) return { teks: 'semua bidang sama tahap (TP' + min + '); pilih bidang "' + pilih.nama + '" untuk dikukuhkan.', cara: caraTP(min) };
+  return { teks: 'bidang "' + pilih.nama + '" (TP' + min + ') paling perlu dibantu. Bidang paling kuat: ' + kuat + ' (TP' + max + ') — boleh guna kekuatan ini untuk bantu bidang lemah.', cara: caraTP(min) };
 }
 /* Senarai model sembang Groq yang masih aktif, disusun ikut keutamaan (model biasa dahulu, model "berfikir" kemudian).
    Diambil terus dari Groq dan disimpan dalam cache 6 jam. */
