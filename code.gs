@@ -1,6 +1,6 @@
 /**
  * =====================================================================
- *  e-PBD : SISTEM PELAPORAN PENTAKSIRAN BILIK DARJAH (Google Apps Script)
+ *  e-PBD PPKI : SISTEM PELAPORAN PENTAKSIRAN BILIK DARJAH (Google Apps Script)
  *  Backend API — membaca & menulis data terus dari Google Sheet.
  *  TIADA data disimpan dalam kod ini. Semua data (termasuk kata laluan
  *  admin) berada dalam Google Sheet: 01_TETAPAN, 02_MURID, 03_MATA_PELAJARAN,
@@ -397,8 +397,8 @@ function padamAkaun_(emel) {
 function doGet(e) {
   try {
     const action = (e && e.parameter && e.parameter.action) || 'getAll';
-    if (action === 'ping') return out_({ ok: true, msg: 'e-PBD API aktif' });
-    if (action === 'getAll') return out_({ ok: false, error: 'Sila log masuk melalui aplikasi e-PBD.' });
+    if (action === 'ping') return out_({ ok: true, msg: 'e-PBD PPKI API aktif' });
+    if (action === 'getAll') return out_({ ok: false, error: 'Sila log masuk melalui aplikasi e-PBD PPKI.' });
     return out_({ ok: false, error: 'Tindakan tidak dikenali: ' + action });
   } catch (err) { return out_({ ok: false, error: String(err.message || err) }); }
 }
@@ -547,6 +547,11 @@ function hadir_(guru, body) {
 function doPost(e) {
   try { // isyarat kehadiran: tanpa kunci utama supaya tidak melambatkan guru lain yang sedang menyimpan
     const b0 = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    if (b0.action === 'semakEmel') { // semakan pantas: emel sudah berdaftar? (tanpa kunci, tanpa migrasi)
+      const em = normEmel_(b0.emel);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return out_({ ok: true, sah: false, ada: false });
+      return out_({ ok: true, sah: true, ada: !!cariGuru_(em) });
+    }
     if (b0.action === 'hadir') { const g0 = sahGuru_(b0.emel, b0.token, b0.sekolah); return out_({ ok: true, lain: hadir_(g0, b0) }); }
   } catch (err) { return out_({ ok: false, error: String(err && err.message || err) }); }
   const lock = LockService.getScriptLock();

@@ -2,18 +2,18 @@
 <html lang="ms">
 <head>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxEUuXqTKyeCQ1zUWs3RO-mvoYwXOHLTtut1aBTGh8ZYMpRmkt-EercaTYX349IPTpE/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwaTgAQ0z67rZgEP3aEiPJ-Nl7b7q3d_CCzMLXc3JZoLZIbuzJ75DYxl4j-vmTuBs/exec";
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>e-PBD • Sistem Pelaporan Pentaksiran Bilik Darjah</title>
+<title>e-PBD PPKI • Sistem Pelaporan Pentaksiran Bilik Darjah</title>
 <meta name="description" content="Aplikasi pelaporan PBD digital: rekod tahap penguasaan, laporan murid dan sijil PBD.">
 <meta name="theme-color" content="#0f5257">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="e-PBD">
+<meta name="apple-mobile-web-app-title" content="e-PBD PPKI">
 <link rel="preconnect" href="https://script.google.com">
 <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -295,6 +295,52 @@ table.t tr:hover td{background:rgba(255,255,255,.7)}
 .hadir-dot{flex:none;width:10px;height:10px;border-radius:50%;background:#e0a100;box-shadow:0 0 0 0 rgba(224,161,0,.6);animation:hadirP 1.6s infinite}
 @keyframes hadirP{70%{box-shadow:0 0 0 10px rgba(224,161,0,0)}100%{box-shadow:0 0 0 0 rgba(224,161,0,0)}}
 @media print{.hadir-bar{display:none!important}}
+
+/* ===== AUTH FUTURISTIK + HOLOGRAM ===== */
+.holo{position:fixed;inset:0;overflow:hidden;background:radial-gradient(ellipse at 50% 120%,#0b3d4a 0%,#06141f 55%,#030a12 100%);z-index:0}
+.holo .grid{position:absolute;left:-50%;right:-50%;bottom:-10%;height:70%;background-image:linear-gradient(rgba(64,240,255,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(64,240,255,.18) 1px,transparent 1px);background-size:48px 48px;transform:perspective(600px) rotateX(62deg);transform-origin:center top;animation:hGrid 6s linear infinite;mask-image:linear-gradient(to top,#000 20%,transparent 90%);-webkit-mask-image:linear-gradient(to top,#000 20%,transparent 90%)}
+@keyframes hGrid{to{background-position:0 48px,0 0}}
+.holo .orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;mix-blend-mode:screen;animation:hFloat 14s ease-in-out infinite alternate}
+.holo .o1{width:420px;height:420px;left:-80px;top:-60px;background:conic-gradient(from 0deg,#00e5ff,#7c4dff,#00ffa3,#00e5ff)}
+.holo .o2{width:360px;height:360px;right:-60px;top:30%;background:conic-gradient(from 90deg,#ff3df2,#00e5ff,#ffd166,#ff3df2);animation-duration:18s}
+.holo .o3{width:300px;height:300px;left:30%;bottom:-80px;background:conic-gradient(from 180deg,#00ffa3,#00b4ff,#00ffa3);animation-duration:11s}
+@keyframes hFloat{0%{transform:translate(0,0) rotate(0) scale(1)}100%{transform:translate(60px,40px) rotate(180deg) scale(1.15)}}
+.holo .ring{position:absolute;left:50%;top:50%;border:1px solid rgba(64,240,255,.25);border-radius:50%;transform:translate(-50%,-50%) rotateX(70deg);animation:hSpin 20s linear infinite;box-shadow:0 0 30px rgba(64,240,255,.15) inset}
+.holo .r1{width:760px;height:760px}.holo .r2{width:560px;height:560px;border-color:rgba(255,61,242,.22);animation-direction:reverse;animation-duration:14s}.holo .r3{width:980px;height:980px;border-style:dashed;border-color:rgba(0,255,163,.15);animation-duration:40s}
+@keyframes hSpin{to{transform:translate(-50%,-50%) rotateX(70deg) rotateZ(360deg)}}
+.holo .scan{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);pointer-events:none}
+.holo .beam{position:absolute;left:0;right:0;height:120px;background:linear-gradient(180deg,transparent,rgba(64,240,255,.12),transparent);animation:hBeam 7s linear infinite}
+@keyframes hBeam{from{top:-120px}to{top:100%}}
+.holo .pt{position:absolute;width:3px;height:3px;border-radius:50%;background:#7ff6ff;box-shadow:0 0 8px #40f0ff;animation:hPt linear infinite}
+@keyframes hPt{from{transform:translateY(0);opacity:0}10%{opacity:1}to{transform:translateY(-100vh);opacity:0}}
+.authc{position:relative;z-index:2;width:min(440px,92vw);max-height:94vh;overflow:auto;padding:26px 24px;border-radius:22px;color:#e6fbff;background:linear-gradient(160deg,rgba(14,40,56,.72),rgba(6,18,30,.78));backdrop-filter:blur(18px) saturate(140%);border:1px solid rgba(64,240,255,.35);box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 20px 60px rgba(0,0,0,.6),0 0 40px rgba(64,240,255,.18);animation:aIn .5s cubic-bezier(.2,.9,.3,1.2)}
+.authc::before{content:"";position:absolute;inset:-1px;border-radius:22px;padding:1px;background:linear-gradient(120deg,#00e5ff,transparent 30%,transparent 70%,#ff3df2);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:.8}
+@keyframes aIn{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:none}}
+.authc .alogo{width:70px;height:70px;margin:0 auto;border-radius:20px;display:grid;place-items:center;font-size:34px;font-weight:900;color:#03121c;background:linear-gradient(135deg,#40f0ff,#00ffa3);box-shadow:0 0 30px rgba(64,240,255,.6);animation:aPulse 3s ease-in-out infinite}
+@keyframes aPulse{50%{box-shadow:0 0 50px rgba(0,255,163,.8)}}
+.authc h2{margin:12px 0 2px;font-size:26px;letter-spacing:1px;background:linear-gradient(90deg,#7ff6ff,#fff,#ff9df8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.authc .sub{margin:0;font-size:12px;color:#8fc9d6;letter-spacing:.5px}
+.authc .l{color:#7ff6ff;font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
+.authc .f{background:rgba(3,15,25,.7)!important;border:1px solid rgba(64,240,255,.25)!important;color:#e6fbff!important;box-shadow:none!important;transition:.2s}.authc .f::placeholder{color:#4f7f8c}
+.authc .f:focus{outline:none;border-color:#40f0ff!important;box-shadow:0 0 0 3px rgba(64,240,255,.2),0 0 18px rgba(64,240,255,.3)}
+.authc .f.ok{border-color:#00ffa3!important}.authc .f.bad{border-color:#ff4d7a!important}
+.atabs{display:flex;gap:4px;padding:4px;margin:18px 0 14px;border-radius:14px;background:rgba(3,15,25,.6);border:1px solid rgba(64,240,255,.2)}
+.atabs button{flex:1;border:0;padding:10px;border-radius:10px;background:transparent;color:#8fc9d6;font-weight:700;cursor:pointer;transition:.2s}
+.atabs button.on{background:linear-gradient(135deg,#00b4d8,#00c98a);color:#03121c;box-shadow:0 0 18px rgba(64,240,255,.45)}
+.abtn{width:100%;margin-top:18px;padding:13px;border:0;border-radius:12px;font-weight:800;letter-spacing:1px;color:#03121c;cursor:pointer;background:linear-gradient(135deg,#40f0ff,#00ffa3);box-shadow:0 0 24px rgba(64,240,255,.45);transition:.2s}
+.abtn:hover{transform:translateY(-1px);box-shadow:0 0 34px rgba(0,255,163,.6)}.abtn:disabled{opacity:.6;cursor:wait;transform:none}
+.emst{font-size:12px;margin-top:6px;min-height:16px}.emst.ok{color:#00ffa3}.emst.bad{color:#ff7a9a}.emst.wait{color:#8fc9d6}
+.amsg{display:none;margin-top:14px;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.45}
+.amsg.show{display:block;animation:aIn .3s}
+.amsg.ok{background:rgba(0,255,163,.12);border:1px solid rgba(0,255,163,.5);color:#bfffe6}
+.amsg.err{background:rgba(255,77,122,.12);border:1px solid rgba(255,77,122,.55);color:#ffd0dc}
+.amsg.wait{background:rgba(64,240,255,.1);border:1px solid rgba(64,240,255,.4);color:#c9f7ff}
+.amsg a{color:#7ff6ff}
+.ahint{margin-top:14px;font-size:12px;color:#8fc9d6;line-height:1.5}
+.awa{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:11px;border-radius:12px;text-decoration:none;font-weight:700;color:#bfffe6;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.5);transition:.2s}
+.awa:hover{background:rgba(37,211,102,.22);box-shadow:0 0 20px rgba(37,211,102,.35)}
+.alink{display:block;text-align:center;margin-top:12px;font-size:12px;color:#8fc9d6!important}
+.aok{text-align:center;padding:20px 0}.aok .tick{width:84px;height:84px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;font-size:42px;color:#03121c;background:linear-gradient(135deg,#40f0ff,#00ffa3);box-shadow:0 0 50px rgba(0,255,163,.7);animation:aIn .5s}
 </style>
 </head>
 <body>
@@ -304,7 +350,7 @@ table.t tr:hover td{background:rgba(255,255,255,.7)}
     <div class="ld-core" id="ldCore"><div class="ld-ring r3"></div><div class="ld-ring r1"></div><div class="ld-ring r2"></div><div class="ld-ring r4"></div>
       <div class="ld-orb"><div><b id="ldPct">0</b><small>PERATUS</small></div></div></div>
     <div class="ld-info">
-      <div class="ld-title">e-PBD • ENJIN SEGERAK DATA</div>
+      <div class="ld-title">e-PBD PPKI • ENJIN SEGERAK DATA</div>
       <div class="ld-msg" id="ldMsg">Menyambung ke pelayan selamat…</div>
       <div class="ld-bar"><i id="ldBar"></i></div>
       <div class="ld-stats"><span>⇣ <b id="ldRate">0.0</b> MB/s</span><span>PAKET <b id="ldPk">0</b></span><span>LATENSI <b id="ldLat">--</b> ms</span></div>
@@ -317,7 +363,7 @@ table.t tr:hover td{background:rgba(255,255,255,.7)}
 
 <div class="app">
   <aside class="side" id="side">
-    <div class="logo"><div class="mark">P</div><div><b>e-PBD</b><small>Pelaporan Pentaksiran Bilik Darjah</small></div></div>
+    <div class="logo"><div class="mark">P</div><div><b>e-PBD PPKI</b><small>Pelaporan Pentaksiran Bilik Darjah</small></div></div>
     <nav class="nav" id="nav"></nav>
     <div class="who" id="who"></div>
   </aside>
@@ -434,7 +480,7 @@ const WASAP_ADMIN = '01110661077';
 const isMaster = () => !!(S.data && S.data.guru && S.data.guru.MASTER);
 const waNo = t => { let d=String(t||'').replace(/\D/g,''); if(d.startsWith('0')) d='6'+d; return d; };
 const waLink = (t,msg) => 'https://wa.me/'+waNo(t)+(msg?'?text='+encodeURIComponent(msg):'');
-const helpWA = (lbl) => `<a class="btn sm" style="text-decoration:none" target="_blank" rel="noopener" href="${waLink(WASAP_ADMIN,'Salam Master Admin e-PBD, saya perlukan bantuan: ')}">${lbl||('💬 WhatsApp Master Admin '+WASAP_ADMIN)}</a>`;
+const helpWA = (lbl) => `<a class="btn sm" style="text-decoration:none" target="_blank" rel="noopener" href="${waLink(WASAP_ADMIN,'Salam Master Admin e-PBD PPKI, saya perlukan bantuan: ')}">${lbl||('💬 WhatsApp Master Admin '+WASAP_ADMIN)}</a>`;
 function toast(msg, err){ const t=$('#toast'); t.textContent=msg; t.className='toast show'+(err?' err':''); clearTimeout(t._h); t._h=setTimeout(()=>t.className='toast',3200); }
 
 /* ====================== API ====================== */
@@ -468,7 +514,7 @@ async function load(){
     if(shown){ syncing(false); toast('Mod luar talian: memaparkan data simpanan terakhir.', true); return; }
     const c = S.token && readCache();
     if(c){ S.data=c; toast('Mod luar talian: memaparkan data simpanan terakhir.', true); }
-    else return showFatal(/fetch|network|load failed/i.test(e.message) ? 'Pelayan e-PBD tidak dapat dihubungi.' : e.message);
+    else return showFatal(/fetch|network|load failed/i.test(e.message) ? 'Pelayan e-PBD PPKI tidak dapat dihubungi.' : e.message);
   }
   if(shown){
     syncing(false);
@@ -530,58 +576,95 @@ async function run(btn, fn, okMsg){
 
 /* ====================== AUTH (DAFTAR & LOG MASUK GURU) ====================== */
 const UP = `oninput="const p=this.selectionStart;this.value=this.value.toUpperCase();try{this.setSelectionRange(p,p)}catch(e){}" style="text-transform:uppercase"`;
+const HOLO = () => `<div class="holo"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="grid"></div><div class="beam"></div><div class="scan"></div>${Array.from({length:28},()=>`<i class="pt" style="left:${Math.random()*100}%;top:${60+Math.random()*50}%;animation-duration:${6+Math.random()*10}s;animation-delay:${-Math.random()*10}s"></i>`).join('')}</div>`;
+const lupaWA = () => { const em=($('#a_EMEL')&&$('#a_EMEL').value.trim())||''; return waLink(WASAP_ADMIN,'Salam Master Admin e-PBD PPKI, saya terlupa kata laluan. Emel akaun saya: '+(em||'(sila isi)')+'. Mohon bantuan set semula kata laluan. Terima kasih.'); };
 function authForm(mode){
   const daftar = mode==='daftar', master = mode==='master';
   const emelAwal = S.emel===MASTER_EMEL ? '' : S.emel;
   const enter = `onkeydown="if(event.key==='Enter')doAuth('${mode}',document.getElementById('a_btn'))"`;
-  return `<div style="text-align:center;margin-bottom:14px"><img src="icon-192.png" alt="" style="width:64px;height:64px;border-radius:16px" onerror="this.style.display='none'">
-   <h2 style="margin:8px 0 2px">e-PBD Malaysia</h2><p class="lock" style="margin:0">Sistem Pelaporan Pentaksiran Bilik Darjah untuk semua sekolah</p></div>
-   ${master?`<div class="hint" style="margin-bottom:6px">🛡 <b>Log masuk Master Admin</b><br>Akses penuh: semua akaun pengguna, semua sekolah & Tafsiran TP.</div>
-   <label class="l">Kata laluan Master Admin</label><input class="f" id="a_PASSWORD" type="password" autocomplete="current-password" ${enter}>
-   <button class="btn pri" id="a_btn" style="width:100%;margin-top:16px" onclick="doAuth('master',this)">🛡 Log Masuk Master Admin</button>
-   <div style="text-align:center;margin-top:12px"><a href="#" onclick="showAuth('login');return false">← Kembali ke log masuk guru</a></div>`
-   :`<div class="row" style="gap:6px;margin-bottom:14px"><button class="btn ${daftar?'':'pri'}" style="flex:1" onclick="showAuth('login')">Log Masuk</button><button class="btn ${daftar?'pri':''}" style="flex:1" onclick="showAuth('daftar')">Daftar Guru</button></div>
-   ${daftar?`<label class="l">Nama guru</label><input class="f" id="a_NAMA_GURU" ${UP} autocomplete="name">
-   <label class="l" style="margin-top:10px;display:block">Kod sekolah</label><input class="f" id="a_KOD_SEKOLAH" ${UP} placeholder="CONTOH: JBA6041" maxlength="7">
-   <label class="l" style="margin-top:10px;display:block">No telefon</label><input class="f" id="a_NO_TELEFON" type="tel" ${UP} placeholder="0123456789" autocomplete="tel">`:''}
-   <label class="l" style="margin-top:10px;display:block">Emel</label><input class="f" id="a_EMEL" type="email" autocomplete="email" autocapitalize="off" value="${esc(emelAwal)}">
-   <label class="l" style="margin-top:10px;display:block">Kata laluan${daftar?' (min. 6 aksara)':''}</label><input class="f" id="a_PASSWORD" type="password" autocomplete="${daftar?'new-password':'current-password'}" ${enter}>
-   <button class="btn pri" id="a_btn" style="width:100%;margin-top:16px" onclick="doAuth('${mode}',this)">${daftar?'Daftar & Masuk':'Log Masuk'}</button>
-   <p class="hint" style="margin-top:14px">${daftar?'Selepas mendaftar, log masuk':'Log masuk'} menggunakan <b>emel</b> dan <b>kata laluan</b> yang didaftarkan. Setiap guru menggunakan aplikasi mengikut <b>kod sekolah</b> masing-masing — guru dari sekolah yang sama berkongsi data sekolah tersebut.</p>`}
-   <div class="hint" style="margin-top:10px;background:var(--brand-soft)">Lupa kata laluan atau ada sebarang pertanyaan? WhatsApp Master Admin:<div style="margin-top:8px">${helpWA('💬 WhatsApp '+WASAP_ADMIN)}</div></div>
-   ${master?'':`<div style="text-align:center;margin-top:12px"><a href="#" style="font-size:12px;color:var(--muted)" onclick="showAuth('master');return false">🛡 Log masuk Master Admin</a></div>`}`;
+  const lbl = (t,id) => `<label class="l" style="margin-top:12px;display:block" for="a_${id}">${t}</label>`;
+  return `<div style="text-align:center"><div class="alogo">P</div>
+   <h2>e-PBD PPKI</h2><p class="sub">Sistem Pelaporan Pentaksiran Bilik Darjah • Pendidikan Khas</p></div>
+   ${master?`<div class="amsg wait show" style="margin-top:18px">🛡 <b>Log masuk Master Admin</b><br>Akses penuh: semua akaun pengguna, semua sekolah & Tafsiran TP.</div>
+   ${lbl('Kata laluan Master Admin','PASSWORD')}<input class="f" id="a_PASSWORD" type="password" autocomplete="current-password" ${enter}>
+   <button class="abtn" id="a_btn" onclick="doAuth('master',this)">🛡 LOG MASUK MASTER ADMIN</button>
+   <div class="amsg" id="a_msg"></div>
+   <a href="#" class="alink" onclick="showAuth('login');return false">← Kembali ke log masuk guru</a>`
+   :`<div class="atabs"><button class="${daftar?'':'on'}" onclick="showAuth('login')">Log Masuk</button><button class="${daftar?'on':''}" onclick="showAuth('daftar')">Daftar Guru</button></div>
+   ${daftar?`${lbl('Nama guru','NAMA_GURU')}<input class="f" id="a_NAMA_GURU" ${UP} autocomplete="name">
+   ${lbl('Kod sekolah','KOD_SEKOLAH')}<input class="f" id="a_KOD_SEKOLAH" ${UP} placeholder="CONTOH: JBA6041" maxlength="7">
+   ${lbl('No telefon','NO_TELEFON')}<input class="f" id="a_NO_TELEFON" type="tel" ${UP} placeholder="0123456789" autocomplete="tel">`:''}
+   ${lbl('Emel','EMEL')}<input class="f" id="a_EMEL" type="email" autocomplete="email" autocapitalize="off" value="${esc(emelAwal)}" ${daftar?`oninput="semakEmel(this.value)"`:''}>
+   ${daftar?'<div class="emst" id="a_emst"></div>':''}
+   ${lbl('Kata laluan'+(daftar?' (min. 6 aksara)':''),'PASSWORD')}<input class="f" id="a_PASSWORD" type="password" autocomplete="${daftar?'new-password':'current-password'}" ${enter}>
+   <button class="abtn" id="a_btn" onclick="doAuth('${mode}',this)">${daftar?'DAFTAR & MASUK':'LOG MASUK'}</button>
+   <div class="amsg" id="a_msg"></div>
+   <p class="ahint">Guru dari sekolah yang sama (ikut <b>kod sekolah</b>) berkongsi data sekolah tersebut.</p>`}
+   <a class="awa" target="_blank" rel="noopener" href="#" onclick="this.href=lupaWA()">💬 Lupa kata laluan? WhatsApp Admin ${WASAP_ADMIN}</a>
+   ${master?'':`<a href="#" class="alink" onclick="showAuth('master');return false">🛡 Log masuk Master Admin</a>`}`;
 }
 function showAuth(mode){
   closeModal();
   Boot.hide(); syncN=0; $('#sync').classList.remove('show');
   const L=$('#loader'); L.style.display='grid';
-  L.innerHTML=`<div class="card" style="width:min(440px,92vw);max-height:94vh;overflow:auto">${authForm(mode)}</div>`;
+  L.innerHTML=HOLO()+`<div class="authc">${authForm(mode)}</div>`;
+  if(mode==='daftar' && $('#a_EMEL').value) semakEmel($('#a_EMEL').value);
 }
 function askLogin(){ showAuth('login'); }
+function authMsg(type, html){ const m=$('#a_msg'); if(!m) return; m.className='amsg show '+type; m.innerHTML=html; }
+/* Semakan pantas emel (daftar): elak emel berganda */
+const emelCache = {}; let emelT, emelSeq=0, emelAda=false;
+function semakEmel(val){
+  const em=String(val||'').trim().toLowerCase(), st=$('#a_emst'), inp=$('#a_EMEL'); emelAda=false;
+  clearTimeout(emelT); if(!st) return;
+  inp.classList.remove('ok','bad');
+  if(!em){ st.className='emst'; st.textContent=''; return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ st.className='emst bad'; st.textContent='✗ Format emel tidak sah'; inp.classList.add('bad'); return; }
+  const show = ada => { emelAda=ada; inp.classList.add(ada?'bad':'ok'); st.className='emst '+(ada?'bad':'ok');
+    st.innerHTML = ada ? `✗ Emel ini sudah didaftarkan. <a href="#" style="color:#7ff6ff" onclick="showAuth('login');return false">Log masuk di sini</a>` : '✓ Emel boleh digunakan'; };
+  if(em in emelCache) return show(emelCache[em]);
+  st.className='emst wait'; st.textContent='⏳ Menyemak emel…';
+  const seq=++emelSeq;
+  emelT=setTimeout(async()=>{ try{ const j=await post({action:'semakEmel',emel:em}); if(seq!==emelSeq) return; if(j.ok){ emelCache[em]=!!j.ada; show(!!j.ada); } else { st.className='emst'; st.textContent=''; } }catch(e){ if(seq===emelSeq){ st.className='emst'; st.textContent=''; } } },350);
+}
 async function doAuth(mode, btn){
   const v = id => ($('#a_'+id)?$('#a_'+id).value:'').trim();
-  if(!URL_OK()) return toast('Sistem belum dikonfigurasi sepenuhnya. Sila hubungi Master Admin.',true);
+  const fail = m => { authMsg('err','✗ '+esc(m)); toast(m,true); };
+  if(!URL_OK()) return fail('Sistem belum dikonfigurasi sepenuhnya. Sila hubungi Master Admin.');
   let body;
   if(mode==='master'){
-    const pw=$('#a_PASSWORD').value; if(!pw) return toast('Sila isi kata laluan Master Admin',true);
+    const pw=$('#a_PASSWORD').value; if(!pw) return fail('Sila isi kata laluan Master Admin');
     body={action:'loginMaster',password:pw,sekolah:S.sekolah,kelas:S.kelas};
   } else {
     const d = { EMEL:v('EMEL').toLowerCase(), PASSWORD:$('#a_PASSWORD').value };
     if(mode==='daftar'){ d.NAMA_GURU=v('NAMA_GURU').toUpperCase(); d.KOD_SEKOLAH=v('KOD_SEKOLAH').toUpperCase().replace(/\s+/g,''); d.NO_TELEFON=v('NO_TELEFON').toUpperCase();
-      if(!d.NAMA_GURU||!d.KOD_SEKOLAH||!d.NO_TELEFON) return toast('Sila lengkapkan semua maklumat',true);
-      if(!/^[A-Z]{3}[0-9]{4}$/.test(d.KOD_SEKOLAH)) return toast('Kod sekolah tidak sah (contoh: JBA6041)',true); }
-    if(!d.EMEL||!d.PASSWORD) return toast('Sila isi emel dan kata laluan',true);
+      if(!d.NAMA_GURU||!d.KOD_SEKOLAH||!d.NO_TELEFON) return fail('Sila lengkapkan semua maklumat');
+      if(!/^[A-Z]{3}[0-9]{4}$/.test(d.KOD_SEKOLAH)) return fail('Kod sekolah tidak sah (contoh: JBA6041)');
+      if(d.PASSWORD.length<6) return fail('Kata laluan sekurang-kurangnya 6 aksara');
+      if(emelAda || emelCache[d.EMEL]) return fail('Emel ini sudah didaftarkan. Sila log masuk.'); }
+    if(!d.EMEL||!d.PASSWORD) return fail('Sila isi emel dan kata laluan');
     body = mode==='daftar' ? {action:'daftar',data:d} : {action:'login',emel:d.EMEL,password:d.PASSWORD,kelas:S.kelas};
   }
-  const old=btn.innerHTML; btn.disabled=true; btn.innerHTML='⏳ Sila tunggu…';
+  const old=btn.innerHTML; btn.disabled=true; btn.innerHTML='⏳ SILA TUNGGU…';
+  authMsg('wait', mode==='daftar'?'⏳ Sedang mendaftar akaun anda…':'⏳ Sedang mengesahkan akaun anda…');
   try{
     const j = await post(body);
     if(!j.ok) throw new Error(j.error);
     S.emel=j.emel; S.token=j.token; localStorage.setItem('pbd_emel',S.emel); localStorage.setItem('pbd_token',S.token);
+    if(mode!=='master' && mode==='daftar') emelCache[S.emel]=true;
     setData(j.data); S.view = mode==='master' ? 'akaun' : 'dash';
+    const nama = mode==='master' ? 'Master Admin' : (j.guru&&j.guru.NAMA_GURU||'Cikgu');
+    const box=$('#loader .authc');
+    if(box) box.innerHTML=`<div class="aok"><div class="tick">✓</div><h2>${mode==='daftar'?'Pendaftaran Berjaya!':'Log Masuk Berjaya!'}</h2><p class="sub" style="font-size:14px;margin-top:6px">Selamat datang, <b style="color:#fff">${esc(nama)}</b></p><p class="sub" style="margin-top:14px">Membuka papan pemuka…</p></div>`;
+    await new Promise(r=>setTimeout(r,1400));
     $('#loader').style.display='none'; render();
-    toast(mode==='master' ? 'Selamat datang, Master Admin 🛡' : (mode==='daftar'?'Pendaftaran berjaya. ':'')+'Selamat datang, '+(j.guru&&j.guru.NAMA_GURU||'Cikgu')+' ✓');
-  }catch(e){ toast(e.message,true); btn.disabled=false; btn.innerHTML=old; }
+    toast((mode==='daftar'?'Pendaftaran berjaya. ':'Log masuk berjaya. ')+'Selamat datang, '+nama+' ✓');
+  }catch(e){
+    const m = /fetch|network|load failed/i.test(e.message) ? 'Tiada sambungan internet / pelayan tidak dapat dihubungi. Cuba lagi.' : e.message;
+    fail(m);
+    if(/kata laluan salah/i.test(m)) authMsg('err',`✗ ${esc(m)}<br><a target="_blank" rel="noopener" href="${lupaWA()}">💬 Hantar WhatsApp kepada Admin sekarang</a>`);
+    btn.disabled=false; btn.innerHTML=old;
+  }
 }
 function logout(){
   try{ Object.keys(localStorage).filter(k=>k.startsWith('pbd_cache')).forEach(k=>localStorage.removeItem(k)); }catch(e){}
@@ -1004,7 +1087,7 @@ function profileHTML(s){
      Kekuatan utama: <b>${esc(best.join(', ')||'-')}</b>.<br>${weak.length?`Fokus penambahbaikan: <b>${esc(weak.join(', '))}</b>.`:'Prestasi seimbang merentas semua mata pelajaran.'}<br>
      <span style="color:#5b7577">Garis putus emas = purata TP murid (${avg.toFixed(1)}). Skala 1–6.</span></div>
    </div>
-   <div class="ft"><span>e-PBD • PENTAKSIRAN BILIK DARJAH ${esc(t.SESI||'')}</span><span>DIJANA ${fmtDate(new Date())}</span></div>
+   <div class="ft"><span>e-PBD PPKI • PENTAKSIRAN BILIK DARJAH ${esc(t.SESI||'')}</span><span>DIJANA ${fmtDate(new Date())}</span></div>
   </div>`;
 }
 V.sijil = () => {
@@ -1105,7 +1188,7 @@ function saveTaf(btn){
 
 /* ---------- Panduan ---------- */
 V.panduan = () => {
-  $('#view').innerHTML = head('Panduan Penggunaan','Panduan Pentaksiran Bilik Darjah dan cara menggunakan e-PBD.')+
+  $('#view').innerHTML = head('Panduan Penggunaan','Panduan Pentaksiran Bilik Darjah dan cara menggunakan e-PBD PPKI.')+
   `<div class="card" style="line-height:1.7">${S.data.panduan.map(p=>{const t=String(p.TEKS); const isH=/^[A-E] \| /.test(t)||/^PANDUAN|^PENTAKSIRAN|^PENGENALAN/.test(t);
     return isH?`<h3 style="margin:18px 0 4px;color:var(--brand)">${esc(t.replace(/^([A-E]) \| /,'$1. '))}</h3>`:`<div>${esc(t.replace(/ \| /g,' — '))}</div>`}).join('')}</div>
   <div class="card" style="margin-top:16px"><h3 style="margin-top:0">Cara guna aplikasi ini</h3><ol style="line-height:1.8">

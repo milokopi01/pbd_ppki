@@ -1,6 +1,6 @@
 {
-  "name": "e-PBD Pelaporan Pentaksiran Bilik Darjah",
-  "short_name": "e-PBD",
+  "name": "e-PBD PPKI - Pelaporan Pentaksiran Bilik Darjah",
+  "short_name": "e-PBD PPKI",
   "description": "Rekod TP, laporan murid dan sijil PBD",
   "start_url": "./index.html",
   "scope": "./",
