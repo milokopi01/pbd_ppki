@@ -552,6 +552,7 @@ function doPost(e) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return out_({ ok: true, sah: false, ada: false });
       return out_({ ok: true, sah: true, ada: !!cariGuru_(em) });
     }
+    if (b0.action === 'aiUlasan') { sahGuru_(b0.emel, b0.token, b0.sekolah); return out_({ ok: true, ulasan: aiUlasan_(b0) }); }
     if (b0.action === 'hadir') { const g0 = sahGuru_(b0.emel, b0.token, b0.sekolah); return out_({ ok: true, lain: hadir_(g0, b0) }); }
   } catch (err) { return out_({ ok: false, error: String(err && err.message || err) }); }
   const lock = LockService.getScriptLock();
@@ -740,3 +741,39 @@ function saveTafsiran_(d, kod, tahap) {
 
 /* Jalankan sekali dari editor untuk menguji sambungan */
 function testSambungan() { migrasiSKBenut(); Logger.log(JSON.stringify(getAll_('', { KOD_SEKOLAH: KOD_ASAL, NAMA_GURU: 'UJIAN', EMEL: '' })).slice(0, 1500)); }
+
+/* ===================== ULASAN AI (Groq) =====================
+ * Sheet "apikey": A1 = kunci API Groq, B2 = nama model (cth: llama-3.3-70b-versatile).
+ * Hanya nama singkatan murid + TP dihantar ke AI (tiada MyKid / nama penuh). */
+function aiUlasan_(b) {
+  const sh = ss_().getSheetByName('apikey');
+  if (!sh) throw new Error('Sheet "apikey" tidak dijumpai. Cipta sheet bernama apikey: A1 = API key Groq, B2 = model.');
+  const key = String(sh.getRange('A1').getValue() || '').trim();
+  const model = String(sh.getRange('B2').getValue() || '').trim() || 'llama-3.3-70b-versatile';
+  if (!key) throw new Error('API key Groq kosong di sheet apikey sel A1.');
+  const nama = String(b.nama || 'Murid').slice(0, 40);
+  const mp = String(b.mp || '').slice(0, 120);
+  const bid = (Array.isArray(b.bidang) ? b.bidang : []).slice(0, 12)
+    .map(x => '- ' + String(x.nama || '').slice(0, 80) + ': TP' + (Number(x.tp) || '-')).join('\n');
+  const tp = Number(b.tp) || '-';
+  const prompt = 'Murid: ' + nama + '\nMata pelajaran: ' + mp + '\nTP keseluruhan: TP' + tp + '\nTP setiap bidang:\n' + bid +
+    '\n\nTulis ulasan guru mata pelajaran untuk ibu bapa dalam Bahasa Melayu, 2-3 ayat (maksimum 60 patah perkataan). ' +
+    'Sebut nama murid. Puji bidang yang kuat (TP tinggi), nyatakan bidang yang perlu dibimbing (TP rendah) dan beri satu cadangan ringkas di rumah. ' +
+    'Nada positif, sesuai murid pendidikan khas. Skala: TP1 sangat terhad, TP2 terhad, TP3 memuaskan, TP4 baik, TP5 sangat baik, TP6 cemerlang. ' +
+    'Jawab dengan ulasan sahaja tanpa tajuk atau tanda petik.';
+  const r = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+    headers: { Authorization: 'Bearer ' + key },
+    payload: JSON.stringify({ model: model, temperature: 0.7, max_tokens: 300, messages: [
+      { role: 'system', content: 'Anda guru Program Pendidikan Khas Integrasi di Malaysia yang menulis ulasan Pentaksiran Bilik Darjah.' },
+      { role: 'user', content: prompt }] })
+  });
+  const code = r.getResponseCode(); let j = {};
+  try { j = JSON.parse(r.getContentText()); } catch (e) {}
+  if (code === 401) throw new Error('API key Groq tidak sah (semak sheet apikey A1).');
+  if (code === 429) throw new Error('Had penggunaan Groq dicapai. Cuba lagi sebentar.');
+  if (code !== 200) throw new Error('Groq ralat ' + code + ': ' + ((j.error && j.error.message) || 'tidak diketahui'));
+  const t = String(((j.choices || [])[0] || {}).message && j.choices[0].message.content || '').trim().replace(/^["']|["']$/g, '');
+  if (!t) throw new Error('AI tidak memberi ulasan. Cuba lagi.');
+  return t;
+}

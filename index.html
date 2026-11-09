@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbww-SsawRAYoS9P8ZIs0B2tEPeqotlO5k_U3uoCwnzg7GgzaKghoE-mm8dK07SK8RE4/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwaTgAQ0z67rZgEP3aEiPJ-Nl7b7q3d_CCzMLXc3JZoLZIbuzJ75DYxl4j-vmTuBs/exec";
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -79,6 +79,7 @@ table.t tr:hover td{background:#faf6ec}
 .tw{overflow:auto;max-height:70vh;border-radius:12px}
 .tp{display:inline-grid;place-items:center;min-width:34px;height:28px;border-radius:8px;font-weight:800;color:#fff;font-size:13px;padding:0 6px}
 .tp1{background:var(--tp1)}.tp2{background:var(--tp2)}.tp3{background:var(--tp3);color:#4a3a00}.tp4{background:var(--tp4)}.tp5{background:var(--tp5)}.tp6{background:var(--tp6)}.tp0{background:#ddd;color:#777}
+.aib{margin-top:6px;font:600 11px/1 inherit;padding:6px 10px;border-radius:999px;border:1px solid var(--brand,#0f766e);background:transparent;color:var(--brand,#0f766e);cursor:pointer}.aib:disabled{opacity:.6;cursor:wait}
 select.tpsel{padding:6px;border-radius:8px;border:1px solid var(--line);font-weight:700;width:64px;text-align:center}
 select.tpsel.auto{animation:tpflash .75s ease-out}
 @keyframes tpflash{0%{box-shadow:0 0 0 0 rgba(201,150,43,.6)}100%{box-shadow:0 0 0 9px rgba(201,150,43,0)}}
@@ -1013,12 +1014,12 @@ V.markah = () => {
   `<div class="card" style="margin-bottom:16px"><div class="row"><div style="min-width:280px;flex:1"><label class="l">Mata pelajaran</label><select class="f" onchange="S.mpSel=this.value;render()">
    ${mps.map(m=>`<option value="${m.KOD_MP}" ${m.KOD_MP===S.mpSel?'selected':''}>${esc(m.NAMA_MATA_PELAJARAN)}${String(m.AKTIF).toUpperCase()==='Y'?'':' (tidak aktif)'}</option>`).join('')}</select></div>
    <div><label class="l">Guru mata pelajaran</label><b>${esc(mp&&mp.NAMA_GURU_MP||'—')}</b></div>
-   ${isAdmin()?`<div><label class="l">&nbsp;</label><button class="btn" onclick="autoTP()">↺ Guna purata semua bidang</button></div>`:''}</div></div>
-  ${mp?`<div class="card"><div class="tw"><table class="t" id="tbK"><thead><tr><th>Bil</th><th style="min-width:220px">Nama Murid</th>${cs.map((c,i)=>`<th title="${esc(c)}" style="min-width:80px">${esc(c)}</th>`).join('')}<th style="background:var(--gold)">TP KESELURUHAN</th><th style="min-width:260px">Ulasan Guru MP (jika perlu)</th></tr></thead><tbody>
+   ${isAdmin()?`<div><label class="l">&nbsp;</label><button class="btn" onclick="autoTP()">↺ Guna purata semua bidang</button> <button class="btn" onclick="aiUlSemua(this)">✨ AI ulasan semua</button></div>`:''}</div></div>
+  ${mp?`<div class="card"><div class="tw"><table class="t" id="tbK"><thead><tr><th>Bil</th><th style="min-width:220px">Nama Murid</th>${cs.map((c,i)=>`<th title="${esc(c)}" style="min-width:80px">${esc(c)}</th>`).join('')}<th style="background:var(--gold)">TP KESELURUHAN</th><th style="min-width:280px">Ulasan Guru MP (jika perlu)</th></tr></thead><tbody>
   ${st.map((s,i)=>{const r=mk(s.ID_MURID,mp.KOD_MP)||{}; return `<tr data-id="${s.ID_MURID}"><td>${i+1}</td><td><b>${esc(s.NAMA_MURID)}</b><br><span class="lock">${esc(s.NO_MYKID)} • ${esc(s.JANTINA)}</span></td>
    ${cs.map((c,j)=>`<td><select class="tpsel" data-k="K${j+1}" ${dis}>${opt(r['K'+(j+1)])}</select></td>`).join('')}
    <td class="tpk"><select class="tpsel" data-k="TP_KESELURUHAN" style="border-color:var(--gold)" ${dis}>${opt(r.TP_KESELURUHAN)}</select><div class="tpx" data-tpx></div></td>
-   <td><textarea class="f" rows="2" data-k="ULASAN_GURU_MP" ${dis}>${esc(r.ULASAN_GURU_MP)}</textarea></td></tr>`}).join('')}
+   <td><textarea class="f" rows="3" data-k="ULASAN_GURU_MP" ${dis}>${esc(r.ULASAN_GURU_MP)}</textarea>${isAdmin()?`<button type="button" class="aib" onclick="aiUl(this)">✨ Jana ulasan AI</button>`:''}</td></tr>`}).join('')}
   </tbody></table></div><div class="hint" style="margin-top:12px">💡 <b>TP keseluruhan dikira sendiri</b> sebagai purata bidang (dibundarkan). Anda masih boleh pilih TP lain — ia akan ditanda <b>MANUAL</b>. Tekan <b>↺</b> untuk kembali kepada purata.</div></div>`:'<div class="card empty">Tiada mata pelajaran.</div>'}`;
   bindTP();
 };
@@ -1061,6 +1062,36 @@ function bindTP(){
   });
 }
 function tpAuto(tr){ tr.dataset.tpManual='0'; syncTP(tr,true); }
+
+/* ---- Ulasan AI (Groq, kunci dibaca di server daripada sheet apikey) ---- */
+function namaPendek(n){
+  let w=String(n||'').trim().split(/\s+/); const i=w.findIndex(x=>/^(BIN|BINTI|BT|A\/L|A\/P|ANAK)$/i.test(x)); if(i>0) w=w.slice(0,i);
+  const pre=/^(MUHAMMAD|MUHAMAD|MOHAMAD|MOHAMMAD|MOHAMED|MOHD|MUHD|MUH|MD|NUR|NURUL|NOR|SITI|AHMAD|WAN|NIK|CHE|SYED|SHARIFAH|TENGKU|ABDUL|ABD|AB)$/i;
+  let k=w.find(x=>!pre.test(x))||w[0]||'Murid';
+  return k.charAt(0).toUpperCase()+k.slice(1).toLowerCase();
+}
+async function aiUlRow(tr){
+  const mp=subjects(true).find(m=>m.KOD_MP===S.mpSel); const cs=mp?comps(mp):[];
+  const s=students().find(x=>String(x.ID_MURID)===String(tr.dataset.id))||{};
+  const bidang=cs.map((c,j)=>({nama:c,tp:tpNum(tr.querySelector(`[data-k="K${j+1}"]`).value)})).filter(b=>b.tp);
+  const tp=tpNum(tr.querySelector('[data-k="TP_KESELURUHAN"]').value);
+  if(!bidang.length && !tp) throw new Error('Isi TP bidang dahulu');
+  const j=await post({action:'aiUlasan',emel:S.emel,token:S.token,sekolah:S.sekolah,nama:namaPendek(s.NAMA_MURID),mp:mp?mp.NAMA_MATA_PELAJARAN:'',bidang,tp});
+  if(!j.ok) throw new Error(j.error);
+  tr.querySelector('[data-k="ULASAN_GURU_MP"]').value=j.ulasan;
+}
+async function aiUl(btn){
+  const tr=btn.closest('tr'); const t=btn.textContent; btn.disabled=true; btn.textContent='⏳ Menjana…';
+  try{ await aiUlRow(tr); toast('Ulasan AI dijana — semak & tekan Simpan Rekod'); }catch(e){ toast('✗ '+e.message); }
+  finally{ btn.disabled=false; btn.textContent=t; }
+}
+async function aiUlSemua(btn){
+  const rows=[...document.querySelectorAll('#tbK tbody tr')].filter(tr=>tpNum(tr.querySelector('[data-k="TP_KESELURUHAN"]').value) && !tr.querySelector('[data-k="ULASAN_GURU_MP"]').value.trim());
+  if(!rows.length) return toast('Tiada murid ber-TP yang ulasannya kosong');
+  btn.disabled=true; let ok=0;
+  for(const [i,tr] of rows.entries()){ btn.textContent=`⏳ ${i+1}/${rows.length}`; try{ await aiUlRow(tr); ok++; }catch(e){ toast('✗ '+e.message); if(/key|had|sheet/i.test(e.message)) break; } }
+  btn.disabled=false; btn.textContent='✨ AI ulasan semua'; toast(`${ok} ulasan AI dijana — semak & tekan Simpan Rekod`);
+}
 function autoTP(){
   const tb=document.getElementById('tbK'); if(!tb) return;
   [...tb.querySelectorAll('tbody tr')].forEach(tr=>{ tr.dataset.tpManual='0'; syncTP(tr,true); });
