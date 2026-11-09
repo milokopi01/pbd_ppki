@@ -5,7 +5,7 @@
 /* ===== URL WEB APP GOOGLE APPS SCRIPT =====
    Tampal URL Web App (berakhir dengan /exec) DI ANTARA tanda petikan " " di bawah.
    Boleh tampal URL biasa (https://script.google.com/...) — TIDAK perlu atob / tukar kod. */
-var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzxgX1UrPhTezuHMLKjs-yWfSjm9BFlsr6SzGmlLx0nTgsxPxINae5dmmDJffywOS83/exec";
+var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwaTgAQ0z67rZgEP3aEiPJ-Nl7b7q3d_CCzMLXc3JZoLZIbuzJ75DYxl4j-vmTuBs/exec";
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -1122,7 +1122,7 @@ async function aiUlSemua(btn){
   const rows=[...document.querySelectorAll('#tbK tbody tr')].filter(tr=>tpNum(tr.querySelector('[data-k="TP_KESELURUHAN"]').value) && !tr.querySelector('[data-k="ULASAN_GURU_MP"]').value.trim());
   if(!rows.length) return toast('Tiada murid ber-TP yang ulasannya kosong');
   btn.disabled=true; let ok=0;
-  for(const [i,tr] of rows.entries()){ btn.textContent=`⏳ ${i+1}/${rows.length}`; try{ await aiUlRow(tr); ok++; }catch(e){ toast('✗ '+e.message); if(/AI-(0[1245]|401|403|429)/.test(e.message)) break; } }
+  for(const [i,tr] of rows.entries()){ btn.textContent=`⏳ ${i+1}/${rows.length}`; try{ await aiUlRow(tr); ok++; }catch(e){ toast('✗ '+e.message); if(/AI-(0[1245]|401|403|404|429)/.test(e.message)) break; } }
   btn.disabled=false; btn.textContent='✨ AI ulasan semua'; toast(`${ok} ulasan AI dijana — semak & tekan Simpan Rekod`);
 }
 function autoTP(){

@@ -762,19 +762,49 @@ function aiUlasan_(b) {
     'Sebut nama murid. Puji bidang yang kuat (TP tinggi), nyatakan bidang yang perlu dibimbing (TP rendah) dan beri satu cadangan ringkas di rumah. ' +
     'Nada positif, sesuai murid pendidikan khas. Skala: TP1 sangat terhad, TP2 terhad, TP3 memuaskan, TP4 baik, TP5 sangat baik, TP6 cemerlang. ' +
     'Jawab dengan ulasan sahaja tanpa tajuk atau tanda petik.';
-  let r; try { r = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const panggil = m => { let r; try { r = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'post', contentType: 'application/json', muteHttpExceptions: true,
     headers: { Authorization: 'Bearer ' + key },
-    payload: JSON.stringify({ model: model, temperature: 0.7, max_tokens: 300, messages: [
+    payload: JSON.stringify({ model: m, temperature: 0.7, max_tokens: 300, messages: [
       { role: 'system', content: 'Anda guru Program Pendidikan Khas Integrasi di Malaysia yang menulis ulasan Pentaksiran Bilik Darjah.' },
       { role: 'user', content: prompt }] })
   }); } catch (e) { console.error(e); throw new Error(/permission|kebenaran/i.test(String(e)) ? 'AI bermasalah. Kod: AI-04' : 'AI bermasalah. Kod: AI-05'); }
-  const code = r.getResponseCode(); let j = {};
-  try { j = JSON.parse(r.getContentText()); } catch (e) {}
+    let j = {}; try { j = JSON.parse(r.getContentText()); } catch (e) {}
+    return { code: r.getResponseCode(), j: j };
+  };
+  let res = panggil(model);
+  // Model dalam B1 sudah ditamatkan / tiada (404 atau model_decommissioned): pilih model aktif secara automatik
+  const modelMati = x => x.code === 404 || (x.code === 400 && /decommission|not exist|model_not_found|does not exist/i.test(JSON.stringify(x.j.error || '')));
+  if (modelMati(res)) {
+    console.error('AI model "' + model + '" tidak tersedia: ' + JSON.stringify(res.j.error || ''));
+    const ganti = modelGroqAktif_(key, model);
+    if (ganti) {
+      res = panggil(ganti);
+      if (res.code === 200) { try { sh.getRange('B1').setValue(ganti); sh.getRange('C1').setValue('Model lama "' + model + '" ditamatkan oleh Groq. Ditukar automatik ke "' + ganti + '" pada ' + new Date()); } catch (e) {} }
+    }
+  }
+  const code = res.code, j = res.j;
   if (code !== 200) { console.error('AI ' + code + ': ' + ((j.error && j.error.message) || '')); throw new Error('AI bermasalah. Kod: AI-' + code); }
   const t = String(((j.choices || [])[0] || {}).message && j.choices[0].message.content || '').trim().replace(/^["']|["']$/g, '');
   if (!t) throw new Error('AI bermasalah. Kod: AI-03');
   return t;
+}
+/* Cari model sembang Groq yang masih aktif (senarai diambil terus dari Groq, disimpan dalam cache 6 jam) */
+const GROQ_PILIHAN = ['llama-3.3-70b-versatile', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'meta-llama/llama-4-maverick-17b-128e-instruct', 'meta-llama/llama-4-scout-17b-16e-instruct', 'qwen/qwen3-32b', 'llama-3.1-8b-instant'];
+function modelGroqAktif_(key, kecuali) {
+  const c = CacheService.getScriptCache();
+  let ids = null; try { ids = JSON.parse(c.get('GROQ_MODELS') || 'null'); } catch (e) {}
+  if (!ids) {
+    try {
+      const r = UrlFetchApp.fetch('https://api.groq.com/openai/v1/models', { muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + key } });
+      if (r.getResponseCode() !== 200) return '';
+      ids = (JSON.parse(r.getContentText()).data || []).filter(m => m.active !== false).map(m => String(m.id));
+      try { c.put('GROQ_MODELS', JSON.stringify(ids), 21600); } catch (e) {}
+    } catch (e) { return ''; }
+  }
+  ids = ids.filter(id => id !== kecuali);
+  const p = GROQ_PILIHAN.find(id => ids.indexOf(id) > -1);
+  return p || ids.find(id => !/whisper|tts|guard|playai|orpheus|distil|compound|allam/i.test(id)) || '';
 }
 
 /* Jalankan SEKALI dari editor Apps Script (pilih fungsi ini > Run) untuk memberi kebenaran sambungan ke Groq. */
@@ -782,4 +812,5 @@ function benarkanAI() {
   const r = UrlFetchApp.fetch('https://api.groq.com/openai/v1/models', { muteHttpExceptions: true,
     headers: { Authorization: 'Bearer ' + String(ss_().getSheetByName('apikey').getRange('A1').getValue()).trim() } });
   Logger.log('Groq: ' + r.getResponseCode() + (r.getResponseCode() === 200 ? ' — sambungan OK' : ' — semak API key di A1'));
+  if (r.getResponseCode() === 200) Logger.log('Model aktif: ' + (JSON.parse(r.getContentText()).data || []).map(m => m.id).join(', '));
 }
