@@ -758,9 +758,11 @@ function aiUlasan_(b) {
     .map(x => '- ' + String(x.nama || '').slice(0, 80) + ': TP' + (Number(x.tp) || '-')).join('\n');
   const tp = Number(b.tp) || '-';
   const prompt = 'Murid: ' + nama + '\nMata pelajaran: ' + mp + '\nTP keseluruhan: TP' + tp + '\nTP setiap bidang:\n' + bid +
-    '\n\nTulis ulasan guru mata pelajaran untuk ibu bapa dalam Bahasa Melayu, 2-3 ayat (maksimum 60 patah perkataan). ' +
-    'Sebut nama murid. Puji bidang yang kuat (TP tinggi), nyatakan bidang yang perlu dibimbing (TP rendah) dan beri satu cadangan ringkas di rumah. ' +
-    'Nada positif, sesuai murid pendidikan khas. Skala: TP1 sangat terhad, TP2 terhad, TP3 memuaskan, TP4 baik, TP5 sangat baik, TP6 cemerlang. ' +
+    '\n\nTulis ulasan guru mata pelajaran untuk ibu bapa dalam Bahasa Melayu. RINGKAS DAN PADAT: tepat 2 ayat pendek, maksimum 30 patah perkataan. ' +
+    'Ayat 1: sebut nama murid, tahap TP dan bidang paling kuat (sebut bidang lemah jika ada TP rendah). Ayat 2: satu cadangan ringkas di rumah. ' +
+    'Jangan ulang nama mata pelajaran, jangan guna frasa panjang seperti "menunjukkan pencapaian" atau "untuk meningkatkan lagi kemahiran". ' +
+    'Skala: TP1 sangat terhad, TP2 terhad, TP3 memuaskan, TP4 baik, TP5 sangat baik, TP6 cemerlang. ' +
+    'Contoh gaya: Ali mencapai TP4 (baik), terutama dalam menggambar; corak dan rekaan perlu bimbingan. Galakkan Ali melukis 15 minit sehari di rumah. ' +
     'Jawab dengan ulasan sahaja tanpa tajuk atau tanda petik.';
   // Tetapan khas ikut jenis model: model "berfikir" (gpt-oss, qwen3, deepseek) perlu ruang token lebih
   // dan pemikirannya disembunyikan, jika tidak jawapan kosong (AI-03).
@@ -769,8 +771,8 @@ function aiUlasan_(b) {
   const fetchAI = (m, tambahan) => { let r; try { r = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'post', contentType: 'application/json', muteHttpExceptions: true,
     headers: { Authorization: 'Bearer ' + key },
-    payload: JSON.stringify(Object.assign({ model: m, temperature: 0.7, max_tokens: 1500, messages: [
-      { role: 'system', content: 'Anda guru Program Pendidikan Khas Integrasi di Malaysia yang menulis ulasan Pentaksiran Bilik Darjah. Jawab terus dengan ulasan sahaja.' },
+    payload: JSON.stringify(Object.assign({ model: m, temperature: 0.5, max_tokens: 1500, messages: [
+      { role: 'system', content: 'Anda guru Program Pendidikan Khas Integrasi di Malaysia yang menulis ulasan Pentaksiran Bilik Darjah. Jawab terus dengan ulasan sahaja, ringkas dan padat.' },
       { role: 'user', content: prompt }] }, tambahan))
   }); } catch (e) { console.error(e); throw new Error(/permission|kebenaran/i.test(String(e)) ? 'AI bermasalah. Kod: AI-04' : 'AI bermasalah. Kod: AI-05'); }
     let j = {}; try { j = JSON.parse(r.getContentText()); } catch (e) {}
@@ -793,6 +795,7 @@ function aiUlasan_(b) {
     for (const m of calon) { const x = cuba(m); if (x.t) { res = x; guna = m; break; } if (BERHENTI(x.code)) { res = x; break; } }
   }
   if (res.t) {
+    res.t = ringkas_(res.t);
     if (guna !== model) { try { sh.getRange('B1').setValue(guna); sh.getRange('C1').setValue('Model "' + model + '" tidak berfungsi. Ditukar automatik ke "' + guna + '" pada ' + new Date()); } catch (e) {} }
     return res.t;
   }
@@ -800,6 +803,18 @@ function aiUlasan_(b) {
     403: 'akaun Groq tiada kebenaran', 429: 'had penggunaan percuma Groq dicapai — tunggu 1 minit dan cuba lagi', 413: 'permintaan terlalu panjang' };
   if (res.code !== 200) throw new Error('AI bermasalah. Kod: AI-' + res.code + (SEBAB[res.code] ? ' (' + SEBAB[res.code] + ')' : (res.code >= 500 ? ' (pelayan Groq sibuk — cuba sebentar lagi)' : '')));
   throw new Error('AI bermasalah. Kod: AI-03 (semua model AI tidak memberi jawapan — cuba sebentar lagi)');
+}
+/* Pastikan ulasan ringkas: maksimum 2 ayat, ~35 patah perkataan (tidak memotong di tengah ayat jika boleh). */
+function ringkas_(t) {
+  t = String(t || '').replace(/\s+/g, ' ').trim();
+  const ayat = t.match(/[^.!?]+[.!?]+/g) || [t];
+  let hasil = ayat.slice(0, 2).map(a => a.trim()).join(' ');
+  const kata = hasil.split(' ');
+  if (kata.length > 35) {
+    hasil = ayat[0].trim();
+    if (hasil.split(' ').length > 35) hasil = hasil.split(' ').slice(0, 35).join(' ').replace(/[,;:]$/, '') + '.';
+  }
+  return hasil;
 }
 /* Senarai model sembang Groq yang masih aktif, disusun ikut keutamaan (model biasa dahulu, model "berfikir" kemudian).
    Diambil terus dari Groq dan disimpan dalam cache 6 jam. */
