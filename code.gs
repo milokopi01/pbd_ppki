@@ -15,17 +15,25 @@
  *       Execute as : Me
  *       Who has access : Anyone
  *  4. Salin Web App URL (berakhir /exec) dan tampal di baris ke-5 index.html.
+ *  5. Kelas baharu / tahun baharu: buka menu "Kelas & Tahun" dalam aplikasi.
+ *     Sheet MURID & MARKAH baharu dicipta secara automatik; data tahun lepas kekal.
+ *  PENTING: selepas tampal kod baharu, buat Deploy > Manage deployments > Edit > New version.
  *  (Jika skrip TIDAK dibuka dari dalam Google Sheet, isi SPREADSHEET_ID di bawah.)
  * =====================================================================
  */
 const SPREADSHEET_ID = ''; // kosongkan jika skrip dibuka dari Extensions > Apps Script
 
 const SH = {
+  KELAS: '00_KELAS',
   TETAPAN: '01_TETAPAN', MURID: '02_MURID', MP: '03_MATA_PELAJARAN', MARKAH: '04_MARKAH',
   TAFSIRAN: '05_TAFSIRAN_TP', KEMAHIRAN: '06_PENYATAAN_KEMAHIRAN', BAHASA: '07_BAHASA_LABEL',
   RUJUKAN: '08_RUJUKAN', PANDUAN: '09_PANDUAN', LOG: '10_LOG'
 };
 const MARKAH_HEADERS = ['ID_MURID','KOD_MP','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','TP_KESELURUHAN','ULASAN_GURU_MP','DIKEMASKINI'];
+
+const KELAS_HEADERS = ['ID_KELAS','SESI','TAHUN','NAMA_KELAS','NAMA_GURU_KELAS','SHEET_MURID','SHEET_MARKAH','STATUS','DICIPTA'];
+// Tetapan yang berbeza bagi setiap kelas (disimpan dalam 00_KELAS, bukan 01_TETAPAN)
+const KELAS_KEYS = { SESI: 'SESI', TAHUN: 'TAHUN', KELAS: 'NAMA_KELAS', NAMA_GURU_KELAS: 'NAMA_GURU_KELAS' };
 
 function ss_() { return SPREADSHEET_ID ? SpreadsheetApp.openById(SPREADSHEET_ID) : SpreadsheetApp.getActiveSpreadsheet(); }
 function sheet_(name) {
@@ -74,19 +82,90 @@ function doGet(e) {
   try {
     const action = (e && e.parameter && e.parameter.action) || 'getAll';
     if (action === 'ping') return out_({ ok: true, msg: 'e-PBD API aktif' });
-    if (action === 'getAll') return out_({ ok: true, data: getAll_() });
+    if (action === 'getAll') return out_({ ok: true, data: getAll_(e.parameter.kelas) });
     return out_({ ok: false, error: 'Tindakan tidak dikenali: ' + action });
   } catch (err) { return out_({ ok: false, error: String(err.message || err) }); }
 }
 
-function getAll_() {
+/* ====================== KELAS & TAHUN (SESI) ======================
+ * Setiap kelas bagi setiap tahun mempunyai 2 sheet sendiri:
+ *   "MURID 2026 2 AL BIRUNI"  dan  "MARKAH 2026 2 AL BIRUNI"
+ * Senarai semua kelas (termasuk tahun-tahun lepas) disimpan dalam 00_KELAS.
+ * Data tahun lepas tidak dipadam, jadi sejarah PBD sentiasa boleh dibuka semula.
+ */
+function kelasSheet_() {
+  const ss = ss_(); let sh = ss.getSheetByName(SH.KELAS);
+  if (!sh) {
+    sh = ss.insertSheet(SH.KELAS, 0);
+    sh.getRange(1, 1, 1, KELAS_HEADERS.length).setValues([KELAS_HEADERS]).setFontWeight('bold').setBackground('#0f5257').setFontColor('#ffffff');
+    sh.setFrozenRows(1);
+  }
+  if (sh.getLastRow() < 2) { // pindahan automatik: daftar data sedia ada sebagai kelas pertama
+    const t = settings_();
+    if (ss.getSheetByName(SH.MURID)) {
+      const sesi = String(t.SESI || new Date().getFullYear()), tahun = String(t.TAHUN || ''), nama = String(t.KELAS || 'KELAS 1');
+      sh.appendRow([kelasId_(sesi, tahun, nama), sesi, tahun, nama, t.NAMA_GURU_KELAS || '', SH.MURID, SH.MARKAH, 'AKTIF', new Date()]);
+    }
+  }
+  return sh;
+}
+function kelasId_(sesi, tahun, nama) { return (String(sesi) + '-' + String(tahun) + '-' + String(nama)).toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_|_$/g, ''); }
+function senaraiKelas_() { kelasSheet_(); return readTable_(SH.KELAS); }
+function kelas_(id) {
+  const all = senaraiKelas_();
+  if (!all.length) throw new Error('Tiada kelas berdaftar. Sila tambah kelas dahulu.');
+  if (!id) { // lalai: kelas aktif terbaharu
+    const sorted = all.slice().sort((a, b) => (+b.SESI || 0) - (+a.SESI || 0));
+    return sorted.find(k => String(k.STATUS).toUpperCase() !== 'ARKIB') || sorted[0];
+  }
+  const k = all.find(x => String(x.ID_KELAS) === String(id));
+  if (!k) throw new Error('Kelas "' + id + '" tidak dijumpai.');
+  return k;
+}
+function safeName_(s) { return String(s).replace(/[\[\]\*\?\/\\:']/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 90); }
+
+function createKelas_(d) {
+  const sesi = String(d.SESI || '').trim(), tahun = String(d.TAHUN || '').trim(), nama = String(d.NAMA_KELAS || '').trim().toUpperCase();
+  if (!sesi || !nama) throw new Error('Sesi (tahun kalendar) dan nama kelas wajib diisi.');
+  const id = kelasId_(sesi, tahun, nama);
+  if (senaraiKelas_().some(k => k.ID_KELAS === id)) throw new Error('Kelas ' + tahun + ' ' + nama + ' bagi sesi ' + sesi + ' sudah wujud.');
+  const ss = ss_(); const label = safeName_(sesi + ' ' + tahun + ' ' + nama);
+  const shM = ss.insertSheet('MURID ' + label), shK = ss.insertSheet('MARKAH ' + label);
+  // tajuk lajur murid disalin dari 02_MURID supaya struktur sama
+  const tmpl = ss.getSheetByName(SH.MURID);
+  const mh = tmpl ? headers_(tmpl) : ['ID_MURID','BIL','NAMA_MURID','NAMA_RINGKAS','NO_MYKID','JANTINA','ULASAN_GURU_KELAS','AKTIF','CATATAN'];
+  [[shM, mh], [shK, MARKAH_HEADERS]].forEach(([sh, h]) => { sh.getRange(1, 1, 1, h.length).setValues([h]).setFontWeight('bold').setBackground('#0f5257').setFontColor('#ffffff'); sh.setFrozenRows(1); });
+  // pilihan: salin murid dari kelas lain (contoh: naik tahun) — rekod TP tidak disalin
+  if (d.SALIN_DARI) {
+    const src = kelas_(d.SALIN_DARI);
+    const rows = readTable_(src.SHEET_MURID).filter(r => String(r.AKTIF || 'YA').toUpperCase() !== 'TIDAK');
+    if (rows.length) shM.getRange(2, 1, rows.length, mh.length).setValues(rows.map(r => mh.map(h => h === 'ULASAN_GURU_KELAS' ? '' : (r[h] === undefined ? '' : r[h]))));
+  }
+  kelasSheet_().appendRow([id, sesi, tahun, nama, d.NAMA_GURU_KELAS || '', shM.getName(), shK.getName(), 'AKTIF', new Date()]);
+  return id;
+}
+function setStatusKelas_(id, status) {
+  const sh = kelasSheet_(); const k = kelas_(id); const hd = headers_(sh);
+  sh.getRange(k._row, hd.indexOf('STATUS') + 1).setValue(status);
+  return id;
+}
+function updateKelas_(id, data) { // simpan tetapan khusus kelas
+  const sh = kelasSheet_(); const k = kelas_(id); const hd = headers_(sh);
+  Object.keys(KELAS_KEYS).forEach(key => { if (data[key] !== undefined) sh.getRange(k._row, hd.indexOf(KELAS_KEYS[key]) + 1).setValue(data[key]); });
+}
+
+function getAll_(kelasId) {
+  const k = kelas_(kelasId);
   const set = settings_();
   delete set.ADMIN_PASSWORD; // kata laluan tidak dihantar ke pelayar
+  set.SESI = k.SESI; set.TAHUN = k.TAHUN; set.KELAS = k.NAMA_KELAS; set.NAMA_GURU_KELAS = k.NAMA_GURU_KELAS;
   return {
     tetapan: set,
-    murid: readTable_(SH.MURID),
+    kelasAktif: k,
+    senaraiKelas: senaraiKelas_(),
+    murid: readTable_(k.SHEET_MURID),
     mp: readTable_(SH.MP),
-    markah: readTable_(SH.MARKAH),
+    markah: readTable_(k.SHEET_MARKAH),
     tafsiran: readTable_(SH.TAFSIRAN),
     kemahiran: readTable_(SH.KEMAHIRAN),
     bahasa: readTable_(SH.BAHASA),
@@ -104,20 +183,23 @@ function doPost(e) {
     const a = body.action;
     if (a === 'login') { checkPass_(body.password); log_('LOGIN', 'Admin log masuk'); return out_({ ok: true }); }
     checkPass_(body.password);
-    let res;
+    let res; let kid = body.kelas;
+    const K = () => kelas_(kid);
     switch (a) {
-      case 'saveTetapan':   res = saveTetapan_(body.data); break;
-      case 'saveMurid':     res = upsert_(SH.MURID, 'ID_MURID', body.data, 'M'); break;
-      case 'deleteMurid':   res = deleteMurid_(body.id); break;
+      case 'createKelas':   res = kid = createKelas_(body.data); break;
+      case 'arkibKelas':    res = setStatusKelas_(body.id, body.status || 'ARKIB'); break;
+      case 'saveTetapan':   updateKelas_(K().ID_KELAS, body.data); res = saveTetapan_(body.data); break;
+      case 'saveMurid':     res = upsert_(K().SHEET_MURID, 'ID_MURID', body.data, 'M'); break;
+      case 'deleteMurid':   res = deleteMurid_(K(), body.id); break;
       case 'saveMP':        res = upsert_(SH.MP, 'KOD_MP', body.data, null); break;
       case 'deleteMP':      res = deleteMP_(body.id); break;
-      case 'saveMarkah':    res = saveMarkah_(body.kod, body.rows); break;
-      case 'saveUlasanKelas': res = saveUlasanKelas_(body.rows); break;
+      case 'saveMarkah':    res = saveMarkah_(K().SHEET_MARKAH, body.kod, body.rows); break;
+      case 'saveUlasanKelas': res = saveUlasanKelas_(K().SHEET_MURID, body.rows); break;
       case 'saveTafsiran':  res = saveTafsiran_(body.data); break;
       default: throw new Error('Tindakan tidak dikenali: ' + a);
     }
     log_(a, JSON.stringify(body.data || body.id || body.kod || '').slice(0, 300));
-    return out_({ ok: true, result: res, data: getAll_() });
+    return out_({ ok: true, result: res, data: getAll_(kid) });
   } catch (err) {
     return out_({ ok: false, error: String(err.message || err) });
   } finally { try { lock.releaseLock(); } catch (e) {} }
@@ -129,6 +211,7 @@ function saveTetapan_(data) {
   const sh = sheet_(SH.TETAPAN);
   const vals = sh.getDataRange().getValues();
   Object.keys(data || {}).forEach(k => {
+    if (KELAS_KEYS[k]) return; // disimpan dalam 00_KELAS
     if (k === 'ADMIN_PASSWORD' && !String(data[k]).trim()) return;
     let found = false;
     for (let i = 1; i < vals.length; i++) {
@@ -166,12 +249,13 @@ function deleteRowsWhere_(name, col, val) {
   const vals = sh.getDataRange().getValues();
   for (let i = vals.length - 1; i >= 1; i--) if (String(vals[i][c]) === String(val)) sh.deleteRow(i + 1);
 }
-function deleteMurid_(id) { deleteRowsWhere_(SH.MURID, 'ID_MURID', id); deleteRowsWhere_(SH.MARKAH, 'ID_MURID', id); return id; }
-function deleteMP_(kod) { deleteRowsWhere_(SH.MP, 'KOD_MP', kod); deleteRowsWhere_(SH.MARKAH, 'KOD_MP', kod); return kod; }
+function deleteMurid_(k, id) { deleteRowsWhere_(k.SHEET_MURID, 'ID_MURID', id); deleteRowsWhere_(k.SHEET_MARKAH, 'ID_MURID', id); return id; }
+function deleteMP_(kod) { // mata pelajaran dikongsi semua kelas; rekod TP lama dikekalkan sebagai sejarah
+  deleteRowsWhere_(SH.MP, 'KOD_MP', kod); return kod; }
 
-function saveMarkah_(kod, rows) {
+function saveMarkah_(sheetName, kod, rows) {
   if (!kod) throw new Error('Kod mata pelajaran tiada.');
-  const sh = sheet_(SH.MARKAH);
+  const sh = sheet_(sheetName);
   const hd = headers_(sh);
   const vals = sh.getDataRange().getValues();
   const idx = {};
@@ -192,8 +276,8 @@ function saveMarkah_(kod, rows) {
   return (rows || []).length;
 }
 
-function saveUlasanKelas_(rows) {
-  const sh = sheet_(SH.MURID); const hd = headers_(sh);
+function saveUlasanKelas_(sheetName, rows) {
+  const sh = sheet_(sheetName); const hd = headers_(sh);
   const cId = hd.indexOf('ID_MURID'), cU = hd.indexOf('ULASAN_GURU_KELAS');
   const vals = sh.getDataRange().getValues();
   (rows || []).forEach(r => {

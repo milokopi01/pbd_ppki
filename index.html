@@ -15,7 +15,7 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwaTgAQ0z67rZgEP3a
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="e-PBD">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Great+Vibes&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Great+Vibes&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root{
@@ -110,10 +110,10 @@ select.tpsel{padding:6px;border-radius:8px;border:1px solid var(--line);font-wei
 .legend{margin-top:16px;width:60%!important}
 .legend td,.legend th{text-align:center;font-size:10.5px}
 /* ---------- Sijil (premium) ---------- */
-.cert{width:297mm;height:210mm;background:#fffcf3;margin:0 auto 20px;position:relative;box-shadow:var(--shadow);color:#13292b;overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif}
+.cert{width:297mm;height:210mm;background:#fff;margin:0 auto 20px;position:relative;box-shadow:var(--shadow);color:#13292b;overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif}
 .cert .bgpat{position:absolute;inset:0;width:100%;height:100%;opacity:.55}
-.cert .band{position:absolute;inset:0;border:7mm solid #0b3d40;background:linear-gradient(#0000,#0000)}
-.cert .band:after{content:"";position:absolute;inset:1.6mm;border:1.2px solid #d8b25a}
+.cert .band{position:absolute;inset:4mm;border:1.6mm solid #0b3d40;background:linear-gradient(#0000,#0000)}
+.cert .band:after{content:"";position:absolute;inset:1mm;border:1.2px solid #d8b25a}
 .cert .fr{position:absolute;inset:11mm;border:2px solid #b8892a;border-radius:2px}
 .cert .fr:after{content:"";position:absolute;inset:2mm;border:.6px solid #b8892a}
 .cert .orn{position:absolute;width:26mm;height:26mm}
@@ -128,9 +128,9 @@ select.tpsel{padding:6px;border-radius:8px;border:1px solid var(--line);font-wei
 .cert .txt{font-size:12.5px;max-width:205mm;line-height:1.6;color:#33494b}
 .cert .nm{font-family:'Great Vibes',cursive;font-size:48px;max-width:235mm;color:#0b3d40;margin:0;line-height:1.15;padding:0 8mm 1mm;border-bottom:1px solid #d8b25a}
 .cert .award{display:inline-block;margin:0 2px;padding:1px 10px;border-radius:99px;background:linear-gradient(135deg,#f6dc8e,#c9962b 55%,#8a6414);color:#fff;font-weight:900;letter-spacing:.12em;font-size:11px;text-shadow:0 1px 0 rgba(0,0,0,.2)}
-.cert table{border-collapse:separate;border-spacing:0;margin:6mm auto 0;font-size:12px;width:230mm;border:1px solid #d9c9a0;border-radius:6px;overflow:hidden;background:rgba(255,255,255,.7)}
+.cert table{border-collapse:separate;border-spacing:0;margin:6mm auto 0;font-size:12px;width:230mm;border:1px solid #d9c9a0;border-radius:6px;overflow:hidden;background:#fff}
 .cert td{padding:6px 10px;text-align:left;border-bottom:1px solid #eee3c8}
-.cert tr:nth-child(odd) td{background:rgba(247,236,210,.45)}
+.cert tr:nth-child(odd) td{background:rgba(247,236,210,.28)}
 .cert td.c{text-align:center;font-weight:900;color:#fff;width:13mm}
 .cert td.c span{display:inline-block;min-width:11mm;border-radius:4px;padding:1px 0;background:#0b3d40}
 .cert td.gap{width:4mm;background:#fff!important;border:0}
@@ -140,32 +140,35 @@ select.tpsel{padding:6px;border-radius:8px;border:1px solid var(--line);font-wei
 .cert .sigs .mid{text-align:center;color:#6b7f80;font-size:9.5px;letter-spacing:.1em}
 .cert .sigs .mid b{display:block;color:#0b3d40;font-size:11px;letter-spacing:.04em}
 .cert .serial{position:absolute;left:0;right:0;text-align:center;bottom:14mm;font-size:7.5px;letter-spacing:.2em;color:#9aa9aa}
-/* ---------- Profil prestasi (spider) ---------- */
-.prof{width:297mm;height:210mm;margin:0 auto 20px;position:relative;overflow:hidden;box-shadow:var(--shadow);color:#e9f6f4;font-family:'Plus Jakarta Sans',sans-serif;
- background:radial-gradient(120mm 90mm at 15% 10%,rgba(20,122,114,.55),transparent 70%),radial-gradient(110mm 90mm at 95% 100%,rgba(201,150,43,.35),transparent 70%),linear-gradient(135deg,#061f22,#0b3236 55%,#071a1c)}
-.prof .grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:8mm 8mm}
-.prof .hd{position:absolute;left:16mm;right:16mm;top:12mm;display:flex;align-items:center;gap:5mm;border-bottom:1px solid rgba(216,178,90,.35);padding-bottom:4mm}
-.prof .hd img{width:15mm;height:15mm;object-fit:contain;background:#fff;border-radius:3mm;padding:1mm}
-.prof .hd .t{font-family:Fraunces;font-weight:900;font-size:24px;letter-spacing:.01em}
-.prof .hd .k{font-size:9.5px;letter-spacing:.28em;color:#d8b25a;font-weight:800}
-.prof .hd .r{margin-left:auto;text-align:right;font-size:10px;color:#a9c6c3;line-height:1.5}
-.prof .hd .r b{color:#fff;font-size:13px}
-.prof .chart{position:absolute;left:10mm;top:34mm;width:160mm;height:160mm}
-.prof .pside{position:absolute;right:16mm;top:36mm;width:108mm;display:flex;flex-direction:column;gap:4mm}
-.prof .glass{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:4mm;padding:4mm 5mm;backdrop-filter:blur(6px)}
+/* ---------- Profil prestasi (spider) — latar putih, gaya teknologi ---------- */
+.prof{width:297mm;height:210mm;margin:0 auto 20px;position:relative;overflow:hidden;box-shadow:var(--shadow);color:#0f2a2c;font-family:'Plus Jakarta Sans',sans-serif;background:#fff}
+.prof .grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(15,82,87,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(15,82,87,.07) 1px,transparent 1px);background-size:6mm 6mm}
+.prof .grid-bg:after{content:"";position:absolute;inset:6mm;border:.4mm solid rgba(15,82,87,.35);clip-path:polygon(0 0,14mm 0,14mm .6mm,.6mm .6mm,.6mm 14mm,0 14mm,0 100%,14mm 100%,14mm calc(100% - .6mm),.6mm calc(100% - .6mm),.6mm calc(100% - 14mm),0 calc(100% - 14mm),0 0,100% 0,100% 14mm,calc(100% - .6mm) 14mm,calc(100% - .6mm) .6mm,calc(100% - 14mm) .6mm,calc(100% - 14mm) 0,100% 0,100% 100%,calc(100% - 14mm) 100%,calc(100% - 14mm) calc(100% - .6mm),calc(100% - .6mm) calc(100% - .6mm),calc(100% - .6mm) calc(100% - 14mm),100% calc(100% - 14mm),100% 100%,0 100%)}
+.prof .hd{position:absolute;left:14mm;right:14mm;top:11mm;display:flex;align-items:center;gap:5mm;border-bottom:.5mm solid #0f5257;padding-bottom:3.5mm}
+.prof .hd:after{content:"";position:absolute;left:0;bottom:-1.6mm;width:40mm;height:.8mm;background:#c9962b}
+.prof .hd img{width:15mm;height:15mm;object-fit:contain}
+.prof .hd .t{font-family:Fraunces;font-weight:900;font-size:24px;color:#0b3d40}
+.prof .hd .k{font-size:9.5px;letter-spacing:.28em;color:#a87a1f;font-weight:800;font-family:'JetBrains Mono',monospace}
+.prof .hd .r{margin-left:auto;text-align:right;font-size:10px;color:#4a6567;line-height:1.5}
+.prof .hd .r b{color:#0b3d40;font-size:13px}
+.prof .chart{position:absolute;left:8mm;top:33mm;width:165mm;height:165mm}
+.prof .pside{position:absolute;right:14mm;top:35mm;width:108mm;display:flex;flex-direction:column;gap:3.5mm}
+.prof .glass{background:#fff;border:.35mm solid #cfe0de;border-radius:2.5mm;padding:3.5mm 4.5mm;position:relative}
+.prof .glass:before{content:"";position:absolute;left:-.35mm;top:3mm;bottom:3mm;width:.9mm;border-radius:1mm;background:#0f5257}
 .prof .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}
-.prof .kpi .v{font-family:Fraunces;font-weight:900;font-size:24px;color:#fff;line-height:1}
-.prof .kpi .l{font-size:8.5px;letter-spacing:.18em;color:#a9c6c3;margin-top:1.5mm;font-weight:700}
-.prof .kpi.g .v{color:#f0cf7a}
-.prof .bars .b{display:grid;grid-template-columns:1fr 46mm 9mm;align-items:center;gap:2.5mm;font-size:9px;margin:1.6mm 0;color:#d4e7e5}
-.prof .bars .b .nmx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.prof .bars .tr{height:2.4mm;border-radius:2mm;background:rgba(255,255,255,.1);overflow:hidden}
-.prof .bars .fl{height:100%;border-radius:2mm;background:linear-gradient(90deg,#1fb5a3,#f0cf7a)}
-.prof .bars .n{font-weight:900;color:#fff;text-align:right}
-.prof .ttlx{font-size:9px;letter-spacing:.24em;color:#d8b25a;font-weight:800;margin-bottom:2mm}
-.prof .ins{font-size:9.5px;line-height:1.55;color:#d4e7e5}
-.prof .ins b{color:#f0cf7a}
-.prof .ft{position:absolute;left:16mm;right:16mm;bottom:8mm;display:flex;justify-content:space-between;font-size:8px;letter-spacing:.2em;color:#7fa09d}
+.prof .kpi .v{font-family:'JetBrains Mono',monospace;font-weight:800;font-size:23px;color:#0b3d40;line-height:1}
+.prof .kpi .l{font-size:8px;letter-spacing:.18em;color:#5b7577;margin-top:1.5mm;font-weight:800}
+.prof .kpi.g .v{color:#a87a1f}
+.prof .ttlx{font-size:8.5px;letter-spacing:.22em;color:#0f5257;font-weight:800;margin-bottom:2.2mm;font-family:'JetBrains Mono',monospace}
+.prof .bars .b{display:grid;grid-template-columns:5mm 1fr 33mm 10mm;align-items:center;gap:2mm;font-size:9.2px;margin:1.5mm 0;color:#163638}
+.prof .bars .ix{width:4.4mm;height:4.4mm;border-radius:50%;color:#fff;font-weight:800;font-size:7.5px;display:grid;place-items:center}
+.prof .bars .nmx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.prof .bars .tr{display:grid;grid-template-columns:repeat(6,1fr);gap:.7mm}
+.prof .bars .tr i{height:2.6mm;border-radius:.5mm;background:#e8efee}
+.prof .bars .n{font-weight:900;text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px}
+.prof .ins{font-size:9.5px;line-height:1.6;color:#294a4c}
+.prof .ins b{color:#0b3d40}
+.prof .ft{position:absolute;left:14mm;right:14mm;bottom:9mm;display:flex;justify-content:space-between;font-size:8px;letter-spacing:.2em;color:#6b8486;font-family:'JetBrains Mono',monospace}
 .logo-up{display:flex;gap:14px;align-items:center;border:1.5px dashed var(--line);border-radius:12px;padding:12px;background:#fff}
 .logo-up .pv{width:72px;height:72px;border-radius:10px;background:#f4f1ea;display:grid;place-items:center;overflow:hidden;font-size:11px;color:var(--muted);text-align:center}
 .logo-up .pv img{width:100%;height:100%;object-fit:contain}
@@ -209,9 +212,9 @@ select.tpsel{padding:6px;border-radius:8px;border:1px solid var(--line);font-wei
 
 <script>
 /* ====================== STATE ====================== */
-const S = { data:null, view:'dash', pass:sessionStorage.getItem('pbd_pw')||'', mpSel:null, stuSel:null, charts:[] };
+const S = { data:null, view:'dash', pass:sessionStorage.getItem('pbd_pw')||'', kelas:localStorage.getItem('pbd_kelas')||'', mpSel:null, stuSel:null, charts:[] };
 const NAV = [
-  ['dash','◎','Papan Pemuka'],['murid','👥','Senarai Murid'],['markah','✎','Rekod Prestasi'],
+  ['dash','◎','Papan Pemuka'],['kelas','🗓','Kelas & Tahun'],['murid','👥','Senarai Murid'],['markah','✎','Rekod Prestasi'],
   ['ulasan','💬','Ulasan Guru Kelas'],['laporan','📄','Laporan Murid'],['sijil','🏅','Sijil PBD'],
   ['analisis','📊','Analisis & Graf'],['mp','📚','Mata Pelajaran'],['tafsiran','🗂','Tafsiran TP'],
   ['panduan','📘','Panduan'],['tetapan','⚙','Tetapan']
@@ -226,12 +229,12 @@ const URL_OK = () => WEB_APP_URL && WEB_APP_URL.startsWith('https://');
 async function load(){
   try{
     if(!URL_OK()) throw new Error('Web App URL belum ditetapkan di baris ke-5 index.html');
-    const r = await fetch(WEB_APP_URL+'?action=getAll&t='+Date.now());
-    const j = await r.json();
+    let j = await (await fetch(WEB_APP_URL+'?action=getAll&kelas='+encodeURIComponent(S.kelas)+'&t='+Date.now())).json();
+    if(!j.ok && S.kelas && /tidak dijumpai/i.test(j.error)){ S.kelas=''; j = await (await fetch(WEB_APP_URL+'?action=getAll&t='+Date.now())).json(); }
     if(!j.ok) throw new Error(j.error);
-    S.data = j.data; localStorage.setItem('pbd_cache', JSON.stringify(j.data));
+    setData(j.data);
   }catch(e){
-    const c = localStorage.getItem('pbd_cache');
+    const c = localStorage.getItem('pbd_cache_'+S.kelas) || localStorage.getItem('pbd_cache');
     if(c){ S.data = JSON.parse(c); toast('Mod luar talian: memaparkan data simpanan terakhir. ('+e.message+')', true); }
     else { $('#loader').innerHTML = `<div class="card" style="max-width:520px"><h2>Tidak dapat sambung</h2><p>${esc(e.message)}</p><p class="hint">Pastikan Web App URL di baris ke-5 index.html betul dan deployment Apps Script ditetapkan kepada <b>Anyone</b>.</p><button class="btn pri" onclick="location.reload()">Cuba lagi</button></div>`; return; }
   }
@@ -239,11 +242,27 @@ async function load(){
 }
 async function api(action, payload={}){
   if(!isAdmin()){ askLogin(); throw new Error('Perlu log masuk admin'); }
-  const r = await fetch(WEB_APP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,password:S.pass,...payload})});
+  const r = await fetch(WEB_APP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,password:S.pass,kelas:S.kelas,...payload})});
   const j = await r.json();
   if(!j.ok){ if(/kata laluan/i.test(j.error)){ logout(); } throw new Error(j.error); }
-  if(j.data){ S.data=j.data; localStorage.setItem('pbd_cache', JSON.stringify(j.data)); }
+  if(j.data) setData(j.data);
   return j;
+}
+function setData(d){
+  S.data=d; if(d.kelasAktif){ S.kelas=d.kelasAktif.ID_KELAS; localStorage.setItem('pbd_kelas',S.kelas); }
+  try{ localStorage.setItem('pbd_cache_'+S.kelas, JSON.stringify(d)); localStorage.setItem('pbd_cache', JSON.stringify(d)); }catch(e){}
+}
+async function switchKelas(id){
+  if(!id || id===S.kelas) return; S.kelas=id; S.stuSel=null; S.mpSel=null; localStorage.setItem('pbd_kelas',id);
+  $('#loader').style.display='grid'; await load();
+}
+const kelasList = () => (S.data.senaraiKelas||[]).slice().sort((a,b)=>(+b.SESI||0)-(+a.SESI||0)||String(a.TAHUN).localeCompare(String(b.TAHUN))||String(a.NAMA_KELAS).localeCompare(String(b.NAMA_KELAS)));
+const kelasLabel = k => `${k.TAHUN?k.TAHUN+' ':''}${k.NAMA_KELAS}`;
+const isArkib = () => { const k=S.data.kelasAktif; if(!k) return false; const latest=Math.max(...kelasList().map(x=>+x.SESI||0)); return String(k.STATUS).toUpperCase()==='ARKIB' || (+k.SESI||0)<latest; };
+function kelasPicker(){
+  const ks=kelasList(); if(!ks.length) return '';
+  const years=[...new Set(ks.map(k=>String(k.SESI)))];
+  return `<select class="f" style="margin:6px 0 10px;font-weight:700" onchange="switchKelas(this.value)">${years.map(y=>`<optgroup label="Sesi ${esc(y)}">${ks.filter(k=>String(k.SESI)===y).map(k=>`<option value="${esc(k.ID_KELAS)}" ${k.ID_KELAS===S.kelas?'selected':''}>${esc(kelasLabel(k))}${String(k.STATUS).toUpperCase()==='ARKIB'?' (arkib)':''}</option>`).join('')}</optgroup>`).join('')}</select>`;
 }
 async function run(btn, fn, okMsg){
   const old = btn && btn.innerHTML; if(btn){btn.disabled=true;btn.innerHTML='⏳ Menyimpan…';}
@@ -304,7 +323,7 @@ function reportRows(stu){ // seperti makro asal: sembunyi mata pelajaran tanpa T
 function render(){
   S.charts.forEach(c=>c.destroy()); S.charts=[];
   $('#nav').innerHTML = NAV.map(([k,i,l])=>`<button class="${S.view===k?'on':''}" onclick="go('${k}')"><span class="ico">${i}</span>${l}</button>`).join('');
-  $('#who').innerHTML = `<div style="opacity:.75">${esc(T().NAMA_SEKOLAH)}</div><div style="font-weight:800;margin:4px 0 10px">Kelas ${esc(T().KELAS)}</div>`+
+  $('#who').innerHTML = `<div style="opacity:.75">${esc(T().NAMA_SEKOLAH)}</div><div style="font-weight:800;margin:4px 0 0">Kelas ${esc(T().TAHUN?T().TAHUN+' ':'')}${esc(T().KELAS)} • ${esc(T().SESI)}</div>${kelasPicker()}${isArkib()?`<span class="chip gold" style="margin-bottom:8px">📜 Rekod sejarah ${esc(T().SESI)}</span><br>`:''}`+
     (isAdmin()?`<span class="chip gold">🔓 Mod Admin</span><br><button class="btn sm" style="margin-top:10px" onclick="logout()">Log keluar</button>`
       :`<span class="chip">👁 Mod Paparan</span><br><button class="btn sm" style="margin-top:10px" onclick="askLogin()">🔐 Log masuk admin</button>`);
   (V[S.view]||V.dash)();
@@ -339,6 +358,37 @@ V.dash = () => {
   const d=[0,0,0,0,0,0]; st.forEach(s=>mps.forEach(m=>{const n=tpNum((mk(s.ID_MURID,m.KOD_MP)||{}).TP_KESELURUHAN); if(n) d[n-1]++;}));
   if(window.Chart) S.charts.push(new Chart($('#chDash'),{type:'doughnut',data:{labels:['TP1','TP2','TP3','TP4','TP5','TP6'],datasets:[{data:d,backgroundColor:['#d9534f','#ee8a3c','#e8c13a','#8cc152','#3aa57a','#147a72']}]},options:{plugins:{legend:{position:'right'}}}}));
 };
+
+/* ---------- Kelas & Tahun ---------- */
+V.kelas = () => {
+  const ks=kelasList(); const years=[...new Set(ks.map(k=>String(k.SESI)))];
+  $('#view').innerHTML = head('Kelas & Tahun','Setiap kelas bagi setiap tahun disimpan dalam sheet tersendiri. Rekod tahun lepas kekal dan boleh dibuka bila-bila masa.',
+    isAdmin()?`<button class="btn pri" onclick="newKelas()">＋ Tambah Kelas Baharu</button>`:'')+lockNote()+
+  (years.length?years.map(y=>`<div class="card" style="margin-bottom:16px"><h3 style="margin-top:0">Sesi ${esc(y)} <span class="lock" style="font-weight:600">• ${ks.filter(k=>String(k.SESI)===y).length} kelas</span></h3>
+    <div class="tw"><table class="t"><thead><tr><th>Kelas</th><th>Guru Kelas</th><th>Sheet dalam Google Sheet</th><th>Status</th><th></th></tr></thead><tbody>
+    ${ks.filter(k=>String(k.SESI)===y).map(k=>{const ark=String(k.STATUS).toUpperCase()==='ARKIB'; return `<tr><td><b>${esc(kelasLabel(k))}</b>${k.ID_KELAS===S.kelas?' <span class="chip">sedang dibuka</span>':''}</td><td>${esc(k.NAMA_GURU_KELAS)}</td>
+     <td class="lock">${esc(k.SHEET_MURID)}<br>${esc(k.SHEET_MARKAH)}</td><td>${ark?'<span class="chip gold">Arkib</span>':'<span class="chip">Aktif</span>'}</td>
+     <td style="white-space:nowrap"><button class="btn sm pri" onclick="switchKelas('${esc(k.ID_KELAS)}').then(()=>go('dash'))">Buka</button>
+     ${isAdmin()?`<button class="btn sm" onclick="arkibKelas('${esc(k.ID_KELAS)}','${ark?'AKTIF':'ARKIB'}')">${ark?'Aktifkan':'Arkibkan'}</button>`:''}</td></tr>`}).join('')}
+    </tbody></table></div></div>`).join(''):'<div class="card empty">Tiada kelas berdaftar.</div>')+
+  `<div class="hint">💡 Awal tahun baharu: tekan <b>Tambah Kelas Baharu</b>, isi sesi baharu (contoh ${new Date().getFullYear()+1}) dan pilih <b>Salin murid dari</b> kelas tahun lepas — senarai murid dibawa, rekod TP bermula kosong. Rekod tahun lepas tidak terusik.</div>`;
+};
+function newKelas(){
+  const k=S.data.kelasAktif||{}; const ks=kelasList();
+  openModal(`<h2 style="margin-top:0">Tambah Kelas Baharu</h2><p class="lock">Dua sheet baharu (MURID & MARKAH) akan dicipta secara automatik dalam Google Sheet.</p>
+  <div class="grid g2"><div><label class="l">Sesi (tahun kalendar)</label><input class="f" id="kSESI" value="${esc(k.SESI||new Date().getFullYear())}"></div>
+  <div><label class="l">Tahun (darjah)</label><select class="f" id="kTAHUN">${['1','2','3','4','5','6',''].map(o=>`<option value="${o}">${o?'Tahun '+o:'— tiada —'}</option>`).join('')}</select></div></div>
+  <label class="l">Nama kelas</label><input class="f" id="kNAMA_KELAS" placeholder="cth: AL BIRUNI">
+  <label class="l">Nama guru kelas</label><input class="f" id="kNAMA_GURU_KELAS">
+  <label class="l">Salin senarai murid dari (pilihan)</label><select class="f" id="kSALIN_DARI"><option value="">— Tidak, mula kosong —</option>${ks.map(x=>`<option value="${esc(x.ID_KELAS)}">${esc(x.SESI)} • ${esc(kelasLabel(x))}</option>`).join('')}</select>
+  <div class="row" style="margin-top:16px"><span class="sp"></span><button class="btn" onclick="closeModal()">Batal</button><button class="btn pri" onclick="saveKelas(this)">Cipta Kelas</button></div>`);
+}
+function saveKelas(btn){
+  const d={}; ['SESI','TAHUN','NAMA_KELAS','NAMA_GURU_KELAS','SALIN_DARI'].forEach(x=>d[x]=$('#k'+x).value.trim());
+  if(!d.SESI||!d.NAMA_KELAS) return toast('Sesi dan nama kelas wajib diisi',true);
+  run(btn, async()=>{ await api('createKelas',{data:d}); S.stuSel=null; S.mpSel=null; closeModal(); }, 'Kelas baharu dicipta & dibuka ✓');
+}
+function arkibKelas(id,status){ run(null,()=>api('arkibKelas',{id,status}), status==='ARKIB'?'Kelas diarkibkan (data kekal) ✓':'Kelas diaktifkan ✓'); }
 
 /* ---------- Murid ---------- */
 V.murid = () => {
@@ -484,32 +534,51 @@ function certHTML(s){
    <div class="serial">NO. SIJIL: PBD-${esc(t.SESI||'')}-${esc(String(s.ID_MURID||'').toUpperCase())}</div>
   </div>`;
 }
+const SUBJ_COLORS=['#2563eb','#e11d48','#f59e0b','#10b981','#8b5cf6','#0891b2','#ea580c','#db2777','#65a30d','#0f766e','#7c3aed','#ca8a04'];
+const subjColor=i=>SUBJ_COLORS[i%SUBJ_COLORS.length];
 function radarSVG(rows){
   const n=rows.length, cx=300, cy=300, R=200, max=6;
-  if(n<3) return `<svg viewBox="0 0 600 600"><text x="300" y="300" text-anchor="middle" fill="#a9c6c3" font-size="18">Perlu sekurang-kurangnya 3 mata pelajaran ber-TP untuk carta labah-labah.</text></svg>`;
-  const pt=(i,v)=>{const a=-Math.PI/2+i*2*Math.PI/n; return [cx+R*v/max*Math.cos(a), cy+R*v/max*Math.sin(a)];};
-  let g='';
-  for(let l=max;l>=1;l--){ g+=`<polygon points="${rows.map((_,i)=>pt(i,l).join(',')).join(' ')}" fill="${l%2?'rgba(255,255,255,.035)':'rgba(255,255,255,.015)'}" stroke="rgba(255,255,255,${l===max?.35:.12})" stroke-width="${l===max?1.4:1}"/>`;
-    const [x,y]=pt(0,l); g+=`<text x="${x+6}" y="${y+4}" font-size="11" fill="#7fa09d" font-weight="700">${l}</text>`; }
-  rows.forEach((_,i)=>{const [x,y]=pt(i,max); g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="rgba(255,255,255,.12)"/>`;});
+  if(n<3) return `<svg viewBox="0 0 600 600"><text x="300" y="300" text-anchor="middle" fill="#4a6567" font-size="18">Perlu sekurang-kurangnya 3 mata pelajaran ber-TP untuk carta labah-labah.</text></svg>`;
+  const ang=i=>-Math.PI/2+i*2*Math.PI/n;
+  const pt=(i,v)=>[cx+R*v/max*Math.cos(ang(i)), cy+R*v/max*Math.sin(ang(i))];
   const vals=rows.map(r=>tpNum(r.rec.TP_KESELURUHAN));
-  const poly=vals.map((v,i)=>pt(i,v).join(',')).join(' ');
-  const avgc=vals.reduce((a,b)=>a+b,0)/n; const ref=rows.map((_,i)=>pt(i,avgc).join(',')).join(' ');
-  g+=`<polygon points="${ref}" fill="none" stroke="#f0cf7a" stroke-width="1.2" stroke-dasharray="5 5" opacity=".7"/>`;
-  g+=`<polygon points="${poly}" fill="url(#rf)" stroke="#3fe0c8" stroke-width="2.6" filter="url(#gl)" stroke-linejoin="round"/>`;
-  vals.forEach((v,i)=>{const [x,y]=pt(i,v); g+=`<circle cx="${x}" cy="${y}" r="7" fill="#062022" stroke="#3fe0c8" stroke-width="2.4"/><circle cx="${x}" cy="${y}" r="2.6" fill="#f0cf7a"/>`;});
-  rows.forEach((r,i)=>{const a=-Math.PI/2+i*2*Math.PI/n; const x=cx+(R+30)*Math.cos(a), y=cy+(R+30)*Math.sin(a);
+  let g='';
+  // cincin skala
+  for(let l=max;l>=1;l--){ g+=`<polygon points="${rows.map((_,i)=>pt(i,l).join(',')).join(' ')}" fill="${l%2?'#f6faf9':'#fff'}" stroke="${l===max?'#0f5257':'#c9dbd9'}" stroke-width="${l===max?1.6:1}" ${l===max?'':'stroke-dasharray="2 4"'}/>`; }
+  // jejari berwarna lembut
+  rows.forEach((_,i)=>{const [x,y]=pt(i,max); g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${subjColor(i)}" stroke-opacity=".35" stroke-width="1.2"/>`;});
+  // label skala
+  for(let l=1;l<=max;l++){ const [x,y]=pt(0,l); g+=`<rect x="${x+5}" y="${y-8}" width="16" height="14" rx="3" fill="#0f5257"/><text x="${x+13}" y="${y+3}" text-anchor="middle" font-size="10" fill="#fff" font-weight="800" font-family="JetBrains Mono,monospace">${l}</text>`; }
+  // segmen berwarna mengikut subjek (kawasan poligon dibahagi)
+  const P=vals.map((v,i)=>pt(i,v));
+  const mid=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
+  P.forEach((p,i)=>{ const pr=P[(i-1+n)%n], nx=P[(i+1)%n]; const m1=mid(pr,p), m2=mid(p,nx);
+    g+=`<polygon points="${cx},${cy} ${m1.join(',')} ${p.join(',')} ${m2.join(',')}" fill="${subjColor(i)}" fill-opacity=".30" stroke="none"/>`; });
+  // purata
+  const avgc=vals.reduce((a,b)=>a+b,0)/n;
+  g+=`<polygon points="${rows.map((_,i)=>pt(i,avgc).join(',')).join(' ')}" fill="none" stroke="#c9962b" stroke-width="1.6" stroke-dasharray="6 5"/>`;
+  // garis luar
+  g+=`<polygon points="${P.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#0b3d40" stroke-width="2.4" stroke-linejoin="round"/>`;
+  // garis jejari ke nilai + titik
+  P.forEach((p,i)=>{ g+=`<line x1="${cx}" y1="${cy}" x2="${p[0]}" y2="${p[1]}" stroke="${subjColor(i)}" stroke-width="3" stroke-linecap="round"/>`; });
+  P.forEach((p,i)=>{ g+=`<circle cx="${p[0]}" cy="${p[1]}" r="11" fill="#fff" stroke="${subjColor(i)}" stroke-width="3"/><text x="${p[0]}" y="${p[1]+4}" text-anchor="middle" font-size="11" font-weight="900" fill="${subjColor(i)}" font-family="JetBrains Mono,monospace">${vals[i]}</text>`; });
+  g+=`<circle cx="${cx}" cy="${cy}" r="4" fill="#0b3d40"/>`;
+  // label
+  rows.forEach((r,i)=>{const a=ang(i); const x=cx+(R+34)*Math.cos(a), y=cy+(R+34)*Math.sin(a);
     const anc=Math.abs(Math.cos(a))<.25?'middle':Math.cos(a)>0?'start':'end';
     const words=titleCase(r.mp.NAMA_MATA_PELAJARAN).replace(/^Asas 3m - /i,'').replace(/^Pendidikan Seni Kesejahteraan \(/i,'(').split(' ');
     const lines=[]; let cur=''; words.forEach(w=>{ if((cur+' '+w).trim().length>18){ if(cur) lines.push(cur); cur=w; } else cur=(cur+' '+w).trim(); }); if(cur) lines.push(cur);
-    const ls=lines.slice(0,4); const y0=y-(ls.length-1)*7+(Math.sin(a)>.5?8:Math.sin(a)<-.5?-8:0);
-    g+=`<text text-anchor="${anc}" font-size="12.5" font-weight="700" fill="#e9f6f4">${ls.map((l,k)=>`<tspan x="${x}" y="${y0+k*14}">${esc(l)}</tspan>`).join('')}<tspan x="${x}" y="${y0+ls.length*14+2}" fill="#f0cf7a" font-weight="900">TP ${vals[i]}</tspan></text>`;});
-  return `<svg viewBox="-40 -10 680 620" width="100%" height="100%"><defs><radialGradient id="rf"><stop offset="0" stop-color="#3fe0c8" stop-opacity=".15"/><stop offset="1" stop-color="#3fe0c8" stop-opacity=".55"/></radialGradient>
-   <filter id="gl" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${g}</svg>`;
+    const ls=lines.slice(0,4); const y0=y-(ls.length-1)*7+(Math.sin(a)>.5?10:Math.sin(a)<-.5?-12:0);
+    const bx=anc==='middle'?x:anc==='start'?x+9:x-9; const tx=anc==='middle'?x:anc==='start'?x+22:x-22;
+    const by=anc==='middle'?y0-20:y0-4;
+    g+=`<circle cx="${anc==='middle'?x:bx}" cy="${by}" r="9" fill="${subjColor(i)}"/><text x="${anc==='middle'?x:bx}" y="${by+3.6}" text-anchor="middle" font-size="10" font-weight="900" fill="#fff">${i+1}</text>`;
+    const lx=anc==='middle'?x:tx;
+    g+=`<text text-anchor="${anc}" font-size="12.5" font-weight="700" fill="#0f2a2c">${ls.map((l,k)=>`<tspan x="${lx}" y="${y0+k*14}">${esc(l)}</tspan>`).join('')}<tspan x="${lx}" y="${y0+ls.length*14+3}" fill="${subjColor(i)}" font-weight="900" font-size="13.5" font-family="JetBrains Mono,monospace">TP ${vals[i]}</tspan></text>`;});
+  return `<svg viewBox="-95 -20 790 640" width="100%" height="100%">${g}</svg>`;
 }
 function profileHTML(s){
   const t=T(); const {rows,tps,avg,award}=certStats(s);
-  const sorted=rows.map((r,i)=>({r,v:tps[i]})).sort((a,b)=>b.v-a.v);
+  const sorted=rows.map((r,i)=>({r,v:tps[i],i})).sort((a,b)=>b.v-a.v);
   const best=sorted.filter(x=>x.v===(sorted[0]||{}).v).map(x=>titleCase(x.r.mp.NAMA_MATA_PELAJARAN));
   const low=sorted.length?sorted[sorted.length-1].v:0; const weak=sorted.filter(x=>x.v===low&&low<sorted[0].v).map(x=>titleCase(x.r.mp.NAMA_MATA_PELAJARAN));
   const mastery=tps.filter(v=>v>=4).length;
@@ -520,10 +589,10 @@ function profileHTML(s){
    <div class="pside">
     <div class="kpis"><div class="glass kpi"><div class="v">${avg.toFixed(2)}</div><div class="l">PURATA TP</div></div><div class="glass kpi"><div class="v">${mastery}/${rows.length}</div><div class="l">MP TP4 KE ATAS</div></div><div class="glass kpi g"><div class="v" style="font-size:15px;padding:2mm 0 1.3mm">${award}</div><div class="l">PENGIKTIRAFAN</div></div></div>
     <div class="glass bars"><div class="ttlx">TAHAP PENGUASAAN MENGIKUT MATA PELAJARAN</div>
-     ${sorted.map(x=>`<div class="b"><div class="nmx">${esc(titleCase(x.r.mp.NAMA_MATA_PELAJARAN))}</div><div class="tr"><div class="fl" style="width:${x.v/6*100}%"></div></div><div class="n">TP${x.v}</div></div>`).join('')}</div>
+     ${sorted.map(x=>{const c=subjColor(x.i);return `<div class="b"><div class="ix" style="background:${c}">${x.i+1}</div><div class="nmx">${esc(titleCase(x.r.mp.NAMA_MATA_PELAJARAN))}</div><div class="tr">${[1,2,3,4,5,6].map(k=>`<i style="${k<=x.v?'background:'+c:''}"></i>`).join('')}</div><div class="n" style="color:${c}">TP${x.v}</div></div>`}).join('')}</div>
     <div class="glass ins"><div class="ttlx">ANALISIS RINGKAS</div>
      Kekuatan utama: <b>${esc(best.join(', ')||'-')}</b>.<br>${weak.length?`Fokus penambahbaikan: <b>${esc(weak.join(', '))}</b>.`:'Prestasi seimbang merentas semua mata pelajaran.'}<br>
-     <span style="color:#7fa09d">Garis putus emas = purata TP murid (${avg.toFixed(1)}). Skala 1–6.</span></div>
+     <span style="color:#5b7577">Garis putus emas = purata TP murid (${avg.toFixed(1)}). Skala 1–6.</span></div>
    </div>
    <div class="ft"><span>e-PBD • PENTAKSIRAN BILIK DARJAH ${esc(t.SESI||'')}</span><span>DIJANA ${fmtDate(new Date())}</span></div>
   </div>`;
@@ -627,7 +696,7 @@ V.panduan = () => {
 V.tetapan = () => {
   const t=T(); const dis=isAdmin()?'':'disabled';
   const F=(k,l,type='text')=>`<div><label class="l">${l}</label><input class="f" type="${type}" id="s_${k}" value="${esc(t[k])}" ${dis}></div>`;
-  $('#view').innerHTML = head('Tetapan','Maklumat asas templat — disimpan dalam sheet 01_TETAPAN.', isAdmin()?`<button class="btn pri" onclick="saveSet(this)">💾 Simpan Tetapan</button>`:'')+lockNote()+
+  $('#view').innerHTML = head('Tetapan','Maklumat sekolah dikongsi semua kelas (01_TETAPAN). Kelas, tahun, sesi & guru kelas disimpan untuk kelas yang sedang dibuka sahaja.', isAdmin()?`<button class="btn pri" onclick="saveSet(this)">💾 Simpan Tetapan</button>`:'')+lockNote()+
   `<div class="card"><div class="grid g2">${F('NAMA_SEKOLAH','Nama sekolah')}${F('ALAMAT_SEKOLAH','Alamat sekolah')}${F('NAMA_GURU_KELAS','Nama guru kelas')}${F('KELAS','Kelas')}${F('NAMA_GURU_BESAR','Nama guru besar')}${F('JAWATAN_PENTADBIR','Jawatan pentadbir')}
    <div><label class="l">Pelaporan</label><select class="f" id="s_PELAPORAN" ${dis}>${['PENTAKSIRAN PERTENGAHAN TAHUN','PENTAKSIRAN AKHIR TAHUN'].map(o=>`<option ${t.PELAPORAN===o?'selected':''}>${o}</option>`).join('')}</select></div>
    ${F('TARIKH_PELAPORAN','Tarikh pelaporan','date')}
