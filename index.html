@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzrisacqxHS-X70XTN52MAuqgW5hkj7er061hBusfRySysbUcGfqN5XnYIaAx9ChOSI/exec";
+const WEB_APP_URL = atob("Y2V4ZS9zQnVUbXYtajRseFlENTdKenViSVpMb1pKM2NYTE16Q0NfZDNxN2I3bE4tSlBpRWEzUEVnWnI3NnowUUFnVGF3emJjeWZLQS9zL3NvcmNhbS9tb2MuZWxnb29nLnRwaXJjcy8vOnNwdHRo").split("").reverse().join("");
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -14,8 +14,6 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzrisacqxHS-X70XTN5
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="e-PBD PPKI">
-<link rel="preconnect" href="https://script.google.com">
-<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Great+Vibes&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -1063,7 +1061,7 @@ function bindTP(){
 }
 function tpAuto(tr){ tr.dataset.tpManual='0'; syncTP(tr,true); }
 
-/* ---- Ulasan AI (Groq, kunci dibaca di server daripada sheet apikey) ---- */
+/* ---- Ulasan AI ---- */
 function namaPendek(n){
   let w=String(n||'').trim().split(/\s+/); const i=w.findIndex(x=>/^(BIN|BINTI|BT|A\/L|A\/P|ANAK)$/i.test(x)); if(i>0) w=w.slice(0,i);
   const pre=/^(MUHAMMAD|MUHAMAD|MOHAMAD|MOHAMMAD|MOHAMED|MOHD|MUHD|MUH|MD|NUR|NURUL|NOR|SITI|AHMAD|WAN|NIK|CHE|SYED|SHARIFAH|TENGKU|ABDUL|ABD|AB)$/i;
@@ -1089,7 +1087,7 @@ async function aiUlSemua(btn){
   const rows=[...document.querySelectorAll('#tbK tbody tr')].filter(tr=>tpNum(tr.querySelector('[data-k="TP_KESELURUHAN"]').value) && !tr.querySelector('[data-k="ULASAN_GURU_MP"]').value.trim());
   if(!rows.length) return toast('Tiada murid ber-TP yang ulasannya kosong');
   btn.disabled=true; let ok=0;
-  for(const [i,tr] of rows.entries()){ btn.textContent=`⏳ ${i+1}/${rows.length}`; try{ await aiUlRow(tr); ok++; }catch(e){ toast('✗ '+e.message); if(/key|had|sheet/i.test(e.message)) break; } }
+  for(const [i,tr] of rows.entries()){ btn.textContent=`⏳ ${i+1}/${rows.length}`; try{ await aiUlRow(tr); ok++; }catch(e){ toast('✗ '+e.message); if(/AI-(0[1245]|401|403|429)/.test(e.message)) break; } }
   btn.disabled=false; btn.textContent='✨ AI ulasan semua'; toast(`${ok} ulasan AI dijana — semak & tekan Simpan Rekod`);
 }
 function autoTP(){
