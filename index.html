@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbww-SsawRAYoS9P8ZIs0B2tEPeqotlO5k_U3uoCwnzg7GgzaKghoE-mm8dK07SK8RE4/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwaTgAQ0z67rZgEP3aEiPJ-Nl7b7q3d_CCzMLXc3JZoLZIbuzJ75DYxl4j-vmTuBs/exec";
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -1326,7 +1326,9 @@ V.tetapan = () => {
   const F=(k,l,type='text')=>`<div><label class="l">${l}</label><input class="f" type="${type}" id="s_${k}" value="${esc(t[k])}" ${dis}></div>`;
   $('#view').innerHTML = head('Tetapan','Maklumat sekolah dikongsi semua kelas. Kelas, tahun, sesi & guru kelas disimpan untuk kelas yang sedang dibuka sahaja.', isAdmin()?`<button class="btn pri" onclick="saveSet(this)">💾 Simpan Tetapan</button>`:'')+lockNote()+
   `<div class="card"><div class="grid g2">${F('NAMA_SEKOLAH','Nama sekolah')}${F('ALAMAT_SEKOLAH','Alamat sekolah')}${F('NAMA_GURU_KELAS','Nama guru kelas')}${F('KELAS','Kelas')}${F('NAMA_GURU_BESAR','Nama guru besar')}${F('JAWATAN_PENTADBIR','Jawatan pentadbir')}
-   <div><label class="l">Pelaporan</label><select class="f" id="s_PELAPORAN" ${dis}>${['PENTAKSIRAN PERTENGAHAN TAHUN','PENTAKSIRAN AKHIR TAHUN'].map(o=>`<option ${t.PELAPORAN===o?'selected':''}>${o}</option>`).join('')}</select></div>
+   <div style="grid-column:1/-1"><label class="l">Sesi pelaporan (dicetak 2 kali setahun)</label><input type="hidden" id="s_PELAPORAN" value="${isTengah()?'PENTAKSIRAN PERTENGAHAN TAHUN':'PENTAKSIRAN AKHIR TAHUN'}">
+    <div class="row" style="gap:10px;flex-wrap:wrap">${[['PENTAKSIRAN PERTENGAHAN TAHUN','🌓 Pertengahan Tahun','Laporan Jun'],['PENTAKSIRAN AKHIR TAHUN','🌕 Akhir Tahun','Laporan Disember']].map(([v,l,h])=>{const on=(isTengah()?'PENTAKSIRAN PERTENGAHAN TAHUN':'PENTAKSIRAN AKHIR TAHUN')===v;return `<button type="button" class="btn ${on?'pri':''} pl-opt" data-v="${v}" ${dis} onclick="pickPel(this)" style="flex:1;min-width:200px;padding:14px;text-align:left;display:block"><b style="display:block;font-size:15px">${l}</b><small style="opacity:.8">${h}</small></button>`}).join('')}</div>
+    <div class="hint" style="margin-top:6px">Pilihan ini dipaparkan pada laporan murid, sijil dan profil prestasi. Tekan <b>Simpan Tetapan</b> selepas memilih.</div></div>
    ${F('TARIKH_PELAPORAN','Tarikh pelaporan','date')}
    <div><label class="l">Jenis sekolah</label><select class="f" id="s_JENIS_SEKOLAH" ${dis}>${['SEK KEB (SK)','SEK JENIS KEB (SJK)','PENDIDIKAN KHAS','INKLUSIF'].map(o=>`<option ${t.JENIS_SEKOLAH===o?'selected':''}>${o}</option>`).join('')}</select></div>
    <div><label class="l">Bahasa laporan</label><select class="f" id="s_BAHASA_LAPORAN" ${dis}>${['SK','SJKC','SJKT'].map(o=>`<option ${lang()===o?'selected':''}>${o}</option>`).join('')}</select></div>
@@ -1336,6 +1338,7 @@ V.tetapan = () => {
    ${isAdmin()&&!isMaster()?`<div><label class="l">Kata laluan akaun anda yang baharu (kosong = kekal)</label><input class="f" type="password" id="s_ADMIN_PASSWORD"></div>`:''}
   </div></div>`;
 };
+function pickPel(b){ $('#s_PELAPORAN').value=b.dataset.v; document.querySelectorAll('.pl-opt').forEach(x=>x.classList.toggle('pri',x===b)); }
 function setLogo(url){ $('#s_LOGO_URL').value=url; $('#logoPv').innerHTML=url?`<img src="${url}">`:'Tiada logo'; }
 function pickLogo(inp){
   const f=inp.files[0]; if(!f) return;
