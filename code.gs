@@ -762,50 +762,65 @@ function aiUlasan_(b) {
     'Sebut nama murid. Puji bidang yang kuat (TP tinggi), nyatakan bidang yang perlu dibimbing (TP rendah) dan beri satu cadangan ringkas di rumah. ' +
     'Nada positif, sesuai murid pendidikan khas. Skala: TP1 sangat terhad, TP2 terhad, TP3 memuaskan, TP4 baik, TP5 sangat baik, TP6 cemerlang. ' +
     'Jawab dengan ulasan sahaja tanpa tajuk atau tanda petik.';
-  const panggil = m => { let r; try { r = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
+  // Tetapan khas ikut jenis model: model "berfikir" (gpt-oss, qwen3, deepseek) perlu ruang token lebih
+  // dan pemikirannya disembunyikan, jika tidak jawapan kosong (AI-03).
+  const extra = m => /gpt-oss/i.test(m) ? { reasoning_effort: 'low', include_reasoning: false }
+    : /qwen3|deepseek|r1/i.test(m) ? { reasoning_format: 'hidden' } : {};
+  const fetchAI = (m, tambahan) => { let r; try { r = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'post', contentType: 'application/json', muteHttpExceptions: true,
     headers: { Authorization: 'Bearer ' + key },
-    payload: JSON.stringify({ model: m, temperature: 0.7, max_tokens: 300, messages: [
-      { role: 'system', content: 'Anda guru Program Pendidikan Khas Integrasi di Malaysia yang menulis ulasan Pentaksiran Bilik Darjah.' },
-      { role: 'user', content: prompt }] })
+    payload: JSON.stringify(Object.assign({ model: m, temperature: 0.7, max_tokens: 1500, messages: [
+      { role: 'system', content: 'Anda guru Program Pendidikan Khas Integrasi di Malaysia yang menulis ulasan Pentaksiran Bilik Darjah. Jawab terus dengan ulasan sahaja.' },
+      { role: 'user', content: prompt }] }, tambahan))
   }); } catch (e) { console.error(e); throw new Error(/permission|kebenaran/i.test(String(e)) ? 'AI bermasalah. Kod: AI-04' : 'AI bermasalah. Kod: AI-05'); }
     let j = {}; try { j = JSON.parse(r.getContentText()); } catch (e) {}
     return { code: r.getResponseCode(), j: j };
   };
-  let res = panggil(model);
-  // Model dalam B1 sudah ditamatkan / tiada (404 atau model_decommissioned): pilih model aktif secara automatik
-  const modelMati = x => x.code === 404 || (x.code === 400 && /decommission|not exist|model_not_found|does not exist/i.test(JSON.stringify(x.j.error || '')));
-  if (modelMati(res)) {
-    console.error('AI model "' + model + '" tidak tersedia: ' + JSON.stringify(res.j.error || ''));
-    const ganti = modelGroqAktif_(key, model);
-    if (ganti) {
-      res = panggil(ganti);
-      if (res.code === 200) { try { sh.getRange('B1').setValue(ganti); sh.getRange('C1').setValue('Model lama "' + model + '" ditamatkan oleh Groq. Ditukar automatik ke "' + ganti + '" pada ' + new Date()); } catch (e) {} }
-    }
+  const teks_ = j => String((((j.choices || [])[0] || {}).message || {}).content || '')
+    .replace(/<think>[\s\S]*?(<\/think>|$)/gi, '').trim().replace(/^["'“”]+|["'“”]+$/g, '').trim();
+  const cuba = m => { // satu model: dengan tetapan khas, kemudian tanpa (jika Groq tolak parameter)
+    let x = fetchAI(m, extra(m));
+    if (x.code === 400 && Object.keys(extra(m)).length && !/decommission|not exist|model_not_found/i.test(JSON.stringify(x.j.error || ''))) x = fetchAI(m, {});
+    x.t = x.code === 200 ? teks_(x.j) : '';
+    if (x.code !== 200 || !x.t) console.error('AI [' + m + '] ' + x.code + ': ' + JSON.stringify(x.j.error || (((x.j.choices || [])[0] || {}).finish_reason) || '').slice(0, 300));
+    return x;
+  };
+  // 1) cuba model dalam B1; 2) jika gagal (model ditamatkan / jawapan kosong / ralat pelayan) cuba model aktif lain
+  const BERHENTI = c => c === 401 || c === 403 || c === 429 || c === 413; // kunci salah / had penggunaan: model lain tidak membantu
+  let res = cuba(model), guna = model;
+  if (!res.t && !BERHENTI(res.code)) {
+    const calon = modelGroqSenarai_(key).filter(id => id !== model).slice(0, 4);
+    for (const m of calon) { const x = cuba(m); if (x.t) { res = x; guna = m; break; } if (BERHENTI(x.code)) { res = x; break; } }
   }
-  const code = res.code, j = res.j;
-  if (code !== 200) { console.error('AI ' + code + ': ' + ((j.error && j.error.message) || '')); throw new Error('AI bermasalah. Kod: AI-' + code); }
-  const t = String(((j.choices || [])[0] || {}).message && j.choices[0].message.content || '').trim().replace(/^["']|["']$/g, '');
-  if (!t) throw new Error('AI bermasalah. Kod: AI-03');
-  return t;
+  if (res.t) {
+    if (guna !== model) { try { sh.getRange('B1').setValue(guna); sh.getRange('C1').setValue('Model "' + model + '" tidak berfungsi. Ditukar automatik ke "' + guna + '" pada ' + new Date()); } catch (e) {} }
+    return res.t;
+  }
+  const SEBAB = { 401: 'API key Groq di sel A1 salah atau telah dipadam — jana kunci baharu di console.groq.com/keys',
+    403: 'akaun Groq tiada kebenaran', 429: 'had penggunaan percuma Groq dicapai — tunggu 1 minit dan cuba lagi', 413: 'permintaan terlalu panjang' };
+  if (res.code !== 200) throw new Error('AI bermasalah. Kod: AI-' + res.code + (SEBAB[res.code] ? ' (' + SEBAB[res.code] + ')' : (res.code >= 500 ? ' (pelayan Groq sibuk — cuba sebentar lagi)' : '')));
+  throw new Error('AI bermasalah. Kod: AI-03 (semua model AI tidak memberi jawapan — cuba sebentar lagi)');
 }
-/* Cari model sembang Groq yang masih aktif (senarai diambil terus dari Groq, disimpan dalam cache 6 jam) */
-const GROQ_PILIHAN = ['llama-3.3-70b-versatile', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'meta-llama/llama-4-maverick-17b-128e-instruct', 'meta-llama/llama-4-scout-17b-16e-instruct', 'qwen/qwen3-32b', 'llama-3.1-8b-instant'];
-function modelGroqAktif_(key, kecuali) {
+/* Senarai model sembang Groq yang masih aktif, disusun ikut keutamaan (model biasa dahulu, model "berfikir" kemudian).
+   Diambil terus dari Groq dan disimpan dalam cache 6 jam. */
+const GROQ_PILIHAN = ['llama-3.3-70b-versatile', 'meta-llama/llama-4-maverick-17b-128e-instruct', 'meta-llama/llama-4-scout-17b-16e-instruct', 'llama-3.1-8b-instant', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3-32b'];
+function modelGroqSenarai_(key) {
   const c = CacheService.getScriptCache();
   let ids = null; try { ids = JSON.parse(c.get('GROQ_MODELS') || 'null'); } catch (e) {}
   if (!ids) {
     try {
       const r = UrlFetchApp.fetch('https://api.groq.com/openai/v1/models', { muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + key } });
-      if (r.getResponseCode() !== 200) return '';
-      ids = (JSON.parse(r.getContentText()).data || []).filter(m => m.active !== false).map(m => String(m.id));
-      try { c.put('GROQ_MODELS', JSON.stringify(ids), 21600); } catch (e) {}
-    } catch (e) { return ''; }
+      if (r.getResponseCode() === 200) {
+        ids = (JSON.parse(r.getContentText()).data || []).filter(m => m.active !== false).map(m => String(m.id));
+        try { c.put('GROQ_MODELS', JSON.stringify(ids), 21600); } catch (e) {}
+      }
+    } catch (e) {}
   }
-  ids = ids.filter(id => id !== kecuali);
-  const p = GROQ_PILIHAN.find(id => ids.indexOf(id) > -1);
-  return p || ids.find(id => !/whisper|tts|guard|playai|orpheus|distil|compound|allam/i.test(id)) || '';
+  if (!ids) return GROQ_PILIHAN.slice(); // tidak dapat senarai: cuba pilihan lalai
+  const sembang = ids.filter(id => !/whisper|tts|guard|playai|orpheus|distil|compound|allam/i.test(id));
+  return GROQ_PILIHAN.filter(id => sembang.indexOf(id) > -1).concat(sembang.filter(id => GROQ_PILIHAN.indexOf(id) < 0));
 }
+function modelGroqAktif_(key, kecuali) { return modelGroqSenarai_(key).filter(id => id !== kecuali)[0] || ''; }
 
 /* Jalankan SEKALI dari editor Apps Script (pilih fungsi ini > Run) untuk memberi kebenaran sambungan ke Groq. */
 function benarkanAI() {
