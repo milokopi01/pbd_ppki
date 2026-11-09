@@ -743,15 +743,14 @@ function saveTafsiran_(d, kod, tahap) {
 function testSambungan() { migrasiSKBenut(); Logger.log(JSON.stringify(getAll_('', { KOD_SEKOLAH: KOD_ASAL, NAMA_GURU: 'UJIAN', EMEL: '' })).slice(0, 1500)); }
 
 /* ===================== ULASAN AI (Groq) =====================
- * Sheet "apikey": A1 = kunci API, B1 = nama model bahasa.
+ * Sheet "apikey": A1 = kunci API Groq, B2 = nama model (cth: llama-3.3-70b-versatile).
  * Hanya nama singkatan murid + TP dihantar ke AI (tiada MyKid / nama penuh). */
 function aiUlasan_(b) {
   const sh = ss_().getSheetByName('apikey');
   if (!sh) throw new Error('AI bermasalah. Kod: AI-01');
   const key = String(sh.getRange('A1').getValue() || '').trim();
-  const model = String(sh.getRange('B1').getValue() || '').trim();
+  const model = String(sh.getRange('B2').getValue() || '').trim() || 'llama-3.3-70b-versatile';
   if (!key) throw new Error('AI bermasalah. Kod: AI-02');
-  if (!model) throw new Error('AI bermasalah. Kod: AI-06');
   const nama = String(b.nama || 'Murid').slice(0, 40);
   const mp = String(b.mp || '').slice(0, 120);
   const bid = (Array.isArray(b.bidang) ? b.bidang : []).slice(0, 12)
