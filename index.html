@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw7TN_LAHPdAjrOC9322oVNMfZyQyV14h8ITLxgClxr3FeXW7XxKsOt9NCU-9iFWDHl/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwaTgAQ0z67rZgEP3aEiPJ-Nl7b7q3d_CCzMLXc3JZoLZIbuzJ75DYxl4j-vmTuBs/exec";
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -265,16 +265,24 @@ table.t tr:hover td{background:rgba(255,255,255,.7)}
 
 <script>
 /* ====================== STATE ====================== */
-const S = { data:null, view:'dash', pass:sessionStorage.getItem('pbd_pw')||'', kelas:localStorage.getItem('pbd_kelas')||'', mpSel:null, stuSel:null, charts:[] };
+const S = { data:null, view:'dash', emel:localStorage.getItem('pbd_emel')||'', token:localStorage.getItem('pbd_token')||'', kelas:localStorage.getItem('pbd_kelas')||'', sekolah:localStorage.getItem('pbd_sekolah')||'', mpSel:null, stuSel:null, charts:[] };
+try{ sessionStorage.removeItem('pbd_pw'); localStorage.removeItem('pbd_cache'); }catch(e){} // bersihkan data versi lama
 const NAV = [
-  ['dash','◎','Papan Pemuka'],['kelas','🗓','Kelas & Tahun'],['murid','👥','Senarai Murid'],['markah','✎','Rekod Prestasi'],
+  ['dash','◎','Papan Pemuka'],['akaun','🛡','Akaun Pengguna'],['kelas','🗓','Kelas & Tahun'],['murid','👥','Senarai Murid'],['markah','✎','Rekod Prestasi'],
   ['ulasan','💬','Ulasan Guru Kelas'],['laporan','📄','Laporan Murid'],['sijil','🏅','Sijil PBD'],
   ['analisis','📊','Analisis & Graf'],['mp','📚','Mata Pelajaran'],['tafsiran','🗂','Tafsiran TP'],
   ['panduan','📘','Panduan'],['tetapan','⚙','Tetapan']
 ];
 const $ = s => document.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const isAdmin = () => !!S.pass;
+const isAdmin = () => !!S.token;
+/* ---------- MASTER ADMIN & BANTUAN ---------- */
+const MASTER_EMEL = 'MASTER_ADMIN';
+const WASAP_ADMIN = '01110661077';
+const isMaster = () => !!(S.data && S.data.guru && S.data.guru.MASTER);
+const waNo = t => { let d=String(t||'').replace(/\D/g,''); if(d.startsWith('0')) d='6'+d; return d; };
+const waLink = (t,msg) => 'https://wa.me/'+waNo(t)+(msg?'?text='+encodeURIComponent(msg):'');
+const helpWA = (lbl) => `<a class="btn sm" style="text-decoration:none" target="_blank" rel="noopener" href="${waLink(WASAP_ADMIN,'Salam Master Admin e-PBD, saya perlukan bantuan: ')}">${lbl||('💬 WhatsApp Master Admin '+WASAP_ADMIN)}</a>`;
 function toast(msg, err){ const t=$('#toast'); t.textContent=msg; t.className='toast show'+(err?' err':''); clearTimeout(t._h); t._h=setTimeout(()=>t.className='toast',3200); }
 
 /* ====================== API ====================== */
@@ -282,32 +290,50 @@ const URL_OK = () => WEB_APP_URL && WEB_APP_URL.startsWith('https://');
 async function load(){
   try{
     if(!URL_OK()) throw new Error('Web App URL belum ditetapkan di baris ke-5 index.html');
-    let j = await (await fetch(WEB_APP_URL+'?action=getAll&kelas='+encodeURIComponent(S.kelas)+'&t='+Date.now())).json();
-    if(!j.ok && S.kelas && /tidak dijumpai/i.test(j.error)){ S.kelas=''; j = await (await fetch(WEB_APP_URL+'?action=getAll&t='+Date.now())).json(); }
+    if(!S.token){ showAuth('login'); return; }
+    let j = await post({action:'getAll',emel:S.emel,token:S.token,kelas:S.kelas,sekolah:S.sekolah});
+    if(!j.ok && S.kelas && /tidak dijumpai/i.test(j.error)){ S.kelas=''; j = await post({action:'getAll',emel:S.emel,token:S.token,kelas:'',sekolah:S.sekolah}); }
+    if(!j.ok && /sesi tamat|log masuk/i.test(j.error)){ logout(); toast(j.error,true); return; }
     if(!j.ok) throw new Error(j.error);
     setData(j.data);
   }catch(e){
-    const c = localStorage.getItem('pbd_cache_'+S.kelas) || localStorage.getItem('pbd_cache');
+    const c = S.token && (localStorage.getItem(cacheKey(S.kelas)) || localStorage.getItem(cacheKey('')));
     if(c){ S.data = JSON.parse(c); toast('Mod luar talian: memaparkan data simpanan terakhir. ('+e.message+')', true); }
     else { $('#loader').innerHTML = `<div class="card" style="max-width:520px"><h2>Tidak dapat sambung</h2><p>${esc(e.message)}</p><p class="hint">Pastikan Web App URL di baris ke-5 index.html betul dan deployment Apps Script ditetapkan kepada <b>Anyone</b>.</p><button class="btn pri" onclick="location.reload()">Cuba lagi</button></div>`; return; }
   }
   $('#loader').style.display='none'; render();
 }
+async function post(body){
+  const r = await fetch(WEB_APP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+  return r.json();
+}
+const cacheKey = k => 'pbd_cache_'+S.emel+'_'+(k||'');
 async function api(action, payload={}){
-  if(!isAdmin()){ askLogin(); throw new Error('Perlu log masuk admin'); }
-  const r = await fetch(WEB_APP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,password:S.pass,kelas:S.kelas,...payload})});
-  const j = await r.json();
-  if(!j.ok){ if(/kata laluan/i.test(j.error)){ logout(); } throw new Error(j.error); }
+  if(!isAdmin()){ askLogin(); throw new Error('Perlu log masuk'); }
+  const j = await post({action,emel:S.emel,token:S.token,kelas:S.kelas,sekolah:S.sekolah,...payload});
+  if(!j.ok){ if(/sesi tamat/i.test(j.error)){ logout(); } throw new Error(j.error); }
+  if(j.token){ S.token=j.token; localStorage.setItem('pbd_token',j.token); }
   if(j.data) setData(j.data);
   return j;
 }
 function setData(d){
-  S.data=d; if(d.kelasAktif){ S.kelas=d.kelasAktif.ID_KELAS; localStorage.setItem('pbd_kelas',S.kelas); }
-  try{ localStorage.setItem('pbd_cache_'+S.kelas, JSON.stringify(d)); localStorage.setItem('pbd_cache', JSON.stringify(d)); }catch(e){}
+  S.data=d; S.kelas = d.kelasAktif ? d.kelasAktif.ID_KELAS : ''; localStorage.setItem('pbd_kelas',S.kelas);
+  if(d.guru && d.guru.MASTER){ S.sekolah = (d.tetapan&&d.tetapan.KOD_SEKOLAH)||''; localStorage.setItem('pbd_sekolah',S.sekolah); }
+  try{ localStorage.setItem(cacheKey(S.kelas), JSON.stringify(d)); localStorage.setItem(cacheKey(''), JSON.stringify(d)); }catch(e){}
 }
 async function switchKelas(id){
   if(!id || id===S.kelas) return; S.kelas=id; S.stuSel=null; S.mpSel=null; localStorage.setItem('pbd_kelas',id);
-  $('#loader').style.display='grid'; await load();
+  showLoading(); await load();
+}
+function showLoading(){ const L=$('#loader'); L.innerHTML='<div style="text-align:center"><div class="spin" style="margin:auto"></div><p class="serif" style="margin-top:16px;color:var(--brand)">Memuatkan data dari Google Sheet…</p></div>'; L.style.display='grid'; }
+async function switchSekolah(kod){ // Master Admin: buka data sekolah lain
+  kod=String(kod||'').toUpperCase(); if(!kod || kod===T().KOD_SEKOLAH) return;
+  S.sekolah=kod; S.kelas=''; S.stuSel=null; S.mpSel=null; localStorage.setItem('pbd_sekolah',kod); localStorage.removeItem('pbd_kelas');
+  showLoading(); await load();
+}
+function sekolahPicker(){
+  const sk=S.data.senaraiSekolah||[];
+  return `<select class="f" style="margin:6px 0 10px;font-weight:700" onchange="switchSekolah(this.value)">${sk.map(x=>`<option value="${esc(x.KOD)}" ${x.KOD===T().KOD_SEKOLAH?'selected':''}>${esc(x.KOD)} • ${esc(x.NAMA||'—')} (${x.GURU} guru)</option>`).join('')}</select>`;
 }
 const kelasList = () => (S.data.senaraiKelas||[]).slice().sort((a,b)=>(+b.SESI||0)-(+a.SESI||0)||String(a.TAHUN).localeCompare(String(b.TAHUN))||String(a.NAMA_KELAS).localeCompare(String(b.NAMA_KELAS)));
 const kelasLabel = k => `${k.TAHUN?k.TAHUN+' ':''}${k.NAMA_KELAS}`;
@@ -324,23 +350,66 @@ async function run(btn, fn, okMsg){
   finally{ if(btn){btn.disabled=false;btn.innerHTML=old;} }
 }
 
-/* ====================== AUTH ====================== */
-function askLogin(){
-  openModal(`<h2 style="margin-top:0">🔐 Log Masuk Admin</h2><p class="lock">Hanya admin boleh menambah murid, mata pelajaran dan mengisi rekod.</p>
-  <label class="l">Kata laluan</label><input type="password" class="f" id="pw" autofocus onkeydown="if(event.key==='Enter')doLogin(this)">
-  <div class="row" style="margin-top:16px"><span class="sp"></span><button class="btn" onclick="closeModal()">Batal</button><button class="btn pri" onclick="doLogin(this)">Log Masuk</button></div>`);
-  setTimeout(()=>$('#pw')&&$('#pw').focus(),50);
+/* ====================== AUTH (DAFTAR & LOG MASUK GURU) ====================== */
+const UP = `oninput="const p=this.selectionStart;this.value=this.value.toUpperCase();try{this.setSelectionRange(p,p)}catch(e){}" style="text-transform:uppercase"`;
+function authForm(mode){
+  const daftar = mode==='daftar', master = mode==='master';
+  const emelAwal = S.emel===MASTER_EMEL ? '' : S.emel;
+  const enter = `onkeydown="if(event.key==='Enter')doAuth('${mode}',document.getElementById('a_btn'))"`;
+  return `<div style="text-align:center;margin-bottom:14px"><img src="icon-192.png" alt="" style="width:64px;height:64px;border-radius:16px" onerror="this.style.display='none'">
+   <h2 style="margin:8px 0 2px">e-PBD Malaysia</h2><p class="lock" style="margin:0">Sistem Pelaporan Pentaksiran Bilik Darjah untuk semua sekolah</p></div>
+   ${master?`<div class="hint" style="margin-bottom:6px">🛡 <b>Log masuk Master Admin</b><br>Akses penuh: semua akaun pengguna, semua sekolah & Tafsiran TP.</div>
+   <label class="l">Kata laluan Master Admin</label><input class="f" id="a_PASSWORD" type="password" autocomplete="current-password" ${enter}>
+   <button class="btn pri" id="a_btn" style="width:100%;margin-top:16px" onclick="doAuth('master',this)">🛡 Log Masuk Master Admin</button>
+   <div style="text-align:center;margin-top:12px"><a href="#" onclick="showAuth('login');return false">← Kembali ke log masuk guru</a></div>`
+   :`<div class="row" style="gap:6px;margin-bottom:14px"><button class="btn ${daftar?'':'pri'}" style="flex:1" onclick="showAuth('login')">Log Masuk</button><button class="btn ${daftar?'pri':''}" style="flex:1" onclick="showAuth('daftar')">Daftar Guru</button></div>
+   ${daftar?`<label class="l">Nama guru</label><input class="f" id="a_NAMA_GURU" ${UP} autocomplete="name">
+   <label class="l" style="margin-top:10px;display:block">Kod sekolah</label><input class="f" id="a_KOD_SEKOLAH" ${UP} placeholder="CONTOH: JBA6041" maxlength="7">
+   <label class="l" style="margin-top:10px;display:block">No telefon</label><input class="f" id="a_NO_TELEFON" type="tel" ${UP} placeholder="0123456789" autocomplete="tel">`:''}
+   <label class="l" style="margin-top:10px;display:block">Emel</label><input class="f" id="a_EMEL" type="email" autocomplete="email" autocapitalize="off" value="${esc(emelAwal)}">
+   <label class="l" style="margin-top:10px;display:block">Kata laluan${daftar?' (min. 6 aksara)':''}</label><input class="f" id="a_PASSWORD" type="password" autocomplete="${daftar?'new-password':'current-password'}" ${enter}>
+   <button class="btn pri" id="a_btn" style="width:100%;margin-top:16px" onclick="doAuth('${mode}',this)">${daftar?'Daftar & Masuk':'Log Masuk'}</button>
+   <p class="hint" style="margin-top:14px">${daftar?'Selepas mendaftar, log masuk':'Log masuk'} menggunakan <b>emel</b> dan <b>kata laluan</b> yang didaftarkan. Setiap guru menggunakan aplikasi mengikut <b>kod sekolah</b> masing-masing — guru dari sekolah yang sama berkongsi data sekolah tersebut.</p>`}
+   <div class="hint" style="margin-top:10px;background:var(--brand-soft)">Lupa kata laluan atau ada sebarang pertanyaan? WhatsApp Master Admin:<div style="margin-top:8px">${helpWA('💬 WhatsApp '+WASAP_ADMIN)}</div></div>
+   ${master?'':`<div style="text-align:center;margin-top:12px"><a href="#" style="font-size:12px;color:var(--muted)" onclick="showAuth('master');return false">🛡 Log masuk Master Admin</a></div>`}`;
 }
-async function doLogin(btn){
-  const pw = $('#pw').value; if(!pw) return;
-  btn.disabled=true;
+function showAuth(mode){
+  closeModal();
+  const L=$('#loader'); L.style.display='grid';
+  L.innerHTML=`<div class="card" style="width:min(440px,92vw);max-height:94vh;overflow:auto">${authForm(mode)}</div>`;
+}
+function askLogin(){ showAuth('login'); }
+async function doAuth(mode, btn){
+  const v = id => ($('#a_'+id)?$('#a_'+id).value:'').trim();
+  if(!URL_OK()) return toast('Web App URL belum ditetapkan di baris ke-5 index.html',true);
+  let body;
+  if(mode==='master'){
+    const pw=$('#a_PASSWORD').value; if(!pw) return toast('Sila isi kata laluan Master Admin',true);
+    body={action:'loginMaster',password:pw,sekolah:S.sekolah,kelas:S.kelas};
+  } else {
+    const d = { EMEL:v('EMEL').toLowerCase(), PASSWORD:$('#a_PASSWORD').value };
+    if(mode==='daftar'){ d.NAMA_GURU=v('NAMA_GURU').toUpperCase(); d.KOD_SEKOLAH=v('KOD_SEKOLAH').toUpperCase().replace(/\s+/g,''); d.NO_TELEFON=v('NO_TELEFON').toUpperCase();
+      if(!d.NAMA_GURU||!d.KOD_SEKOLAH||!d.NO_TELEFON) return toast('Sila lengkapkan semua maklumat',true);
+      if(!/^[A-Z]{3}[0-9]{4}$/.test(d.KOD_SEKOLAH)) return toast('Kod sekolah tidak sah (contoh: JBA6041)',true); }
+    if(!d.EMEL||!d.PASSWORD) return toast('Sila isi emel dan kata laluan',true);
+    body = mode==='daftar' ? {action:'daftar',data:d} : {action:'login',emel:d.EMEL,password:d.PASSWORD,kelas:S.kelas};
+  }
+  const old=btn.innerHTML; btn.disabled=true; btn.innerHTML='⏳ Sila tunggu…';
   try{
-    const r = await fetch(WEB_APP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'login',password:pw})});
-    const j = await r.json(); if(!j.ok) throw new Error(j.error);
-    S.pass=pw; sessionStorage.setItem('pbd_pw',pw); closeModal(); toast('Selamat datang, Admin ✓'); render();
-  }catch(e){ toast(e.message,true); btn.disabled=false; }
+    const j = await post(body);
+    if(!j.ok) throw new Error(j.error);
+    S.emel=j.emel; S.token=j.token; localStorage.setItem('pbd_emel',S.emel); localStorage.setItem('pbd_token',S.token);
+    setData(j.data); S.view = mode==='master' ? 'akaun' : 'dash';
+    $('#loader').style.display='none'; render();
+    toast(mode==='master' ? 'Selamat datang, Master Admin 🛡' : (mode==='daftar'?'Pendaftaran berjaya. ':'')+'Selamat datang, '+(j.guru&&j.guru.NAMA_GURU||'Cikgu')+' ✓');
+  }catch(e){ toast(e.message,true); btn.disabled=false; btn.innerHTML=old; }
 }
-function logout(){ S.pass=''; sessionStorage.removeItem('pbd_pw'); render(); }
+function logout(){
+  try{ Object.keys(localStorage).filter(k=>k.startsWith('pbd_cache')).forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  if(S.emel===MASTER_EMEL){ S.emel=''; localStorage.removeItem('pbd_emel'); }
+  S.token=''; S.data=null; S.kelas=''; S.sekolah=''; localStorage.removeItem('pbd_token'); localStorage.removeItem('pbd_kelas'); localStorage.removeItem('pbd_sekolah');
+  showAuth('login');
+}
 function openModal(h){ $('#modalBox').innerHTML=h; $('#modal').classList.add('show'); }
 function closeModal(){ $('#modal').classList.remove('show'); }
 $('#modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
@@ -375,15 +444,16 @@ function reportRows(stu){ // seperti makro asal: sembunyi mata pelajaran tanpa T
 /* ====================== RENDER ====================== */
 function render(){
   S.charts.forEach(c=>c.destroy()); S.charts=[];
-  $('#nav').innerHTML = NAV.map(([k,i,l])=>`<button class="${S.view===k?'on':''}" onclick="go('${k}')"><span class="ico">${i}</span>${l}</button>`).join('');
+  $('#nav').innerHTML = NAV.filter(([k])=>k!=='akaun'||isMaster()).map(([k,i,l])=>`<button class="${S.view===k?'on':''}" onclick="go('${k}')"><span class="ico">${i}</span>${l}</button>`).join('');
   $('#who').innerHTML = `<div style="opacity:.75">${esc(T().NAMA_SEKOLAH)}</div><div style="font-weight:800;margin:4px 0 0">Kelas ${esc(T().TAHUN?T().TAHUN+' ':'')}${esc(T().KELAS)} • ${esc(T().SESI)}</div>${kelasPicker()}${isArkib()?`<span class="chip gold" style="margin-bottom:8px">📜 Rekod sejarah ${esc(T().SESI)}</span><br>`:''}`+
-    (isAdmin()?`<span class="chip gold">🔓 Mod Admin</span><br><button class="btn sm" style="margin-top:10px" onclick="logout()">Log keluar</button>`
-      :`<span class="chip">👁 Mod Paparan</span><br><button class="btn sm" style="margin-top:10px" onclick="askLogin()">🔐 Log masuk admin</button>`);
+    (isMaster()?`<span class="chip gold">🛡 MASTER ADMIN</span><div style="opacity:.75;font-size:12px;margin-top:8px">Lihat data sekolah:</div>${sekolahPicker()}<button class="btn sm" onclick="logout()">Log keluar</button>`
+    :isAdmin()?`<span class="chip gold">👤 ${esc((S.data.guru&&S.data.guru.NAMA_GURU)||S.emel)}</span><div style="opacity:.75;font-size:12px;margin-top:4px">Kod sekolah: <b>${esc(T().KOD_SEKOLAH||'')}</b></div><button class="btn sm" style="margin-top:10px" onclick="logout()">Log keluar</button><div style="margin-top:10px">${helpWA('💬 Bantuan (WhatsApp)')}</div>`
+      :`<span class="chip">👁 Mod Paparan</span><br><button class="btn sm" style="margin-top:10px" onclick="askLogin()">🔐 Log masuk</button>`);
   (V[S.view]||V.dash)();
 }
 function go(v){ S.view=v; $('#side').classList.remove('open'); render(); window.scrollTo(0,0); }
 const head = (t,p,extra='') => `<div class="top"><div><h1>${t}</h1><p>${p||''}</p></div><div class="row">${extra}</div></div>`;
-const lockNote = () => isAdmin()?'':`<p class="lock">🔒 Paparan sahaja. <a href="#" onclick="askLogin();return false">Log masuk admin</a> untuk mengedit.</p>`;
+const lockNote = () => isAdmin()?'':`<p class="lock">🔒 Paparan sahaja. <a href="#" onclick="askLogin();return false">Log masuk</a> untuk mengedit.</p>`;
 
 const V = {};
 /* ---------- Dashboard ---------- */
@@ -411,6 +481,56 @@ V.dash = () => {
   const d=[0,0,0,0,0,0]; st.forEach(s=>mps.forEach(m=>{const n=tpNum((mk(s.ID_MURID,m.KOD_MP)||{}).TP_KESELURUHAN); if(n) d[n-1]++;}));
   if(window.Chart) S.charts.push(new Chart($('#chDash'),{type:'doughnut',data:{labels:['TP1','TP2','TP3','TP4','TP5','TP6'],datasets:[{data:d,backgroundColor:['#d9534f','#ee8a3c','#e8c13a','#8cc152','#3aa57a','#147a72']}]},options:{plugins:{legend:{position:'right'}}}}));
 };
+
+/* ---------- Akaun Pengguna (MASTER ADMIN sahaja) ---------- */
+V.akaun = () => {
+  if(!isMaster()){ S.view='dash'; return V.dash(); }
+  const sk=S.data.senaraiSekolah||[]; const nmS=k=>(sk.find(x=>x.KOD===k)||{}).NAMA||'';
+  const ak=(S.data.akaun||[]).slice().sort((a,b)=>String(a.KOD_SEKOLAH).localeCompare(String(b.KOD_SEKOLAH))||String(a.NAMA_GURU).localeCompare(String(b.NAMA_GURU)));
+  const aktif=ak.filter(a=>String(a.STATUS||'AKTIF').toUpperCase()==='AKTIF').length;
+  const tiada=ak.filter(a=>!String(a.KATA_LALUAN||'')).length;
+  const pw=a=>{ const p=String(a.KATA_LALUAN||''); if(!p) return '<span class="lock" title="Direkod selepas guru log masuk sekali">— belum direkod</span>'; return S.showPw?`<code style="font-family:'JetBrains Mono',monospace;font-weight:800">${esc(p)}</code>`:'<span class="lock">••••••</span>'; };
+  $('#view').innerHTML = head('Akaun Pengguna',`Semua akaun guru berdaftar (${ak.length}) bagi ${sk.length} sekolah. Halaman ini hanya untuk Master Admin.`,
+    `<button class="btn" onclick="S.showPw=!S.showPw;render()">${S.showPw?'🙈 Sembunyi':'👁 Papar'} kata laluan</button><button class="btn" onclick="exportAkaun()">⬇ Muat turun CSV</button><button class="btn" onclick="showLoading();load()">⟳ Muat semula</button>`)+
+  `<div class="grid g4" style="margin-bottom:16px">
+    <div class="card stat"><div class="n">${ak.length}</div><div class="l">Jumlah akaun</div></div>
+    <div class="card stat"><div class="n">${aktif}</div><div class="l">Akaun aktif</div></div>
+    <div class="card stat"><div class="n">${sk.length}</div><div class="l">Sekolah</div></div>
+    <div class="card stat"><div class="n">${ak.length-tiada}</div><div class="l">Kata laluan direkod</div></div></div>
+  ${tiada?`<div class="hint" style="margin-bottom:16px">ℹ ${tiada} akaun lama belum ada kata laluan untuk dipaparkan (dahulu disimpan secara tersulit). Ia direkod automatik apabila guru tersebut log masuk semula, atau tetapkan kata laluan baharu melalui butang ✎.</div>`:''}
+  <div class="card"><input class="f" placeholder="🔎 Cari nama / emel / kod sekolah / telefon…" oninput="filterRows(this.value,'#tbA')" style="margin-bottom:12px"><div class="tw"><table class="t" id="tbA"><thead><tr><th>Bil</th><th>Kod Sekolah</th><th>Nama Guru</th><th>Emel</th><th>No Telefon</th><th>Kata Laluan</th><th>Status</th><th>Log Masuk Akhir</th><th></th></tr></thead><tbody>
+  ${ak.map((a,i)=>{const on=String(a.STATUS||'AKTIF').toUpperCase()==='AKTIF'; return `<tr><td>${i+1}</td><td><b>${esc(a.KOD_SEKOLAH)}</b><br><span class="lock">${esc(nmS(String(a.KOD_SEKOLAH).toUpperCase()))}</span></td><td><b>${esc(a.NAMA_GURU)}</b></td><td>${esc(a.EMEL)}</td>
+   <td>${a.NO_TELEFON?`<a target="_blank" rel="noopener" href="${waLink(a.NO_TELEFON)}">${esc(a.NO_TELEFON)}</a>`:''}</td><td>${pw(a)}</td><td>${on?'<span class="chip">Aktif</span>':'<span class="chip red">Tidak aktif</span>'}</td><td class="lock">${esc(a.LOG_MASUK_AKHIR||'—')}</td>
+   <td style="white-space:nowrap"><button class="btn sm" data-e="${esc(a.EMEL)}" onclick="editAkaun(this.dataset.e)" title="Urus akaun">✎</button> <button class="btn sm" data-k="${esc(a.KOD_SEKOLAH)}" onclick="switchSekolah(this.dataset.k).then(()=>go('dash'))" title="Buka data sekolah ini">🏫</button></td></tr>`}).join('')||'<tr><td colspan="9" class="empty">Tiada akaun berdaftar.</td></tr>'}
+  </tbody></table></div></div>
+  <div class="card" style="margin-top:16px"><h3 style="margin-top:0">Senarai Sekolah</h3><div class="tw"><table class="t"><thead><tr><th>Kod</th><th>Nama Sekolah</th><th>Bil. Guru</th><th></th></tr></thead><tbody>
+  ${sk.map(x=>`<tr><td><b>${esc(x.KOD)}</b>${x.KOD===T().KOD_SEKOLAH?' <span class="chip">sedang dibuka</span>':''}</td><td>${esc(x.NAMA||'—')}</td><td>${x.GURU}</td><td><button class="btn sm pri" data-k="${esc(x.KOD)}" onclick="switchSekolah(this.dataset.k).then(()=>go('dash'))">Buka</button></td></tr>`).join('')}</tbody></table></div></div>`;
+};
+function editAkaun(emel){
+  const a=(S.data.akaun||[]).find(x=>x.EMEL===emel); if(!a) return;
+  const on=String(a.STATUS||'AKTIF').toUpperCase()==='AKTIF';
+  openModal(`<h2 style="margin-top:0">Urus Akaun</h2><p class="lock" style="margin-top:-6px">${esc(a.EMEL)}</p>
+  <label class="l">Nama guru</label><input class="f" id="uNAMA_GURU" value="${esc(a.NAMA_GURU)}" ${UP}>
+  <div class="grid g2"><div><label class="l">Kod sekolah</label><input class="f" id="uKOD_SEKOLAH" value="${esc(a.KOD_SEKOLAH)}" maxlength="7" ${UP}></div><div><label class="l">No telefon</label><input class="f" id="uNO_TELEFON" value="${esc(a.NO_TELEFON)}"></div></div>
+  <div class="grid g2"><div><label class="l">Kata laluan semasa</label><div style="padding:10px 0;font-family:'JetBrains Mono',monospace;font-weight:800">${a.KATA_LALUAN?esc(a.KATA_LALUAN):'<span class="lock">— belum direkod</span>'}</div></div><div><label class="l">Kata laluan baharu (kosong = kekal)</label><input class="f" id="uKATA_LALUAN" placeholder="min. 6 aksara" autocomplete="off"></div></div>
+  <label class="l">Status</label><select class="f" id="uSTATUS"><option value="AKTIF" ${on?'selected':''}>AKTIF</option><option value="TIDAK AKTIF" ${on?'':'selected'}>TIDAK AKTIF</option></select>
+  <div class="row" style="margin-top:16px"><button class="btn danger" data-e="${esc(a.EMEL)}" onclick="padamAkaun(this.dataset.e)">🗑 Padam akaun</button><span class="sp"></span><button class="btn" onclick="closeModal()">Batal</button><button class="btn pri" data-e="${esc(a.EMEL)}" onclick="saveAkaun(this)">Simpan</button></div>`);
+}
+function saveAkaun(btn){
+  const d={}; ['NAMA_GURU','KOD_SEKOLAH','NO_TELEFON','KATA_LALUAN','STATUS'].forEach(k=>d[k]=$('#u'+k).value.trim());
+  d.KOD_SEKOLAH=d.KOD_SEKOLAH.toUpperCase().replace(/\s+/g,'');
+  if(d.KATA_LALUAN && d.KATA_LALUAN.length<6) return toast('Kata laluan baharu sekurang-kurangnya 6 aksara',true);
+  if(!/^[A-Z]{3}[0-9]{4}$/.test(d.KOD_SEKOLAH)) return toast('Kod sekolah tidak sah (contoh: JBA6041)',true);
+  if(!d.KATA_LALUAN) delete d.KATA_LALUAN;
+  run(btn,async()=>{ await api('kemaskiniAkaun',{id:btn.dataset.e,data:d}); closeModal(); },'Akaun dikemas kini ✓');
+}
+function padamAkaun(emel){ if(confirm('Padam akaun '+emel+'? Data sekolah tidak terjejas.')) run(null,async()=>{ await api('padamAkaun',{id:emel}); closeModal(); },'Akaun dipadam'); }
+function exportAkaun(){
+  const cols=['KOD_SEKOLAH','NAMA_GURU','EMEL','NO_TELEFON','KATA_LALUAN','STATUS','DIDAFTAR','LOG_MASUK_AKHIR'];
+  const rows=[cols].concat((S.data.akaun||[]).map(a=>cols.map(k=>a[k]??'')));
+  const csv='\ufeff'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const el=document.createElement('a'); el.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); el.download='Akaun_Pengguna_ePBD.csv'; el.click();
+}
 
 /* ---------- Kelas & Tahun ---------- */
 V.kelas = () => {
@@ -691,21 +811,25 @@ function exportCSV(){
 /* ---------- Mata pelajaran ---------- */
 V.mp = () => {
   const mps=subjects(true);
-  $('#view').innerHTML = head('Mata Pelajaran','Senarai mata pelajaran, guru, bidang/komponen dan status aktif.', isAdmin()?`<button class="btn pri" onclick="editMP()">＋ Tambah Mata Pelajaran</button>`:'')+lockNote()+
-  `<div class="grid g2">${mps.map(m=>`<div class="card"><div class="row"><span class="chip ${String(m.AKTIF).toUpperCase()==='Y'?'':'red'}">${esc(m.KOD_MP)} • ${String(m.AKTIF).toUpperCase()==='Y'?'Aktif':'Tidak aktif'}</span><span class="sp"></span>${isAdmin()?`<button class="btn sm" onclick="editMP('${m.KOD_MP}')">✎</button><button class="btn sm danger" onclick="delMP('${m.KOD_MP}')">🗑</button>`:''}</div>
+  $('#view').innerHTML = head('Mata Pelajaran','Senarai mata pelajaran, guru, bidang/komponen dan status aktif.', isMaster()?`<button class="btn pri" onclick="editMP()">＋ Tambah Mata Pelajaran</button>`:'')+lockNote()+
+  `<div class="hint" style="margin-bottom:16px">🔒 <b>Kod, susunan & nama mata pelajaran</b> serta <b>Tafsiran TP</b> adalah sama untuk semua sekolah dan hanya boleh diubah oleh Master Admin.${isMaster()?' Perubahan anda akan dilihat oleh semua sekolah.':` Guru boleh kemaskini <b>nama guru, bidang/komponen, status aktif & catatan</b> untuk sekolah sendiri. Pembetulan lain: WhatsApp Master Admin <a target="_blank" rel="noopener" href="${waLink(WASAP_ADMIN)}">${WASAP_ADMIN}</a>.`}</div>`+
+  `<div class="grid g2">${mps.map(m=>`<div class="card"><div class="row"><span class="chip ${String(m.AKTIF).toUpperCase()==='Y'?'':'red'}">${esc(m.KOD_MP)} • ${String(m.AKTIF).toUpperCase()==='Y'?'Aktif':'Tidak aktif'}</span><span class="sp"></span>${isAdmin()?`<button class="btn sm" onclick="editMP('${m.KOD_MP}')">✎</button>`:''}${isMaster()?`<button class="btn sm danger" onclick="delMP('${m.KOD_MP}')">🗑</button>`:''}</div>
    <h3 style="margin:10px 0 4px">${esc(m.NAMA_MATA_PELAJARAN)}</h3><div class="lock">Guru: ${esc(m.NAMA_GURU_MP||'—')}</div>
    <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">${comps(m).map(c=>`<span class="chip gold">${esc(c)}</span>`).join('')||'<span class="lock">Tiada komponen</span>'}</div>
    ${m.CATATAN?`<p class="lock" style="margin-bottom:0">${esc(m.CATATAN)}</p>`:''}</div>`).join('')}</div>`;
 };
 function editMP(kod){
+  if(!kod && !isMaster()) return toast('Hanya Master Admin boleh menambah mata pelajaran',true);
   const m=S.data.mp.find(x=>x.KOD_MP===kod)||{SUSUNAN:S.data.mp.length+1,AKTIF:'Y'};
+  const kunci=isMaster()?'':'disabled'; const tag='<span class="chip gold" style="margin-left:6px;padding:2px 8px;font-size:10px;text-transform:none;letter-spacing:0">🔒 Master Admin</span>';
   openModal(`<h2 style="margin-top:0">${kod?'Kemaskini':'Tambah'} Mata Pelajaran</h2>
-  <div class="grid g2"><div><label class="l">Kod (unik)</label><input class="f" id="pKOD_MP" value="${esc(m.KOD_MP)}" ${kod?'disabled':''}></div><div><label class="l">Susunan pada laporan</label><input class="f" id="pSUSUNAN" value="${esc(m.SUSUNAN)}"></div></div>
-  <label class="l">Nama mata pelajaran (seperti pada laporan)</label><input class="f" id="pNAMA_MATA_PELAJARAN" value="${esc(m.NAMA_MATA_PELAJARAN)}">
+  <div class="grid g2"><div><label class="l">Kod (unik)${tag}</label><input class="f" id="pKOD_MP" value="${esc(m.KOD_MP)}" ${kod?'disabled':''}></div><div><label class="l">Susunan pada laporan${tag}</label><input class="f" id="pSUSUNAN" value="${esc(m.SUSUNAN)}" ${kunci}></div></div>
+  <label class="l">Nama mata pelajaran (seperti pada laporan)${tag}</label><input class="f" id="pNAMA_MATA_PELAJARAN" value="${esc(m.NAMA_MATA_PELAJARAN)}" ${kunci}>
+  <p class="lock" style="margin:6px 0 0">${isMaster()?'Kod, susunan & nama di atas dilihat oleh SEMUA sekolah. Maklumat di bawah hanya untuk sekolah '+esc(T().KOD_SEKOLAH)+'.':'Bahagian di atas ditetapkan oleh Master Admin (sama untuk semua sekolah). Anda boleh kemaskini bahagian di bawah.'}</p>
   <label class="l">Nama guru mata pelajaran</label><input class="f" id="pNAMA_GURU_MP" value="${esc(m.NAMA_GURU_MP)}">
   <label class="l">Bidang / komponen (satu baris satu komponen, maks 12)</label><textarea class="f" id="pKOMP" rows="5">${esc(comps(m).join('\n'))}</textarea>
   <div class="grid g2"><div><label class="l">Aktif (papar dalam laporan)</label><select class="f" id="pAKTIF"><option value="Y" ${String(m.AKTIF).toUpperCase()==='Y'?'selected':''}>Ya</option><option value="N" ${String(m.AKTIF).toUpperCase()!=='Y'?'selected':''}>Tidak</option></select></div><div><label class="l">Catatan</label><input class="f" id="pCATATAN" value="${esc(m.CATATAN)}"></div></div>
-  <p class="hint">Penyataan TP diambil dari sheet 05_TAFSIRAN_TP mengikut kod mata pelajaran. Tambah tafsiran di menu Tafsiran TP.</p>
+  <p class="hint">Penyataan TP diambil dari Tafsiran TP mengikut kod mata pelajaran. Tafsiran TP adalah sama untuk semua sekolah dan hanya boleh diubah oleh Master Admin.</p>
   <div class="row" style="margin-top:16px"><span class="sp"></span><button class="btn" onclick="closeModal()">Batal</button><button class="btn pri" onclick="saveMP(this)">Simpan</button></div>`);
 }
 function saveMP(btn){
@@ -714,15 +838,16 @@ function saveMP(btn){
   if(!d.KOD_MP||!d.NAMA_MATA_PELAJARAN) return toast('Kod dan nama wajib diisi',true);
   run(btn,async()=>{ await api('saveMP',{data:d}); closeModal(); },'Mata pelajaran disimpan ✓');
 }
-function delMP(kod){ if(confirm('Padam mata pelajaran '+kod+' beserta semua rekod markahnya?')) run(null,()=>api('deleteMP',{id:kod}),'Mata pelajaran dipadam'); }
+function delMP(kod){ if(confirm('Padam mata pelajaran '+kod+' untuk SEMUA sekolah? Rekod TP lama dikekalkan sebagai sejarah.')) run(null,()=>api('deleteMP',{id:kod}),'Mata pelajaran dipadam'); }
 
 /* ---------- Tafsiran ---------- */
 V.tafsiran = () => {
   const sets=[...new Set(S.data.tafsiran.map(t=>t.SET))]; S.tSet=S.tSet||tafsiranSet();
   const list=S.data.tafsiran.filter(t=>t.SET===S.tSet);
-  $('#view').innerHTML = head('Tafsiran Tahap Penguasaan','Penyataan TP keseluruhan yang digunakan dalam laporan murid.', isAdmin()?`<button class="btn pri" onclick="editTaf()">＋ Tambah</button>`:'')+
+  $('#view').innerHTML = head('Tafsiran Tahap Penguasaan','Penyataan TP keseluruhan yang digunakan dalam laporan murid — sama untuk semua sekolah.', isMaster()?`<button class="btn pri" onclick="editTaf()">＋ Tambah</button>`:'')+
+  (isMaster()?'':`<p class="lock">🔒 Hanya <b>Master Admin</b> boleh mengubah Tafsiran TP. Untuk pembetulan, WhatsApp Master Admin <a target="_blank" rel="noopener" href="${waLink(WASAP_ADMIN)}">${WASAP_ADMIN}</a>.</p>`)+
   `<div class="card" style="margin-bottom:16px"><div class="row">${sets.map(s=>`<button class="btn sm ${S.tSet===s?'pri':''}" onclick="S.tSet='${s}';render()">${s==='TENGAH'?'Tengah Tahun':s==='AKHIR'?'Akhir Tahun':s}</button>`).join('')}<span class="sp"></span><span class="chip">Sedang digunakan: ${tafsiranSet()}</span></div></div>
-  ${list.map((t,i)=>`<div class="card" style="margin-bottom:12px"><div class="row"><h3 style="margin:0">${esc(t.MATA_PELAJARAN)}</h3><span class="chip">${esc(t.KOD_MP||'—')}</span><span class="sp"></span>${isAdmin()&&t.KOD_MP?`<button class="btn sm" onclick="editTaf('${t.SET}','${t.KOD_MP}')">✎</button>`:''}</div>
+  ${list.map((t,i)=>`<div class="card" style="margin-bottom:12px"><div class="row"><h3 style="margin:0">${esc(t.MATA_PELAJARAN)}</h3><span class="chip">${esc(t.KOD_MP||'—')}</span><span class="sp"></span>${isMaster()&&t.KOD_MP?`<button class="btn sm" onclick="editTaf('${t.SET}','${t.KOD_MP}')">✎</button>`:''}</div>
    <div class="grid g3" style="margin-top:10px">${[1,2,3,4,5,6].map(n=>`<div style="font-size:13px"><span class="tp tp${n}">TP ${n}</span> <span style="white-space:pre-line">${esc(t['TP'+n])}</span></div>`).join('')}</div></div>`).join('')||'<div class="card empty">Tiada tafsiran</div>'}`;
 };
 function editTaf(set,kod){
@@ -730,9 +855,16 @@ function editTaf(set,kod){
   openModal(`<h2 style="margin-top:0">Tafsiran TP</h2><div class="grid g2"><div><label class="l">Set</label><input class="f" id="tSET" value="${esc(t.SET)}" ${kod?'disabled':''}></div><div><label class="l">Kod MP</label><input class="f" id="tKOD_MP" value="${esc(t.KOD_MP)}" ${kod?'disabled':''}></div></div>
   <label class="l">Nama mata pelajaran</label><input class="f" id="tMATA_PELAJARAN" value="${esc(t.MATA_PELAJARAN)}">
   ${[1,2,3,4,5,6].map(n=>`<label class="l">TP ${n}</label><textarea class="f" rows="2" id="tTP${n}">${esc(t['TP'+n])}</textarea>`).join('')}
+  <p class="hint" style="margin-top:14px">Tafsiran TP adalah seragam — perubahan akan dilihat oleh SEMUA sekolah.</p>
   <div class="row" style="margin-top:16px"><span class="sp"></span><button class="btn" onclick="closeModal()">Batal</button><button class="btn pri" onclick="saveTaf(this)">Simpan</button></div>`);
 }
-function saveTaf(btn){ const d={}; ['SET','KOD_MP','MATA_PELAJARAN','TP1','TP2','TP3','TP4','TP5','TP6'].forEach(k=>d[k]=$('#t'+k).value.trim()); run(btn,async()=>{await api('saveTafsiran',{data:d});closeModal();},'Tafsiran disimpan ✓'); }
+function saveTaf(btn){
+  if(!isMaster()) return toast('Hanya Master Admin boleh mengubah Tafsiran TP',true);
+  const d={}; ['SET','KOD_MP','MATA_PELAJARAN','TP1','TP2','TP3','TP4','TP5','TP6'].forEach(k=>d[k]=$('#t'+k).value.trim());
+  d.SET=d.SET.toUpperCase(); d.KOD_MP=d.KOD_MP.toUpperCase().replace(/\s+/g,'');
+  if(!d.SET||!d.KOD_MP) return toast('Set dan Kod MP wajib diisi',true);
+  run(btn,async()=>{await api('saveTafsiran',{data:d});closeModal();},'Tafsiran disimpan untuk semua sekolah ✓');
+}
 
 /* ---------- Panduan ---------- */
 V.panduan = () => {
@@ -740,9 +872,10 @@ V.panduan = () => {
   `<div class="card" style="line-height:1.7">${S.data.panduan.map(p=>{const t=String(p.TEKS); const isH=/^[A-E] \| /.test(t)||/^PANDUAN|^PENTAKSIRAN|^PENGENALAN/.test(t);
     return isH?`<h3 style="margin:18px 0 4px;color:var(--brand)">${esc(t.replace(/^([A-E]) \| /,'$1. '))}</h3>`:`<div>${esc(t.replace(/ \| /g,' — '))}</div>`}).join('')}</div>
   <div class="card" style="margin-top:16px"><h3 style="margin-top:0">Cara guna aplikasi ini</h3><ol style="line-height:1.8">
-   <li>Admin log masuk (butang 🔐) untuk mengedit.</li><li>Lengkapkan <b>Tetapan</b> (sekolah, guru, pelaporan, tarikh).</li>
+   <li>Daftar akaun guru (nama, emel, kata laluan, no telefon & kod sekolah). Setiap guru menggunakan aplikasi mengikut <b>kod sekolah</b> masing-masing.</li><li>Log masuk menggunakan <b>emel</b> dan <b>kata laluan</b> yang didaftarkan.</li><li>Lengkapkan <b>Tetapan</b> (sekolah, guru, pelaporan, tarikh).</li>
    <li>Tambah/kemaskini <b>Senarai Murid</b> dan <b>Mata Pelajaran</b>.</li><li>Isi <b>Rekod Prestasi</b> setiap mata pelajaran dan <b>Ulasan Guru Kelas</b>.</li>
-   <li>Cetak <b>Laporan Murid</b> dan <b>Sijil PBD</b> (satu murid atau semua sekali). Pilih "Save as PDF" untuk simpan PDF.</li></ol></div>`;
+   <li>Cetak <b>Laporan Murid</b> dan <b>Sijil PBD</b> (satu murid atau semua sekali). Pilih "Save as PDF" untuk simpan PDF.</li><li><b>Tafsiran TP</b> diselaraskan oleh Master Admin sahaja.</li></ol>
+   <div class="hint">Lupa kata laluan atau ada sebarang pertanyaan? <span style="display:inline-block;margin-top:6px">${helpWA()}</span></div></div>`;
 };
 
 /* ---------- Tetapan ---------- */
@@ -757,8 +890,8 @@ V.tetapan = () => {
    <div><label class="l">Bahasa laporan</label><select class="f" id="s_BAHASA_LAPORAN" ${dis}>${['SK','SJKC','SJKT'].map(o=>`<option ${lang()===o?'selected':''}>${o}</option>`).join('')}</select></div>
    ${F('TAHUN','Tahun')}${F('SESI','Sesi')}${F('TAJUK_SIJIL','Tajuk sijil')}<div><label class="l">Logo sekolah (dipaparkan pada sijil)</label><input type="hidden" id="s_LOGO_URL" value="${esc(t.LOGO_URL)}">
     <div class="logo-up"><div class="pv" id="logoPv">${t.LOGO_URL?`<img src="${esc(t.LOGO_URL)}">`:'Tiada logo'}</div><div style="flex:1">
-    ${isAdmin()?`<input type="file" accept="image/*" id="logoFile" onchange="pickLogo(this)" style="display:none"><button class="btn sm pri" type="button" onclick="$('#logoFile').click()">⬆ Muat naik logo</button> <button class="btn sm" type="button" onclick="setLogo('')">✕ Buang</button><div class="hint" style="font-size:12px;margin-top:6px">PNG/JPG. Logo diperkecil automatik. Tekan <b>Simpan Tetapan</b> selepas muat naik.</div>`:'<div class="hint">Log masuk admin untuk muat naik logo.</div>'}</div></div></div>
-   ${isAdmin()?`<div><label class="l">Kata laluan admin baharu (kosong = kekal)</label><input class="f" type="password" id="s_ADMIN_PASSWORD"></div>`:''}
+    ${isAdmin()?`<input type="file" accept="image/*" id="logoFile" onchange="pickLogo(this)" style="display:none"><button class="btn sm pri" type="button" onclick="$('#logoFile').click()">⬆ Muat naik logo</button> <button class="btn sm" type="button" onclick="setLogo('')">✕ Buang</button><div class="hint" style="font-size:12px;margin-top:6px">PNG/JPG. Logo diperkecil automatik. Tekan <b>Simpan Tetapan</b> selepas muat naik.</div>`:'<div class="hint">Log masuk untuk muat naik logo.</div>'}</div></div></div>
+   ${isAdmin()&&!isMaster()?`<div><label class="l">Kata laluan akaun anda yang baharu (kosong = kekal)</label><input class="f" type="password" id="s_ADMIN_PASSWORD"></div>`:''}
   </div></div>`;
 };
 function setLogo(url){ $('#s_LOGO_URL').value=url; $('#logoPv').innerHTML=url?`<img src="${url}">`:'Tiada logo'; }
@@ -776,7 +909,7 @@ function saveSet(btn){
   const keys=['NAMA_SEKOLAH','ALAMAT_SEKOLAH','NAMA_GURU_KELAS','KELAS','NAMA_GURU_BESAR','JAWATAN_PENTADBIR','PELAPORAN','TARIKH_PELAPORAN','JENIS_SEKOLAH','BAHASA_LAPORAN','TAHUN','SESI','TAJUK_SIJIL','LOGO_URL','ADMIN_PASSWORD'];
   const d={}; keys.forEach(k=>{const el=$('#s_'+k); if(el) d[k]=el.value.trim();});
   const newPw=d.ADMIN_PASSWORD; if(!newPw) delete d.ADMIN_PASSWORD;
-  run(btn,async()=>{ await api('saveTetapan',{data:d}); if(newPw){S.pass=newPw;sessionStorage.setItem('pbd_pw',newPw);} },'Tetapan disimpan ✓');
+  run(btn,async()=>{ await api('saveTetapan',{data:d}); },'Tetapan disimpan ✓');
 }
 
 /* ====================== PWA ====================== */
