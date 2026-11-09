@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzWBlsgZ893S1aXknMLQacgFhEc4gU9ZamURmGoR1ktoSr1ynQ3eubJkQuMLBR4aFjf/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwaTgAQ0z67rZgEP3aEiPJ-Nl7b7q3d_CCzMLXc3JZoLZIbuzJ75DYxl4j-vmTuBs/exec";
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -95,22 +95,39 @@ select.tpsel{padding:6px;border-radius:8px;border:1px solid var(--line);font-wei
 .mob{display:none}
 .hint{font-size:13px;color:var(--ink-2);background:var(--gold-soft);border-radius:12px;padding:10px 14px}
 /* ---------- Laporan (cetakan) ---------- */
-.sheet{background:#fff;color:#000;width:210mm;min-height:297mm;padding:14mm 14mm 12mm;margin:0 auto 20px;box-shadow:var(--shadow);font-family:Arial,Helvetica,sans-serif;font-size:11.5px;position:relative}
-.sheet h2{font-family:Arial;text-align:center;font-size:17px;margin:0 0 12px;letter-spacing:.02em}
-.sheet .info{display:grid;grid-template-columns:1fr 1fr;gap:3px 20px;margin-bottom:10px}
-.sheet .info div b{display:inline-block;min-width:92px}
+.sheet{background:#fff;color:#1a2b2c;width:210mm;min-height:297mm;padding:11mm 13mm 10mm;margin:0 auto 20px;box-shadow:var(--shadow);font-family:Arial,Helvetica,sans-serif;font-size:11px;position:relative;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sheet .hd{display:flex;align-items:center;gap:14px;padding-bottom:9px;border-bottom:3px solid #0f4c4f;position:relative}
+.sheet .hd:after{content:"";position:absolute;left:0;right:0;bottom:-6px;border-bottom:1px solid #c9a24a}
+.sheet .hd img{width:58px;height:58px;object-fit:contain}
+.sheet .hd .lg{width:58px;height:58px;border-radius:50%;background:#0f4c4f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.sheet .hd .nm{flex:1}
+.sheet .hd .nm b{display:block;font-size:17px;letter-spacing:.04em;color:#0f4c4f;text-transform:uppercase}
+.sheet .hd .nm span{display:block;font-size:10.5px;color:#4b5d5e;margin-top:2px}
+.sheet .hd .tag{text-align:right;font-size:9.5px;color:#4b5d5e;line-height:1.5}
+.sheet .hd .tag b{display:inline-block;background:#0f4c4f;color:#fff;padding:3px 9px;border-radius:3px;font-size:10px;letter-spacing:.08em}
+.sheet h2{text-align:center;font-size:15px;margin:18px 0 12px;letter-spacing:.12em;color:#0f4c4f}
+.sheet .info{display:grid;grid-template-columns:1fr 1fr;border:1px solid #c8d6d6;border-radius:6px;overflow:hidden;margin-bottom:12px}
+.sheet .info div{padding:6px 10px;border-bottom:1px solid #e3ecec;display:flex;gap:8px}
+.sheet .info div:nth-child(odd){border-right:1px solid #e3ecec}
+.sheet .info div:nth-last-child(-n+2){border-bottom:0}
+.sheet .info b{min-width:78px;color:#4b5d5e;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;padding-top:1px}
+.sheet .info span{font-weight:700}
 .sheet table{width:100%;border-collapse:collapse}
-.sheet th,.sheet td{border:1px solid #000;padding:6px 7px;vertical-align:middle}
-.sheet th{background:#d9e8e6;font-size:11px}
-.sheet td.mp{font-weight:700;width:24%}
-.sheet td.tpc{text-align:center;font-weight:700;width:12%}
-.sheet .ul{margin:12px 0;line-height:1.5}
-.sheet .ul u{text-underline-offset:3px}
-.sig{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:26px;font-size:11px}
+.sheet .rt{border:1px solid #c8d6d6}
+.sheet th,.sheet td{border:1px solid #c8d6d6;padding:6px 8px;vertical-align:middle}
+.sheet th{background:#0f4c4f;color:#fff;font-size:10px;letter-spacing:.06em;border-color:#0f4c4f}
+.sheet .rt tbody tr:nth-child(even) td{background:#f4f8f8}
+.sheet td.mp{font-weight:700;width:25%;font-size:10.5px;color:#0f4c4f}
+.sheet td.tpc{text-align:center;width:11%}
+.sheet td.tpc i{font-style:normal;display:inline-block;min-width:38px;padding:4px 6px;border-radius:12px;background:#e6f0ef;color:#0f4c4f;font-weight:800;border:1px solid #9fc1bf}
+.sheet .ul{margin:14px 0;padding:9px 12px;border-left:4px solid #c9a24a;background:#fbf7ec;line-height:1.55;border-radius:0 6px 6px 0}
+.sheet .ul b{display:block;font-size:9.5px;letter-spacing:.08em;color:#8a6a1e;margin-bottom:3px}
+.sig{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:22px;font-size:10.5px}
 .sig div{padding-top:34px}
-.sig .ln{border-top:1px solid #000;padding-top:4px}
+.sig .ln{border-top:1px solid #1a2b2c;padding-top:4px}
 .legend{margin-top:16px;width:60%!important}
-.legend td,.legend th{text-align:center;font-size:10.5px}
+.legend td,.legend th{text-align:center;font-size:10px}
+.sheet .ft{position:absolute;left:13mm;right:13mm;bottom:7mm;border-top:1px solid #c8d6d6;padding-top:4px;font-size:8.5px;color:#7a8b8c;display:flex;justify-content:space-between}
 /* ---------- Sijil (premium) ---------- */
 .cert{width:297mm;height:210mm;background:#fff;margin:0 auto 20px;position:relative;box-shadow:var(--shadow);color:#13292b;overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif}
 .cert .bgpat{position:absolute;inset:0;width:100%;height:100%;opacity:.55}
@@ -956,16 +973,19 @@ function saveUl(btn){ const rows=[...document.querySelectorAll('#tbU tbody tr')]
 /* ---------- Laporan murid ---------- */
 function reportHTML(s){
   const t=T(); const rows=reportRows(s);
+  const ini=String(t.NAMA_SEKOLAH||'S').split(/\s+/).map(w=>w[0]).join('').slice(0,3);
   return `<div class="sheet">
+   <div class="hd">${t.LOGO_URL?`<img src="${esc(t.LOGO_URL)}">`:`<div class="lg">${esc(ini)}</div>`}
+    <div class="nm"><b>${esc(t.NAMA_SEKOLAH)}</b><span>${esc(t.ALAMAT_SEKOLAH)} ${esc(t.ALAMAT_SEKOLAH_2||'')}</span><span>${t.KOD_SEKOLAH?'Kod Sekolah: '+esc(t.KOD_SEKOLAH)+' • ':''}Program Pendidikan Khas Integrasi</span></div>
+    <div class="tag"><b>e-PBD PPKI</b><br>${t.SESI?'Sesi '+esc(t.SESI):''}</div></div>
    <h2>${esc(label('TAJUK')).replace(/\n/g,'<br>')}</h2>
    <div class="info">
-    <div><b>${esc(label('NAMA_MURID'))}</b> ${esc(s.NAMA_MURID)}</div><div><b>${esc(label('SEKOLAH'))}</b> ${esc(t.NAMA_SEKOLAH)}</div>
-    <div><b>${esc(label('KELAS'))}</b> ${esc(t.KELAS)}</div><div>${esc(t.ALAMAT_SEKOLAH)} ${esc(t.ALAMAT_SEKOLAH_2||'')}</div>
-    <div><b>${esc(label('JANTINA'))}</b> ${esc(s.JANTINA)}</div><div></div>
-    <div><b>${esc(label('PELAPORAN'))}</b> ${esc(t.PELAPORAN)}</div><div><b>${esc(label('TARIKH'))}</b> ${fmtDate(t.TARIKH_PELAPORAN)}</div>
+    <div><b>${esc(label('NAMA_MURID')).replace(/:/,'')}</b><span>${esc(s.NAMA_MURID)}</span></div><div><b>${esc(label('KELAS')).replace(/:/,'')}</b><span>${esc(t.KELAS)}</span></div>
+    <div><b>${esc(label('JANTINA')).replace(/:/,'')}</b><span>${esc(s.JANTINA)}</span></div><div><b>${esc(label('TARIKH')).replace(/:/,'')}</b><span>${fmtDate(t.TARIKH_PELAPORAN)}</span></div>
+    <div><b>${esc(label('PELAPORAN')).replace(/:/,'')}</b><span>${esc(t.PELAPORAN)}</span></div><div><b>${esc(label('SEKOLAH')).replace(/:/,'')}</b><span>${esc(t.NAMA_SEKOLAH)}</span></div>
    </div>
-   <table><thead><tr><th>${esc(label('MATA_PELAJARAN'))}</th><th>${esc(label('TAHAP_PENGUASAAN'))}</th><th>${esc(label('PENYATAAN'))}</th></tr></thead><tbody>
-   ${rows.length?rows.map(({mp,rec})=>`<tr><td class="mp">${esc(mp.NAMA_MATA_PELAJARAN)}</td><td class="tpc">TP ${tpNum(rec.TP_KESELURUHAN)}</td><td>${esc(penyataan(s,mp,rec)).replace(/\n/g,'<br>')}</td></tr>`).join('')
+   <table class="rt"><thead><tr><th>${esc(label('MATA_PELAJARAN'))}</th><th>${esc(label('TAHAP_PENGUASAAN'))}</th><th>${esc(label('PENYATAAN'))}</th></tr></thead><tbody>
+   ${rows.length?rows.map(({mp,rec})=>`<tr><td class="mp">${esc(mp.NAMA_MATA_PELAJARAN)}</td><td class="tpc"><i>TP ${tpNum(rec.TP_KESELURUHAN)}</i></td><td>${esc(penyataan(s,mp,rec)).replace(/\n/g,'<br>')}</td></tr>`).join('')
      :`<tr><td colspan="3" style="text-align:center;padding:20px">Tiada rekod Tahap Penguasaan.</td></tr>`}
    </tbody></table>
    <div class="ul"><b>${esc(label('ULASAN_GURU_KELAS'))}</b> <u>${esc(s.ULASAN_GURU_KELAS)}</u></div>
@@ -975,6 +995,7 @@ function reportHTML(s){
     <div><div class="ln">${esc(label('TT_IBUBAPA'))}<br><br>${esc(label('NAMA'))}<br>${esc(label('TARIKH2'))}</div></div>
    </div>
    <table class="legend"><tr><th>TP 1</th><th>TP 3</th><th>TP 6</th></tr><tr><td>${esc(label('TP1_KET'))}</td><td>${esc(label('TP3_KET').trim())}</td><td>${esc(label('TP6_KET'))}</td></tr></table>
+   <div class="ft"><span>Dijana oleh e-PBD PPKI • Pentaksiran Bilik Darjah</span><span>Dokumen sulit untuk ibu bapa / penjaga</span></div>
   </div>`;
 }
 V.laporan = () => {
