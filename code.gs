@@ -75,7 +75,7 @@ const KELAS_KEYS = { SESI: 'SESI', TAHUN: 'TAHUN', KELAS: 'NAMA_KELAS', NAMA_GUR
 function ss_() { return SPREADSHEET_ID ? SpreadsheetApp.openById(SPREADSHEET_ID) : SpreadsheetApp.getActiveSpreadsheet(); }
 function sheet_(name) {
   const sh = ss_().getSheetByName(name);
-  if (!sh) throw new Error('Sheet "' + name + '" tidak dijumpai. Pastikan fail data betul.');
+  if (!sh) throw new Error('Ralat data sistem. Sila WhatsApp Master Admin ' + WASAP_ADMIN + '.');
   return sh;
 }
 function out_(obj) { return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON); }
@@ -99,6 +99,14 @@ function readTable_(name) {
     o._row = i + 1;
     rows.push(o);
   }
+  return rows;
+}
+/* Data rujukan (jarang berubah) disimpan dalam cache pelayan 6 jam -> muatan lebih pantas */
+function readCached_(name) {
+  const c = CacheService.getScriptCache(), k = 'TBL_' + name;
+  try { const v = c.get(k); if (v) return JSON.parse(v); } catch (e) {}
+  const rows = readTable_(name);
+  try { const s = JSON.stringify(rows); if (s.length < 95000) c.put(k, s, 21600); } catch (e) {}
   return rows;
 }
 const sama_ = (a, b) => String(a || '').trim().toUpperCase() === String(b || '').trim().toUpperCase();
@@ -364,7 +372,7 @@ function doGet(e) {
   try {
     const action = (e && e.parameter && e.parameter.action) || 'getAll';
     if (action === 'ping') return out_({ ok: true, msg: 'e-PBD API aktif' });
-    if (action === 'getAll') return out_({ ok: false, error: 'Sila log masuk. Kemaskini index.html ke versi terkini (v5).' });
+    if (action === 'getAll') return out_({ ok: false, error: 'Sila log masuk melalui aplikasi e-PBD.' });
     return out_({ ok: false, error: 'Tindakan tidak dikenali: ' + action });
   } catch (err) { return out_({ ok: false, error: String(err.message || err) }); }
 }
@@ -413,7 +421,7 @@ function createKelas_(d, kod) {
   const id = sama_(kod, KOD_ASAL) ? kelasId_(sesi, tahun, nama) : kelasId_(sesi, tahun, nama, kod);
   if (readTable_(SH.KELAS).some(k => k.ID_KELAS === id)) throw new Error('Kelas ' + tahun + ' ' + nama + ' bagi sesi ' + sesi + ' sudah wujud.');
   const ss = ss_(); const label = safeName_((sama_(kod, KOD_ASAL) ? '' : kod + ' ') + sesi + ' ' + tahun + ' ' + nama);
-  if (ss.getSheetByName('MURID ' + label) || ss.getSheetByName('MARKAH ' + label)) throw new Error('Sheet bagi kelas ini sudah wujud dalam fail.');
+  if (ss.getSheetByName('MURID ' + label) || ss.getSheetByName('MARKAH ' + label)) throw new Error('Kelas ini sudah wujud.');
   const shM = ss.insertSheet('MURID ' + label), shK = ss.insertSheet('MARKAH ' + label);
   // tajuk lajur murid disalin dari 02_MURID supaya struktur sama
   const tmpl = ss.getSheetByName(SH.MURID);
@@ -455,9 +463,9 @@ function getAll_(kelasId, guru) {
     mp: mpSekolah_(kod),
     markah: k ? readTable_(k.SHEET_MARKAH) : [],
     tafsiran: readSekolah_(SH.TAFSIRAN, KOD_GLOBAL), // seragam untuk semua sekolah
-    kemahiran: readTable_(SH.KEMAHIRAN),
-    bahasa: readTable_(SH.BAHASA),
-    panduan: readTable_(SH.PANDUAN),
+    kemahiran: readCached_(SH.KEMAHIRAN),
+    bahasa: readCached_(SH.BAHASA),
+    panduan: readCached_(SH.PANDUAN),
     serverTime: new Date().toISOString()
   };
   if (guru._master) { o.senaraiSekolah = senaraiSekolah_(); o.akaun = senaraiAkaun_(); }

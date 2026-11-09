@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzyb9NwD2lgySXZkTjwjMPWmpJfP6tHA560nbevxmJFuq5JJb-oz1qilrTh8ZH2EbiN/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwaTgAQ0z67rZgEP3aEiPJ-Nl7b7q3d_CCzMLXc3JZoLZIbuzJ75DYxl4j-vmTuBs/exec";
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -14,9 +14,11 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzyb9NwD2lgySXZkTjw
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="e-PBD">
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Great+Vibes&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root{
   --ink:#10292b;--ink-2:#3d5a5c;--muted:#7a9294;--bg:#f4f1ea;--paper:#fffdf8;--line:#e3ddd0;
@@ -175,7 +177,7 @@ select.tpsel{padding:6px;border-radius:8px;border:1px solid var(--line);font-wei
 #printArea{display:none}
 @media print{
   body{background:#fff}
-  .app,.toast,.modal,.loader{display:none!important}
+  .app,.toast,.modal,.loader,#boot,.sync{display:none!important}
   #printArea{display:block}
   .sheet,.cert,.prof{box-shadow:none;margin:0;page-break-after:always;break-after:page}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -242,10 +244,71 @@ table.t tr:hover td{background:rgba(255,255,255,.7)}
 .chip{background:rgba(255,255,255,.7)!important;border:1px solid rgba(15,82,87,.15);backdrop-filter:blur(8px)}
 .tp{box-shadow:0 3px 0 rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.4)}
 }
+/* ===== SKRIN SEGERAK DATA (BOOT) ===== */
+#boot{position:fixed;inset:0;z-index:120;display:grid;place-items:center;overflow:hidden;color:#dff7f3;
+  background:radial-gradient(1200px 800px at 50% 40%,#0e3a3d 0%,#082426 45%,#04131a 100%);
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;transition:opacity .5s ease,visibility .5s ease}
+#boot.out{opacity:0;visibility:hidden}
+#boot.out .ld-wrap{transform:scale(1.06);filter:blur(2px)}
+#boot canvas{position:absolute;inset:0;width:100%;height:100%}
+#boot .grid-fx{position:absolute;inset:-50%;background-image:linear-gradient(rgba(94,234,212,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(94,234,212,.06) 1px,transparent 1px);
+  background-size:44px 44px;transform:perspective(600px) rotateX(62deg) translateY(10%);animation:gridMove 1.2s linear infinite;mask-image:radial-gradient(circle at 50% 30%,#000 10%,transparent 60%);-webkit-mask-image:radial-gradient(circle at 50% 30%,#000 10%,transparent 60%)}
+@keyframes gridMove{to{background-position:0 44px,0 0}}
+.ld-wrap{position:relative;display:flex;flex-direction:column;align-items:center;gap:26px;transition:transform .5s ease,filter .5s ease;padding:20px}
+.ld-core{position:relative;width:200px;height:200px;display:grid;place-items:center}
+.ld-ring{position:absolute;inset:0;border-radius:50%}
+.ld-ring.r1{background:conic-gradient(from 0deg,transparent 0 55%,rgba(94,234,212,.9) 75%,#fff 80%,transparent 82%);-webkit-mask:radial-gradient(circle,transparent 63%,#000 64%,#000 67%,transparent 68%);mask:radial-gradient(circle,transparent 63%,#000 64%,#000 67%,transparent 68%);animation:spin 1.1s linear infinite}
+.ld-ring.r2{inset:16px;border:1.5px dashed rgba(201,150,43,.65);animation:spin 6s linear infinite reverse}
+.ld-ring.r3{inset:-14px;background:conic-gradient(from 90deg,transparent 0 70%,rgba(232,193,58,.85) 88%,transparent 90%);-webkit-mask:radial-gradient(circle,transparent 69%,#000 70%,#000 71.5%,transparent 72%);mask:radial-gradient(circle,transparent 69%,#000 70%,#000 71.5%,transparent 72%);animation:spin 2.4s linear infinite}
+.ld-ring.r4{inset:30px;border-radius:50%;border:1px solid rgba(94,234,212,.25);box-shadow:inset 0 0 30px rgba(94,234,212,.25)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-orb{position:relative;width:108px;height:108px;border-radius:50%;display:grid;place-items:center;text-align:center;
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.35),rgba(94,234,212,.18) 40%,rgba(8,36,38,.9) 72%);
+  box-shadow:0 0 40px rgba(94,234,212,.55),0 0 90px rgba(20,122,114,.55),inset 0 0 22px rgba(255,255,255,.18);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 60px rgba(94,234,212,.8),0 0 120px rgba(20,122,114,.7),inset 0 0 26px rgba(255,255,255,.25)}}
+.ld-orb b{font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:800;color:#fff;line-height:1;text-shadow:0 0 14px rgba(94,234,212,.9)}
+.ld-orb small{display:block;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.3em;color:#9be9dc;margin-top:4px}
+.ld-info{width:min(440px,86vw);text-align:center}
+.ld-title{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.42em;color:#e8c13a;font-weight:800}
+.ld-msg{font-family:Fraunces,Georgia,serif;font-size:19px;margin:8px 0 14px;color:#fff;min-height:26px;transition:opacity .2s}
+.ld-bar{position:relative;height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(94,234,212,.18)}
+.ld-bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:99px;background:linear-gradient(90deg,#147a72,#5eead4,#fff);box-shadow:0 0 14px #5eead4}
+.ld-bar i:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.35) 0 6px,transparent 6px 14px);animation:barMove .5s linear infinite}
+@keyframes barMove{to{background-position:28px 0}}
+.ld-stats{display:flex;justify-content:space-between;gap:10px;margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:#7fbfb6}
+.ld-stats b{color:#fff;font-weight:800}
+.ld-log{margin-top:12px;height:58px;overflow:hidden;font-family:'JetBrains Mono',monospace;font-size:10px;line-height:14.5px;color:rgba(155,233,220,.55);text-align:left;
+  mask-image:linear-gradient(transparent,#000 40%);-webkit-mask-image:linear-gradient(transparent,#000 40%)}
+.ld-log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ld-log span{color:#e8c13a}
+@media (prefers-reduced-motion:reduce){#boot .grid-fx,.ld-ring{animation-duration:6s!important}}
+/* ===== PENUNJUK SEGERAK LATAR ===== */
+.sync{position:fixed;top:0;left:0;right:0;height:3px;z-index:130;pointer-events:none;opacity:0;transition:opacity .3s}
+.sync.show{opacity:1}
+.sync:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,#5eead4,#147a72,#e8c13a,transparent);background-size:50% 100%;background-repeat:no-repeat;animation:syncMove 1s linear infinite}
+@keyframes syncMove{from{background-position:-50% 0}to{background-position:150% 0}}
+.sync span{position:absolute;top:10px;right:14px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;font-weight:800;color:var(--brand);background:rgba(255,255,255,.85);backdrop-filter:blur(8px);border:1px solid rgba(15,82,87,.15);padding:5px 10px;border-radius:99px;box-shadow:0 6px 18px -8px rgba(15,60,70,.4)}
+#view.vin>*{animation:vin .32s ease both}
+@keyframes vin{from{opacity:0;transform:translateY(8px)}}
 </style>
 </head>
 <body>
-<div class="loader" id="loader"><div style="text-align:center"><div class="spin" style="margin:auto"></div><p class="serif" style="margin-top:16px;color:var(--brand)">Memuatkan data dari Google Sheet…</p></div></div>
+<div id="boot">
+  <div class="grid-fx"></div><canvas id="ldCv"></canvas>
+  <div class="ld-wrap">
+    <div class="ld-core" id="ldCore"><div class="ld-ring r3"></div><div class="ld-ring r1"></div><div class="ld-ring r2"></div><div class="ld-ring r4"></div>
+      <div class="ld-orb"><div><b id="ldPct">0</b><small>PERATUS</small></div></div></div>
+    <div class="ld-info">
+      <div class="ld-title">e-PBD • ENJIN SEGERAK DATA</div>
+      <div class="ld-msg" id="ldMsg">Menyambung ke pelayan selamat…</div>
+      <div class="ld-bar"><i id="ldBar"></i></div>
+      <div class="ld-stats"><span>⇣ <b id="ldRate">0.0</b> MB/s</span><span>PAKET <b id="ldPk">0</b></span><span>LATENSI <b id="ldLat">--</b> ms</span></div>
+      <div class="ld-log" id="ldLog"></div>
+    </div>
+  </div>
+</div>
+<div class="sync" id="sync"><span>⟳ MENYEGERAK DATA…</span></div>
+<div class="loader" id="loader" style="display:none"></div>
 
 <div class="app">
   <aside class="side" id="side">
@@ -264,6 +327,90 @@ table.t tr:hover td{background:rgba(255,255,255,.7)}
 <div class="toast" id="toast"></div>
 
 <script>
+
+/* ====================== ENJIN SEGERAK (SKRIN LOADING) ====================== */
+const Boot = (() => {
+  const STAGES = ['Menyambung ke pelayan selamat…','Mengesahkan sesi pengguna…','Menyedut data sekolah…','Menyegerak rekod murid & prestasi…','Menyusun tafsiran & analisis…','Memuktamadkan paparan…'];
+  const TAGS = ['MURID','MARKAH','KELAS','TP','ANALISIS','SIJIL','TETAPAN','MP'];
+  let el, cv, ctx, W=0, H=0, cx=0, cy=0, R=0, parts=[], raf=0, last=0, start=0, prog=0, target=0, active=false, fin=null, nextStat=0, pk=0, stage=-1;
+  const $i = id => document.getElementById(id);
+  const hex = n => Math.floor(Math.random()*16**n).toString(16).toUpperCase().padStart(n,'0');
+  function size(){
+    const d = Math.min(2, window.devicePixelRatio||1); W = innerWidth; H = innerHeight;
+    cv.width = W*d; cv.height = H*d; ctx.setTransform(d,0,0,d,0,0);
+    const r = $i('ldCore').getBoundingClientRect(); cx = r.left + r.width/2; cy = r.top + r.height/2; R = Math.hypot(Math.max(cx,W-cx), Math.max(cy,H-cy)) + 40;
+    const want = Math.round(Math.min(220, Math.max(70, W*H/7000)) * (matchMedia('(prefers-reduced-motion: reduce)').matches ? .35 : 1));
+    while (parts.length < want) parts.push(spawn(true)); parts.length = want;
+  }
+  function spawn(any){ return { a: Math.random()*Math.PI*2, r: any ? 60 + Math.random()*R : R + Math.random()*60, v: 2.5 + Math.random()*5, w: .6 + Math.random()*1.8,
+    gold: Math.random() < .16, sw: (Math.random()<.5?-1:1) * (.002 + Math.random()*.006) }; }
+  function frame(t){
+    if (!active) return;
+    const dt = Math.min(48, t - (last||t)); last = t; const k = dt/16.7;
+    const armed = !!(fin && fin.armed);
+    if (!armed) target = 93 * (1 - Math.exp(-(t - start)/2400));
+    prog += (target - prog) * Math.min(1, (armed ? .2 : .06) * k);
+    // jejak lut sinar -> kesan kelajuan
+    ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation = 'lighter';
+    const boost = armed ? 2.4 : 1 + prog/90;
+    for (const p of parts) {
+      const x0 = cx + Math.cos(p.a)*p.r, y0 = cy + Math.sin(p.a)*p.r;
+      const acc = 1 + (1 - Math.min(1, p.r/R)) * 3.2;
+      p.r -= p.v * acc * boost * k; p.a += p.sw * acc * k;
+      if (p.r < 48) { Object.assign(p, spawn(false)); pk++; continue; }
+      const x1 = cx + Math.cos(p.a)*p.r, y1 = cy + Math.sin(p.a)*p.r;
+      const al = Math.min(1, (1 - p.r/R) * 1.6);
+      ctx.strokeStyle = p.gold ? `rgba(232,193,58,${al})` : `rgba(94,234,212,${al})`; ctx.lineWidth = p.w;
+      ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+    }
+    const pc = Math.min(100, prog);
+    $i('ldPct').textContent = Math.floor(pc); $i('ldBar').style.width = pc.toFixed(2) + '%';
+    const s = armed && pc > 99.4 ? STAGES.length : Math.min(STAGES.length-1, Math.floor(pc / (96/STAGES.length)));
+    if (s !== stage) { stage = s; $i('ldMsg').textContent = s >= STAGES.length ? 'Data berjaya disegerakkan ✓' : STAGES[s]; }
+    if (t > nextStat) {
+      nextStat = t + 110;
+      $i('ldRate').textContent = ((60 + Math.random()*70) * boost).toFixed(1);
+      $i('ldPk').textContent = (pk*37 + Math.floor(Math.random()*37)).toLocaleString('en');
+      $i('ldLat').textContent = 8 + Math.floor(Math.random()*18);
+      const log = $i('ldLog'); const d = document.createElement('div');
+      d.innerHTML = `0x${hex(4)} ▸ <span>${TAGS[Math.floor(Math.random()*TAGS.length)]}</span>[${hex(3)}] ▸ ${hex(8)} ▸ OK`;
+      log.appendChild(d); while (log.children.length > 4) log.removeChild(log.firstChild);
+    }
+    if (armed && pc > 99.4 && !fin.done) { fin.done = true; $i('ldPct').textContent = '100'; setTimeout(close, 180); }
+    raf = requestAnimationFrame(frame);
+  }
+  function close(){
+    el.classList.add('out');
+    setTimeout(() => { const f = fin; fin = null; if (f) f.res(); if (!el.classList.contains('out')) return; active = false; cancelAnimationFrame(raf); el.style.display = 'none'; ctx.clearRect(0,0,W,H); }, 500);
+  }
+  return {
+    show(){
+      el = el || $i('boot'); cv = cv || $i('ldCv'); ctx = ctx || cv.getContext('2d');
+      if (active && !fin && !el.classList.contains('out')) return;
+      if (fin) { const f = fin; fin = null; f.res(); }
+      el.style.display = 'grid'; el.classList.remove('out'); void el.offsetWidth;
+      if (!active) { active = true; prog = 0; target = 0; stage = -1; pk = 0; start = performance.now(); last = 0; parts = []; size(); raf = requestAnimationFrame(frame); }
+    },
+    /* lengkapkan ke 100% dengan lancar, kemudian pudar. minMs = masa paparan minimum */
+    done(minMs = 600){
+      if (!active) return Promise.resolve();
+      if (fin) return fin.p;
+      let res; const p = new Promise(r => res = r);
+      fin = { p, res, done: false, armed: false };
+      const arm = () => { if (fin && fin.p === p) { fin.armed = true; target = 100; } };
+      const wait = start + minMs - performance.now(); if (wait > 0) setTimeout(arm, wait); else arm();
+      return p;
+    },
+    hide(){ if (!active) return; el.classList.add('out'); const f = fin; fin = null; if (f) f.res();
+      setTimeout(() => { if (!el.classList.contains('out')) return; active = false; cancelAnimationFrame(raf); el.style.display = 'none'; }, 500); },
+    isActive: () => active,
+    resize(){ if (active) size(); }
+  };
+})();
+addEventListener('resize', () => Boot.resize());
+Boot.show();
+
 /* ====================== STATE ====================== */
 const S = { data:null, view:'dash', emel:localStorage.getItem('pbd_emel')||'', token:localStorage.getItem('pbd_token')||'', kelas:localStorage.getItem('pbd_kelas')||'', sekolah:localStorage.getItem('pbd_sekolah')||'', mpSel:null, stuSel:null, charts:[] };
 try{ sessionStorage.removeItem('pbd_pw'); localStorage.removeItem('pbd_cache'); }catch(e){} // bersihkan data versi lama
@@ -287,30 +434,56 @@ function toast(msg, err){ const t=$('#toast'); t.textContent=msg; t.className='t
 
 /* ====================== API ====================== */
 const URL_OK = () => WEB_APP_URL && WEB_APP_URL.startsWith('https://');
+function readCache(){ try{ const c=localStorage.getItem(cacheKey(S.kelas)); return c?JSON.parse(c):null; }catch(e){ return null; } }
+const sig = d => { try{ const o=Object.assign({},d); delete o.serverTime; return JSON.stringify(o); }catch(e){ return ''; } };
+let syncN=0;
+function syncing(on){ syncN=Math.max(0,syncN+(on?1:-1)); $('#sync').classList.toggle('show',syncN>0); }
+function showFatal(msg){
+  Boot.hide(); const L=$('#loader'); L.style.display='grid';
+  L.innerHTML=`<div class="card" style="max-width:520px;text-align:center"><h2>Tidak dapat sambung</h2><p>${esc(msg)}</p><p class="hint">Sila semak sambungan internet anda dan cuba lagi. Jika masalah berterusan, WhatsApp Master Admin ${WASAP_ADMIN}.</p><div class="row" style="justify-content:center"><button class="btn pri" onclick="location.reload()">Cuba lagi</button>${helpWA()}</div></div>`;
+}
 async function load(){
+  if(!URL_OK()) return showFatal('Sistem belum dikonfigurasi sepenuhnya.');
+  if(!S.token){ Boot.hide(); showAuth('login'); return; }
+  // 1) Paparan segera: guna data simpanan terakhir sementara data terkini disedut di latar
+  let shown=false;
+  if(Boot.isActive()){
+    const c=readCache();
+    if(c){ S.data=c; await Boot.done(450); $('#loader').style.display='none'; render(); shown=true; }
+  } else if(S.data){ shown=true; }
+  const before = shown ? sig(S.data) : '';
+  if(shown) syncing(true);
   try{
-    if(!URL_OK()) throw new Error('Web App URL belum ditetapkan di baris ke-5 index.html');
-    if(!S.token){ showAuth('login'); return; }
     let j = await post({action:'getAll',emel:S.emel,token:S.token,kelas:S.kelas,sekolah:S.sekolah});
     if(!j.ok && S.kelas && /tidak dijumpai/i.test(j.error)){ S.kelas=''; j = await post({action:'getAll',emel:S.emel,token:S.token,kelas:'',sekolah:S.sekolah}); }
-    if(!j.ok && /sesi tamat|log masuk/i.test(j.error)){ logout(); toast(j.error,true); return; }
+    if(!j.ok && /sesi tamat|log masuk/i.test(j.error)){ if(shown) syncing(false); Boot.hide(); logout(); toast(j.error,true); return; }
     if(!j.ok) throw new Error(j.error);
     setData(j.data);
   }catch(e){
-    const c = S.token && (localStorage.getItem(cacheKey(S.kelas)) || localStorage.getItem(cacheKey('')));
-    if(c){ S.data = JSON.parse(c); toast('Mod luar talian: memaparkan data simpanan terakhir. ('+e.message+')', true); }
-    else { $('#loader').innerHTML = `<div class="card" style="max-width:520px"><h2>Tidak dapat sambung</h2><p>${esc(e.message)}</p><p class="hint">Pastikan Web App URL di baris ke-5 index.html betul dan deployment Apps Script ditetapkan kepada <b>Anyone</b>.</p><button class="btn pri" onclick="location.reload()">Cuba lagi</button></div>`; return; }
+    if(shown){ syncing(false); toast('Mod luar talian: memaparkan data simpanan terakhir.', true); return; }
+    const c = S.token && readCache();
+    if(c){ S.data=c; toast('Mod luar talian: memaparkan data simpanan terakhir.', true); }
+    else return showFatal(/fetch|network|load failed/i.test(e.message) ? 'Pelayan e-PBD tidak dapat dihubungi.' : e.message);
   }
+  if(shown){
+    syncing(false);
+    if(sig(S.data)===before) return; // tiada perubahan -> tiada paparan semula (lebih lancar)
+    const ae=document.activeElement, sibuk=$('#modal').classList.contains('show') || (ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName) && ae.closest('#view'));
+    if(sibuk) toast('Data terkini diterima. Tekan ⟳ Muat semula selepas selesai mengedit.'); else render();
+    return;
+  }
+  await Boot.done(600);
   $('#loader').style.display='none'; render();
 }
 async function post(body){
   const r = await fetch(WEB_APP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
   return r.json();
 }
-const cacheKey = k => 'pbd_cache_'+S.emel+'_'+(k||'');
+const cacheKey = k => 'pbd_cache_'+S.emel+'_'+(S.sekolah||'')+'_'+(k||'');
 async function api(action, payload={}){
   if(!isAdmin()){ askLogin(); throw new Error('Perlu log masuk'); }
-  const j = await post({action,emel:S.emel,token:S.token,kelas:S.kelas,sekolah:S.sekolah,...payload});
+  syncing(true); let j;
+  try{ j = await post({action,emel:S.emel,token:S.token,kelas:S.kelas,sekolah:S.sekolah,...payload}); } finally { syncing(false); }
   if(!j.ok){ if(/sesi tamat/i.test(j.error)){ logout(); } throw new Error(j.error); }
   if(j.token){ S.token=j.token; localStorage.setItem('pbd_token',j.token); }
   if(j.data) setData(j.data);
@@ -325,7 +498,7 @@ async function switchKelas(id){
   if(!id || id===S.kelas) return; S.kelas=id; S.stuSel=null; S.mpSel=null; localStorage.setItem('pbd_kelas',id);
   showLoading(); await load();
 }
-function showLoading(){ const L=$('#loader'); L.innerHTML='<div style="text-align:center"><div class="spin" style="margin:auto"></div><p class="serif" style="margin-top:16px;color:var(--brand)">Memuatkan data dari Google Sheet…</p></div>'; L.style.display='grid'; }
+function showLoading(){ closeModal(); Boot.show(); }
 async function switchSekolah(kod){ // Master Admin: buka data sekolah lain
   kod=String(kod||'').toUpperCase(); if(!kod || kod===T().KOD_SEKOLAH) return;
   S.sekolah=kod; S.kelas=''; S.stuSel=null; S.mpSel=null; localStorage.setItem('pbd_sekolah',kod); localStorage.removeItem('pbd_kelas');
@@ -375,13 +548,14 @@ function authForm(mode){
 }
 function showAuth(mode){
   closeModal();
+  Boot.hide(); syncN=0; $('#sync').classList.remove('show');
   const L=$('#loader'); L.style.display='grid';
   L.innerHTML=`<div class="card" style="width:min(440px,92vw);max-height:94vh;overflow:auto">${authForm(mode)}</div>`;
 }
 function askLogin(){ showAuth('login'); }
 async function doAuth(mode, btn){
   const v = id => ($('#a_'+id)?$('#a_'+id).value:'').trim();
-  if(!URL_OK()) return toast('Web App URL belum ditetapkan di baris ke-5 index.html',true);
+  if(!URL_OK()) return toast('Sistem belum dikonfigurasi sepenuhnya. Sila hubungi Master Admin.',true);
   let body;
   if(mode==='master'){
     const pw=$('#a_PASSWORD').value; if(!pw) return toast('Sila isi kata laluan Master Admin',true);
@@ -450,6 +624,7 @@ function render(){
     :isAdmin()?`<span class="chip gold">👤 ${esc((S.data.guru&&S.data.guru.NAMA_GURU)||S.emel)}</span><div style="opacity:.75;font-size:12px;margin-top:4px">Kod sekolah: <b>${esc(T().KOD_SEKOLAH||'')}</b></div><button class="btn sm" style="margin-top:10px" onclick="logout()">Log keluar</button><div style="margin-top:10px">${helpWA('💬 Bantuan (WhatsApp)')}</div>`
       :`<span class="chip">👁 Mod Paparan</span><br><button class="btn sm" style="margin-top:10px" onclick="askLogin()">🔐 Log masuk</button>`);
   (V[S.view]||V.dash)();
+  if(S._lastView!==S.view){ S._lastView=S.view; const v=$('#view'); v.classList.remove('vin'); void v.offsetWidth; v.classList.add('vin'); }
 }
 function go(v){ S.view=v; $('#side').classList.remove('open'); render(); window.scrollTo(0,0); }
 const head = (t,p,extra='') => `<div class="top"><div><h1>${t}</h1><p>${p||''}</p></div><div class="row">${extra}</div></div>`;
@@ -535,12 +710,12 @@ function exportAkaun(){
 /* ---------- Kelas & Tahun ---------- */
 V.kelas = () => {
   const ks=kelasList(); const years=[...new Set(ks.map(k=>String(k.SESI)))];
-  $('#view').innerHTML = head('Kelas & Tahun','Setiap kelas bagi setiap tahun disimpan dalam sheet tersendiri. Rekod tahun lepas kekal dan boleh dibuka bila-bila masa.',
+  $('#view').innerHTML = head('Kelas & Tahun','Setiap kelas bagi setiap tahun disimpan secara berasingan. Rekod tahun lepas kekal dan boleh dibuka bila-bila masa.',
     isAdmin()?`<button class="btn pri" onclick="newKelas()">＋ Tambah Kelas Baharu</button>`:'')+lockNote()+
   (years.length?years.map(y=>`<div class="card" style="margin-bottom:16px"><h3 style="margin-top:0">Sesi ${esc(y)} <span class="lock" style="font-weight:600">• ${ks.filter(k=>String(k.SESI)===y).length} kelas</span></h3>
-    <div class="tw"><table class="t"><thead><tr><th>Kelas</th><th>Guru Kelas</th><th>Sheet dalam Google Sheet</th><th>Status</th><th></th></tr></thead><tbody>
+    <div class="tw"><table class="t"><thead><tr><th>Kelas</th><th>Guru Kelas</th><th>Dicipta</th><th>Status</th><th></th></tr></thead><tbody>
     ${ks.filter(k=>String(k.SESI)===y).map(k=>{const ark=String(k.STATUS).toUpperCase()==='ARKIB'; return `<tr><td><b>${esc(kelasLabel(k))}</b>${k.ID_KELAS===S.kelas?' <span class="chip">sedang dibuka</span>':''}</td><td>${esc(k.NAMA_GURU_KELAS)}</td>
-     <td class="lock">${esc(k.SHEET_MURID)}<br>${esc(k.SHEET_MARKAH)}</td><td>${ark?'<span class="chip gold">Arkib</span>':'<span class="chip">Aktif</span>'}</td>
+     <td class="lock">${esc(fmtDate(k.DICIPTA)||'—')}</td><td>${ark?'<span class="chip gold">Arkib</span>':'<span class="chip">Aktif</span>'}</td>
      <td style="white-space:nowrap"><button class="btn sm pri" onclick="switchKelas('${esc(k.ID_KELAS)}').then(()=>go('dash'))">Buka</button>
      ${isAdmin()?`<button class="btn sm" onclick="arkibKelas('${esc(k.ID_KELAS)}','${ark?'AKTIF':'ARKIB'}')">${ark?'Aktifkan':'Arkibkan'}</button>`:''}</td></tr>`}).join('')}
     </tbody></table></div></div>`).join(''):'<div class="card empty">Tiada kelas berdaftar.</div>')+
@@ -548,7 +723,7 @@ V.kelas = () => {
 };
 function newKelas(){
   const k=S.data.kelasAktif||{}; const ks=kelasList();
-  openModal(`<h2 style="margin-top:0">Tambah Kelas Baharu</h2><p class="lock">Dua sheet baharu (MURID & MARKAH) akan dicipta secara automatik dalam Google Sheet.</p>
+  openModal(`<h2 style="margin-top:0">Tambah Kelas Baharu</h2><p class="lock">Ruang data baharu untuk murid & rekod prestasi kelas ini akan disediakan secara automatik.</p>
   <div class="grid g2"><div><label class="l">Sesi (tahun kalendar)</label><input class="f" id="kSESI" value="${esc(k.SESI||new Date().getFullYear())}"></div>
   <div><label class="l">Tahun (darjah)</label><select class="f" id="kTAHUN">${['1','2','3','4','5','6',''].map(o=>`<option value="${o}">${o?'Tahun '+o:'— tiada —'}</option>`).join('')}</select></div></div>
   <label class="l">Nama kelas</label><input class="f" id="kNAMA_KELAS" placeholder="cth: AL BIRUNI">
@@ -566,7 +741,7 @@ function arkibKelas(id,status){ run(null,()=>api('arkibKelas',{id,status}), stat
 /* ---------- Murid ---------- */
 V.murid = () => {
   const st=S.data.murid.slice().sort((a,b)=>(+a.BIL||999)-(+b.BIL||999));
-  $('#view').innerHTML = head('Senarai Murid',`${st.length} rekod murid dalam Google Sheet`, isAdmin()?`<button class="btn pri" onclick="editMurid()">＋ Tambah Murid</button>`:'')+lockNote()+
+  $('#view').innerHTML = head('Senarai Murid',`${st.length} rekod murid berdaftar`, isAdmin()?`<button class="btn pri" onclick="editMurid()">＋ Tambah Murid</button>`:'')+lockNote()+
   `<div class="card"><input class="f" placeholder="🔎 Cari nama / MyKid…" oninput="filterRows(this.value,'#tbM')" style="margin-bottom:12px"><div class="tw"><table class="t" id="tbM"><thead><tr><th>Bil</th><th>Nama Murid</th><th>Nama Ringkas</th><th>No. MyKid</th><th>Jantina</th><th>Aktif</th><th></th></tr></thead><tbody>
   ${st.map(m=>`<tr><td>${esc(m.BIL)}</td><td><b>${esc(m.NAMA_MURID)}</b>${m.CATATAN?`<br><span class="chip red" style="margin-top:4px">${esc(m.CATATAN)}</span>`:''}</td><td>${esc(m.NAMA_RINGKAS)}</td><td>${esc(m.NO_MYKID)}</td><td>${esc(m.JANTINA)}</td><td>${esc(m.AKTIF)}</td>
   <td style="white-space:nowrap"><button class="btn sm" onclick="S.stuSel='${m.ID_MURID}';go('laporan')">📄</button> ${isAdmin()?`<button class="btn sm" onclick="editMurid('${m.ID_MURID}')">✎</button> <button class="btn sm danger" onclick="delMurid('${m.ID_MURID}')">🗑</button>`:''}</td></tr>`).join('')}
@@ -621,7 +796,7 @@ function saveMarkah(btn){
     tr.querySelectorAll('[data-k]').forEach(el=>{ o[el.dataset.k]= el.tagName==='SELECT' ? (el.value?+el.value:'') : el.value.trim(); });
     return o;
   }).filter(o=>Object.entries(o).some(([k,v])=>k!=='ID_MURID'&&v!=='') || mk(o.ID_MURID,S.mpSel));
-  run(btn,()=>api('saveMarkah',{kod:S.mpSel,rows}),'Rekod prestasi disimpan ke Google Sheet ✓');
+  run(btn,()=>api('saveMarkah',{kod:S.mpSel,rows}),'Rekod prestasi disimpan ✓');
 }
 
 /* ---------- Ulasan guru kelas ---------- */
@@ -868,7 +1043,7 @@ function saveTaf(btn){
 
 /* ---------- Panduan ---------- */
 V.panduan = () => {
-  $('#view').innerHTML = head('Panduan Penggunaan','Diambil terus dari sheet PANDUAN templat asal.')+
+  $('#view').innerHTML = head('Panduan Penggunaan','Panduan Pentaksiran Bilik Darjah dan cara menggunakan e-PBD.')+
   `<div class="card" style="line-height:1.7">${S.data.panduan.map(p=>{const t=String(p.TEKS); const isH=/^[A-E] \| /.test(t)||/^PANDUAN|^PENTAKSIRAN|^PENGENALAN/.test(t);
     return isH?`<h3 style="margin:18px 0 4px;color:var(--brand)">${esc(t.replace(/^([A-E]) \| /,'$1. '))}</h3>`:`<div>${esc(t.replace(/ \| /g,' — '))}</div>`}).join('')}</div>
   <div class="card" style="margin-top:16px"><h3 style="margin-top:0">Cara guna aplikasi ini</h3><ol style="line-height:1.8">
@@ -882,7 +1057,7 @@ V.panduan = () => {
 V.tetapan = () => {
   const t=T(); const dis=isAdmin()?'':'disabled';
   const F=(k,l,type='text')=>`<div><label class="l">${l}</label><input class="f" type="${type}" id="s_${k}" value="${esc(t[k])}" ${dis}></div>`;
-  $('#view').innerHTML = head('Tetapan','Maklumat sekolah dikongsi semua kelas (01_TETAPAN). Kelas, tahun, sesi & guru kelas disimpan untuk kelas yang sedang dibuka sahaja.', isAdmin()?`<button class="btn pri" onclick="saveSet(this)">💾 Simpan Tetapan</button>`:'')+lockNote()+
+  $('#view').innerHTML = head('Tetapan','Maklumat sekolah dikongsi semua kelas. Kelas, tahun, sesi & guru kelas disimpan untuk kelas yang sedang dibuka sahaja.', isAdmin()?`<button class="btn pri" onclick="saveSet(this)">💾 Simpan Tetapan</button>`:'')+lockNote()+
   `<div class="card"><div class="grid g2">${F('NAMA_SEKOLAH','Nama sekolah')}${F('ALAMAT_SEKOLAH','Alamat sekolah')}${F('NAMA_GURU_KELAS','Nama guru kelas')}${F('KELAS','Kelas')}${F('NAMA_GURU_BESAR','Nama guru besar')}${F('JAWATAN_PENTADBIR','Jawatan pentadbir')}
    <div><label class="l">Pelaporan</label><select class="f" id="s_PELAPORAN" ${dis}>${['PENTAKSIRAN PERTENGAHAN TAHUN','PENTAKSIRAN AKHIR TAHUN'].map(o=>`<option ${t.PELAPORAN===o?'selected':''}>${o}</option>`).join('')}</select></div>
    ${F('TARIKH_PELAPORAN','Tarikh pelaporan','date')}
