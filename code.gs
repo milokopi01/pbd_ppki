@@ -41,6 +41,9 @@
  *     Guru setiap sekolah hanya boleh kemaskini: nama guru MP, bidang/komponen,
  *     status aktif dan catatan (disimpan pada baris kod sekolah masing-masing).
  *     Data asal SK BENUT disalin automatik sebagai set "SEMUA" pada panggilan pertama.
+ *  9. TAHAP 1 / TAHAP 2 (v8): setiap kelas mempunyai lajur TAHAP dalam 00_KELAS (1 = Tahun 1-3,
+ *     2 = Tahun 4-6). Mata pelajaran, Tafsiran TP & Penyataan Kemahiran ditapis ikut tahap kelas
+ *     yang sedang dibuka supaya tidak tertukar. Tahap boleh ditukar di Tetapan atau semasa cipta kelas.
  *  PENTING: selepas tampal kod baharu, buat Deploy > Manage deployments > Edit > New version.
  *  (Jika skrip TIDAK dibuka dari dalam Google Sheet, isi SPREADSHEET_ID di bawah.)
  * =====================================================================
@@ -68,9 +71,30 @@ const GURU_HEADERS = ['KOD_SEKOLAH','NAMA_GURU','EMEL','NO_TELEFON','KATA_LALUAN
 const SHEET_BERSEKOLAH = ['00_KELAS', '01_TETAPAN', '03_MATA_PELAJARAN', '05_TAFSIRAN_TP'];
 const MARKAH_HEADERS = ['ID_MURID','KOD_MP','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','TP_KESELURUHAN','ULASAN_GURU_MP','DIKEMASKINI'];
 
-const KELAS_HEADERS = ['ID_KELAS','SESI','TAHUN','NAMA_KELAS','NAMA_GURU_KELAS','SHEET_MURID','SHEET_MARKAH','STATUS','DICIPTA','KOD_SEKOLAH'];
+const KELAS_HEADERS = ['ID_KELAS','SESI','TAHUN','NAMA_KELAS','NAMA_GURU_KELAS','SHEET_MURID','SHEET_MARKAH','STATUS','DICIPTA','KOD_SEKOLAH','TAHAP'];
 // Tetapan yang berbeza bagi setiap kelas (disimpan dalam 00_KELAS, bukan 01_TETAPAN)
-const KELAS_KEYS = { SESI: 'SESI', TAHUN: 'TAHUN', KELAS: 'NAMA_KELAS', NAMA_GURU_KELAS: 'NAMA_GURU_KELAS' };
+const KELAS_KEYS = { SESI: 'SESI', TAHUN: 'TAHUN', KELAS: 'NAMA_KELAS', NAMA_GURU_KELAS: 'NAMA_GURU_KELAS', TAHAP: 'TAHAP' };
+
+/* ====================== TAHAP 1 / TAHAP 2 (v8) ======================
+ * Setiap kelas ditetapkan sebagai TAHAP 1 (Tahun 1-3) atau TAHAP 2 (Tahun 4-6) dalam lajur
+ * TAHAP sheet 00_KELAS. Mata pelajaran (03), Tafsiran TP (05) & Penyataan Kemahiran (06)
+ * juga mempunyai lajur TAHAP, jadi setiap kelas hanya melihat mata pelajaran & pentaksiran
+ * tahapnya sendiri. Baris dengan TAHAP kosong dianggap terpakai untuk kedua-dua tahap. */
+function normTahap_(v) { const s = String(v == null ? '' : v).toUpperCase().replace(/TAHAP|\s/g, '').replace(/\.0+$/, ''); return (s === '1' || s === '2') ? s : ''; }
+function tahapDariTahun_(t) { const n = parseInt(String(t == null ? '' : t).replace(/[^0-9]/g, ''), 10); return (n >= 4 && n <= 6) ? '2' : '1'; }
+function tahapKelas_(k) { return k ? (normTahap_(k.TAHAP) || tahapDariTahun_(k.TAHUN)) : '1'; }
+function ikutTahap_(r, tahap) { const t = normTahap_(r.TAHAP); return !t || t === String(tahap); }
+function pastiLajur_(name, col) {
+  const sh = ss_().getSheetByName(name); if (!sh || sh.getLastColumn() < 1) return;
+  if (headers_(sh).indexOf(col) > -1) return;
+  const c = sh.getLastColumn() + 1;
+  sh.getRange(1, c).setValue(col).setFontWeight('bold').setBackground('#0f5257').setFontColor('#ffffff');
+  if (name === SH.KELAS && sh.getLastRow() > 1) { // isi tahap kelas sedia ada berdasarkan tahun
+    const hd = headers_(sh), cT = hd.indexOf('TAHUN'); const vals = sh.getRange(2, 1, sh.getLastRow() - 1, hd.length).getValues();
+    sh.getRange(2, c, vals.length, 1).setValues(vals.map(v => [tahapDariTahun_(cT > -1 ? v[cT] : '')]));
+  }
+}
+function migrasiTahap() { [SH.KELAS, SH.MP, SH.TAFSIRAN, SH.KEMAHIRAN].forEach(n => pastiLajur_(n, 'TAHAP')); }
 
 function ss_() { return SPREADSHEET_ID ? SpreadsheetApp.openById(SPREADSHEET_ID) : SpreadsheetApp.getActiveSpreadsheet(); }
 function sheet_(name) {
@@ -160,6 +184,7 @@ function migrasi_() {
   const p = PropertiesService.getScriptProperties();
   if (p.getProperty('MIGRASI_SEKOLAH_V5') !== 'SIAP') { migrasiSKBenut(); p.setProperty('MIGRASI_SEKOLAH_V5', 'SIAP'); }
   if (p.getProperty('MIGRASI_GLOBAL_V7') !== 'SIAP') { migrasiGlobal(); p.setProperty('MIGRASI_GLOBAL_V7', 'SIAP'); }
+  if (p.getProperty('MIGRASI_TAHAP_V8') !== 'SIAP') { migrasiTahap(); p.setProperty('MIGRASI_TAHAP_V8', 'SIAP'); }
 }
 /* v7: cipta set mata pelajaran & tafsiran TP seragam ("SEMUA") dari data SK BENUT.
  * Boleh dijalankan secara manual; tidak berbuat apa-apa jika set SEMUA sudah wujud. */
@@ -200,22 +225,23 @@ function sediaSekolah_(kod) {
 /* ====================== MATA PELAJARAN SERAGAM ======================
  * Kod, susunan & nama dari set SEMUA (Master Admin). Nama guru MP, komponen,
  * aktif & catatan dari baris sekolah itu sendiri (jika ada). */
-function mpSekolah_(kod) {
-  const sek = {}; readSekolah_(SH.MP, kod).forEach(r => { sek[String(r.KOD_MP).trim().toUpperCase()] = r; });
-  return readSekolah_(SH.MP, KOD_GLOBAL).map(g => {
+function mpSekolah_(kod, tahap) {
+  tahap = normTahap_(tahap) || '1';
+  const sek = {}; readSekolah_(SH.MP, kod).filter(r => ikutTahap_(r, tahap)).forEach(r => { const key = String(r.KOD_MP).trim().toUpperCase(); if (!sek[key] || normTahap_(r.TAHAP)) sek[key] = r; });
+  return readSekolah_(SH.MP, KOD_GLOBAL).filter(g => ikutTahap_(g, tahap)).map(g => {
     const o = Object.assign({}, g); delete o._row;
     const s = sek[String(g.KOD_MP).trim().toUpperCase()];
     o.NAMA_GURU_MP = s ? s.NAMA_GURU_MP : ''; o.CATATAN = s ? s.CATATAN : '';
     if (s) { o[KOMP_KEY] = s[KOMP_KEY]; o.AKTIF = s.AKTIF; }
-    o.KOD_SEKOLAH = kod;
+    o.KOD_SEKOLAH = kod; o.TAHAP = normTahap_(g.TAHAP) || tahap;
     return o;
   });
 }
-function saveMP_(d, kod, master) {
-  d = d || {};
+function saveMP_(d, kod, master, tahap) {
+  d = d || {}; tahap = normTahap_(tahap) || '1';
   const kmp = String(d.KOD_MP || '').trim().toUpperCase().replace(/\s+/g, '');
   if (!kmp) throw new Error('Kod mata pelajaran wajib diisi.');
-  const cari = () => readSekolah_(SH.MP, KOD_GLOBAL).find(r => String(r.KOD_MP).trim().toUpperCase() === kmp);
+  const cari = () => { const c = readSekolah_(SH.MP, KOD_GLOBAL).filter(r => String(r.KOD_MP).trim().toUpperCase() === kmp && ikutTahap_(r, tahap)); return c.find(r => normTahap_(r.TAHAP)) || c[0]; };
   let glob = cari();
   if (master) { // bahagian seragam: kod, susunan, nama (dilihat semua sekolah)
     const g = { KOD_MP: kmp };
@@ -223,13 +249,13 @@ function saveMP_(d, kod, master) {
     if (d.NAMA_MATA_PELAJARAN !== undefined) g.NAMA_MATA_PELAJARAN = String(d.NAMA_MATA_PELAJARAN).trim();
     if (!glob) { g[KOMP_KEY] = d[KOMP_KEY] || ''; g.AKTIF = d.AKTIF || 'Y'; } // lalai untuk sekolah lain
     if (!String(g.NAMA_MATA_PELAJARAN || (glob && glob.NAMA_MATA_PELAJARAN) || '').trim()) throw new Error('Nama mata pelajaran wajib diisi.');
-    upsertSekolah_(SH.MP, 'KOD_MP', g, KOD_GLOBAL);
+    upsertSekolah_(SH.MP, 'KOD_MP', g, KOD_GLOBAL, tahap);
     glob = cari();
   } else if (!glob) throw new Error('Hanya Master Admin boleh menambah mata pelajaran baharu.');
   // bahagian sekolah: nama guru, komponen, aktif, catatan
   const s = { KOD_MP: kmp, NAMA_MATA_PELAJARAN: glob.NAMA_MATA_PELAJARAN, SUSUNAN: glob.SUSUNAN };
   MP_SEKOLAH.forEach(k => { if (d[k] !== undefined) s[k] = d[k]; });
-  upsertSekolah_(SH.MP, 'KOD_MP', s, kod);
+  upsertSekolah_(SH.MP, 'KOD_MP', s, kod, tahap);
   return kmp;
 }
 
@@ -433,7 +459,7 @@ function createKelas_(d, kod) {
     const rows = readTable_(src.SHEET_MURID).filter(r => String(r.AKTIF || 'YA').toUpperCase() !== 'TIDAK');
     if (rows.length) shM.getRange(2, 1, rows.length, mh.length).setValues(rows.map(r => mh.map(h => h === 'ULASAN_GURU_KELAS' ? '' : (r[h] === undefined ? '' : r[h]))));
   }
-  appendObj_(kelasSheet_(), { ID_KELAS: id, SESI: sesi, TAHUN: tahun, NAMA_KELAS: nama, NAMA_GURU_KELAS: String(d.NAMA_GURU_KELAS || '').toUpperCase(), SHEET_MURID: shM.getName(), SHEET_MARKAH: shK.getName(), STATUS: 'AKTIF', DICIPTA: new Date(), KOD_SEKOLAH: kod });
+  appendObj_(kelasSheet_(), { ID_KELAS: id, SESI: sesi, TAHUN: tahun, NAMA_KELAS: nama, NAMA_GURU_KELAS: String(d.NAMA_GURU_KELAS || '').toUpperCase(), SHEET_MURID: shM.getName(), SHEET_MARKAH: shK.getName(), STATUS: 'AKTIF', DICIPTA: new Date(), KOD_SEKOLAH: kod, TAHAP: normTahap_(d.TAHAP) || tahapDariTahun_(tahun) });
   return id;
 }
 function setStatusKelas_(id, status, kod) {
@@ -443,7 +469,8 @@ function setStatusKelas_(id, status, kod) {
 }
 function updateKelas_(id, data, kod) { // simpan tetapan khusus kelas
   const sh = kelasSheet_(); const k = kelas_(id, kod); const hd = headers_(sh);
-  Object.keys(KELAS_KEYS).forEach(key => { if (data[key] !== undefined) sh.getRange(k._row, hd.indexOf(KELAS_KEYS[key]) + 1).setValue(data[key]); });
+  if (data.TAHAP !== undefined) data.TAHAP = normTahap_(data.TAHAP) || tahapDariTahun_(data.TAHUN !== undefined ? data.TAHUN : k.TAHUN);
+  Object.keys(KELAS_KEYS).forEach(key => { const c = hd.indexOf(KELAS_KEYS[key]); if (data[key] !== undefined && c > -1) sh.getRange(k._row, c + 1).setValue(data[key]); });
 }
 
 function getAll_(kelasId, guru) {
@@ -451,8 +478,10 @@ function getAll_(kelasId, guru) {
   const k = kelas_(kelasId, kod, true);
   const set = settings_(kod);
   delete set.ADMIN_PASSWORD; // kata laluan tidak dihantar ke pelayar
+  const tahap = tahapKelas_(k);
   if (k) { set.SESI = k.SESI; set.TAHUN = k.TAHUN; set.KELAS = k.NAMA_KELAS; set.NAMA_GURU_KELAS = k.NAMA_GURU_KELAS; }
   else { set.SESI = set.SESI || new Date().getFullYear(); set.KELAS = set.KELAS || ''; }
+  set.TAHAP = tahap;
   set.KOD_SEKOLAH = kod;
   const o = {
     tetapan: set,
@@ -460,10 +489,11 @@ function getAll_(kelasId, guru) {
     kelasAktif: k,
     senaraiKelas: senaraiKelas_(kod),
     murid: k ? readTable_(k.SHEET_MURID) : [],
-    mp: mpSekolah_(kod),
+    tahap: tahap, // TAHAP 1 / 2 kelas aktif — mata pelajaran & pentaksiran ditapis ikut tahap ini
+    mp: mpSekolah_(kod, tahap),
     markah: k ? readTable_(k.SHEET_MARKAH) : [],
-    tafsiran: readSekolah_(SH.TAFSIRAN, KOD_GLOBAL), // seragam untuk semua sekolah
-    kemahiran: readCached_(SH.KEMAHIRAN),
+    tafsiran: readSekolah_(SH.TAFSIRAN, KOD_GLOBAL).filter(r => ikutTahap_(r, tahap)), // seragam untuk semua sekolah
+    kemahiran: readCached_(SH.KEMAHIRAN).filter(r => ikutTahap_(r, tahap)),
     bahasa: readCached_(SH.BAHASA),
     panduan: readCached_(SH.PANDUAN),
     serverTime: new Date().toISOString()
@@ -489,6 +519,7 @@ function doPost(e) {
     if (a === 'getAll') return out_({ ok: true, data: getAll_(body.kelas, guru) });
     let res; let kid = body.kelas; let tokenBaru = null;
     const K = () => kelas_(kid, kod);
+    const TH = d => normTahap_(d && d.TAHAP) || tahapKelas_(kelas_(kid, kod, true)); // tahap kelas aktif
     switch (a) {
       case 'createKelas':   res = kid = createKelas_(body.data, kod); break;
       case 'arkibKelas':    res = setStatusKelas_(body.id, body.status || 'ARKIB', kod); break;
@@ -497,19 +528,20 @@ function doPost(e) {
         if (!guru._master && String(d.ADMIN_PASSWORD || '').trim()) tokenBaru = tukarKataLaluan_(guru, String(d.ADMIN_PASSWORD).trim());
         delete d.ADMIN_PASSWORD; delete d.KOD_SEKOLAH;
         const k = kelas_(kid, kod, true); if (k) updateKelas_(k.ID_KELAS, d, kod);
+        delete d.TAHAP; // tahap disimpan pada kelas sahaja
         res = saveTetapan_(d, kod); break;
       }
       case 'saveMurid':     res = upsert_(K().SHEET_MURID, 'ID_MURID', body.data, 'M'); break;
       case 'deleteMurid':   res = deleteMurid_(K(), body.id); break;
-      case 'saveMP':        res = saveMP_(body.data, kod, guru._master); break;
-      case 'deleteMP':      M(); res = deleteMP_(body.id, KOD_GLOBAL); break; // padam untuk semua sekolah
+      case 'saveMP':        res = saveMP_(body.data, kod, guru._master, TH(body.data)); break;
+      case 'deleteMP':      M(); res = deleteMP_(body.id, KOD_GLOBAL, TH(body.data)); break; // padam untuk semua sekolah
       case 'saveMarkah':    res = saveMarkah_(K().SHEET_MARKAH, body.kod, body.rows); break;
       case 'saveUlasanKelas': res = saveUlasanKelas_(K().SHEET_MURID, body.rows); break;
       case 'saveTafsiran': { // HANYA Master Admin
         M();
         const d = Object.assign({}, body.data || {}); delete d.SEMUA_SEKOLAH;
         if (!String(d.SET || '').trim() || !String(d.KOD_MP || '').trim()) throw new Error('Set dan Kod MP wajib diisi.');
-        res = saveTafsiran_(d, KOD_GLOBAL); break; // seragam: semua sekolah nampak tafsiran yang sama
+        res = saveTafsiran_(d, KOD_GLOBAL, TH(d)); break; // seragam: semua sekolah nampak tafsiran yang sama
       }
       case 'kemaskiniAkaun': M(); res = kemaskiniAkaun_(body.id, body.data); break;
       case 'padamAkaun':     M(); res = padamAkaun_(body.id); break;
@@ -542,13 +574,21 @@ function saveTetapan_(data, kod) {
   return true;
 }
 /* upsert bagi sheet dikongsi (mata pelajaran) — padanan KUNCI + KOD_SEKOLAH */
-function upsertSekolah_(name, key, data, kod) {
+function upsertSekolah_(name, key, data, kod, tahap) {
   data = Object.assign({}, data || {}); data.KOD_SEKOLAH = kod;
   if (!data[key]) throw new Error(key + ' wajib diisi.');
   const sh = sheet_(name); const hd = headers_(sh); const vals = sh.getDataRange().getValues();
   const cK = hd.indexOf(key), cS = hd.indexOf('KOD_SEKOLAH');
-  let rowIdx = -1;
-  for (let i = 1; i < vals.length; i++) if (String(vals[i][cK]) === String(data[key]) && sama_(vals[i][cS], kod)) { rowIdx = i; break; }
+  const cT = hd.indexOf('TAHAP'); tahap = normTahap_(tahap);
+  let rowIdx = -1, kosong = -1;
+  for (let i = 1; i < vals.length; i++) if (String(vals[i][cK]) === String(data[key]) && sama_(vals[i][cS], kod)) {
+    if (!tahap || cT < 0) { rowIdx = i; break; }
+    const t = normTahap_(vals[i][cT]);
+    if (t === tahap) { rowIdx = i; break; }
+    if (!t && kosong < 0) kosong = i;
+  }
+  if (rowIdx < 0 && kosong > -1) rowIdx = kosong; // baris tanpa tahap (dikongsi kedua-dua tahap) — kekal tanpa tahap
+  else if (tahap) data.TAHAP = tahap;
   const row = hd.map((h, j) => (data[h] !== undefined ? data[h] : (rowIdx > -1 ? vals[rowIdx][j] : '')));
   if (rowIdx > -1) sh.getRange(rowIdx + 1, 1, 1, hd.length).setValues([row]);
   else sh.appendRow(row);
@@ -583,10 +623,10 @@ function deleteRowsWhere_(name, col, val) {
   for (let i = vals.length - 1; i >= 1; i--) if (String(vals[i][c]) === String(val)) sh.deleteRow(i + 1);
 }
 function deleteMurid_(k, id) { deleteRowsWhere_(k.SHEET_MURID, 'ID_MURID', id); deleteRowsWhere_(k.SHEET_MARKAH, 'ID_MURID', id); return id; }
-function deleteMP_(kodMp, kodSekolah) { // mata pelajaran dikongsi semua kelas sekolah ini; rekod TP lama dikekalkan sebagai sejarah
-  const sh = sheet_(SH.MP); const hd = headers_(sh); const c = hd.indexOf('KOD_MP'), cS = hd.indexOf('KOD_SEKOLAH');
-  const vals = sh.getDataRange().getValues();
-  for (let i = vals.length - 1; i >= 1; i--) if (String(vals[i][c]) === String(kodMp) && sama_(vals[i][cS], kodSekolah)) sh.deleteRow(i + 1);
+function deleteMP_(kodMp, kodSekolah, tahap) { // mata pelajaran dikongsi semua kelas sekolah ini; rekod TP lama dikekalkan sebagai sejarah
+  const sh = sheet_(SH.MP); const hd = headers_(sh); const c = hd.indexOf('KOD_MP'), cS = hd.indexOf('KOD_SEKOLAH'), cT = hd.indexOf('TAHAP');
+  const vals = sh.getDataRange().getValues(); tahap = normTahap_(tahap);
+  for (let i = vals.length - 1; i >= 1; i--) if (String(vals[i][c]) === String(kodMp) && sama_(vals[i][cS], kodSekolah) && (!tahap || cT < 0 || ikutTahap_({ TAHAP: vals[i][cT] }, tahap))) sh.deleteRow(i + 1);
   return kodMp; }
 
 function saveMarkah_(sheetName, kod, rows) {
@@ -622,13 +662,15 @@ function saveUlasanKelas_(sheetName, rows) {
   return true;
 }
 
-function saveTafsiran_(d, kod) {
-  d = Object.assign({}, d || {}); d.KOD_SEKOLAH = kod;
+function saveTafsiran_(d, kod, tahap) {
+  d = Object.assign({}, d || {}); d.KOD_SEKOLAH = kod; tahap = normTahap_(tahap) || normTahap_(d.TAHAP) || '1'; d.TAHAP = tahap;
   const sh = sheet_(SH.TAFSIRAN); const hd = headers_(sh);
   const vals = sh.getDataRange().getValues();
-  const cS = hd.indexOf('SET'), cK = hd.indexOf('KOD_MP'), cSek = hd.indexOf('KOD_SEKOLAH');
+  const cS = hd.indexOf('SET'), cK = hd.indexOf('KOD_MP'), cSek = hd.indexOf('KOD_SEKOLAH'), cT = hd.indexOf('TAHAP');
+  const padan = i => String(vals[i][cS]) === String(d.SET) && String(vals[i][cK]) === String(d.KOD_MP) && sama_(vals[i][cSek], kod);
+  let tepat = -1; if (cT > -1) for (let i = 1; i < vals.length; i++) if (padan(i) && normTahap_(vals[i][cT]) === tahap) { tepat = i; break; }
   for (let i = 1; i < vals.length; i++) {
-    if (String(vals[i][cS]) === String(d.SET) && String(vals[i][cK]) === String(d.KOD_MP) && sama_(vals[i][cSek], kod)) {
+    if (tepat > -1 ? i === tepat : (padan(i) && (cT < 0 || !normTahap_(vals[i][cT])))) {
       ['MATA_PELAJARAN','TP1','TP2','TP3','TP4','TP5','TP6'].forEach(t => { const c = hd.indexOf(t); if (c > -1 && (t !== 'MATA_PELAJARAN' || String(d[t] || '').trim())) sh.getRange(i + 1, c + 1).setValue(d[t] || ''); });
       return true;
     }
