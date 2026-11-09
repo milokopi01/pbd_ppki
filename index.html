@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzWBlsgZ893S1aXknMLQacgFhEc4gU9ZamURmGoR1ktoSr1ynQ3eubJkQuMLBR4aFjf/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwaTgAQ0z67rZgEP3aEiPJ-Nl7b7q3d_CCzMLXc3JZoLZIbuzJ75DYxl4j-vmTuBs/exec";
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -122,6 +122,11 @@ select.tpsel{padding:6px;border-radius:8px;border:1px solid var(--line);font-wei
 .sheet td.tpc i{font-style:normal;display:inline-block;min-width:38px;padding:4px 6px;border-radius:12px;background:#e6f0ef;color:#0f4c4f;font-weight:800;border:1px solid #9fc1bf}
 .sheet .ul{margin:14px 0;padding:9px 12px;border-left:4px solid #c9a24a;background:#fbf7ec;line-height:1.55;border-radius:0 6px 6px 0}
 .sheet .ul b{display:block;font-size:9.5px;letter-spacing:.08em;color:#8a6a1e;margin-bottom:3px}
+.sheet .ul-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.sheet .ul-tools{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sheet .ul-editor{width:100%;box-sizing:border-box;resize:vertical;font:inherit;line-height:1.55;min-height:85px}
+.sheet .ul-actions{display:flex;gap:8px;margin-top:8px}
+@media print{.sheet .ul-tools button,.sheet .ul-editor,.sheet .ul-actions{display:none!important}}
 .sig{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:22px;font-size:10.5px}
 .sig div{padding-top:34px}
 .sig .ln{border-top:1px solid #1a2b2c;padding-top:4px}
@@ -971,7 +976,7 @@ V.ulasan = () => {
 function saveUl(btn){ const rows=[...document.querySelectorAll('#tbU tbody tr')].map(tr=>({ID_MURID:tr.dataset.id,ULASAN_GURU_KELAS:tr.querySelector('textarea').value.trim()})); run(btn,()=>api('saveUlasanKelas',{rows}),'Ulasan disimpan ✓'); }
 
 /* ---------- Laporan murid ---------- */
-function reportHTML(s){
+function reportHTML(s, editable=false){
   const t=T(); const rows=reportRows(s);
   const ini=String(t.NAMA_SEKOLAH||'S').split(/\s+/).map(w=>w[0]).join('').slice(0,3);
   return `<div class="sheet">
@@ -988,7 +993,8 @@ function reportHTML(s){
    ${rows.length?rows.map(({mp,rec})=>`<tr><td class="mp">${esc(mp.NAMA_MATA_PELAJARAN)}</td><td class="tpc"><i>TP ${tpNum(rec.TP_KESELURUHAN)}</i></td><td>${esc(penyataan(s,mp,rec)).replace(/\n/g,'<br>')}</td></tr>`).join('')
      :`<tr><td colspan="3" style="text-align:center;padding:20px">Tiada rekod Tahap Penguasaan.</td></tr>`}
    </tbody></table>
-   <div class="ul"><b>${esc(label('ULASAN_GURU_KELAS'))}</b> <u>${esc(s.ULASAN_GURU_KELAS)}</u></div>
+   <div class="ul"><div class="ul-tools"><b>${esc(label('ULASAN_GURU_KELAS'))}</b>${editable&&isAdmin()?`<button class="btn sm" aria-label="Edit ulasan guru" title="Edit ulasan guru" onclick="editReportUlasan()">✎</button>`:''}</div><div class="ul-text">${esc(s.ULASAN_GURU_KELAS)}</div>
+    ${editable&&isAdmin()?`<div id="reportUlEditor" hidden><textarea class="f ul-editor" id="reportUlasan" aria-label="Ulasan guru kelas" rows="4">${esc(s.ULASAN_GURU_KELAS)}</textarea><div class="ul-actions"><button class="btn pri" onclick="saveReportUlasan(this)">💾 Simpan Ulasan</button><button class="btn" onclick="cancelReportUlasan()">Batal</button></div><div id="reportUlStatus" role="status" aria-live="polite"></div></div>`:''}</div>
    <div class="sig">
     <div><div class="ln"><b>${esc(t.NAMA_GURU_BESAR)}</b><br>${esc(t.JAWATAN_PENTADBIR||label('GURU_BESAR'))}<br>${esc(t.NAMA_SEKOLAH)}</div></div>
     <div><div class="ln"><b>${esc(t.NAMA_GURU_KELAS)}</b><br>${esc(label('GURU_KELAS'))}</div></div>
@@ -1004,8 +1010,38 @@ V.laporan = () => {
    `<button class="btn" onclick="printDocs('report',[S.stuSel])">🖨 Cetak murid ini</button><button class="btn pri" onclick="printDocs('report',students().map(s=>s.ID_MURID))">🖨 Cetak SEMUA (${st.length})</button>`)+
   `<div class="card" style="margin-bottom:16px"><div class="row"><button class="btn sm" onclick="stepStu(-1)">◀</button><select class="f" style="flex:1" onchange="S.stuSel=this.value;render()">
    ${st.map((x,i)=>`<option value="${x.ID_MURID}" ${x.ID_MURID===S.stuSel?'selected':''}>${i+1}. ${esc(x.NAMA_MURID)}</option>`).join('')}</select><button class="btn sm" onclick="stepStu(1)">▶</button></div></div>
-  <div style="overflow:auto"><div class="preview-scale">${s?reportHTML(s):'<div class="card empty">Tiada murid</div>'}</div></div>`;
+  <div style="overflow:auto"><div class="preview-scale">${s?reportHTML(s,true):'<div class="card empty">Tiada murid</div>'}</div></div>`;
 };
+function editReportUlasan(){
+  const editor=$('#reportUlEditor'); if(!editor||!isAdmin()) return;
+  editor.hidden=false; editor.closest('.ul').querySelector('.ul-text').hidden=true;
+  $('#reportUlasan').focus();
+}
+function cancelReportUlasan(){
+  const editor=$('#reportUlEditor'); if(!editor) return;
+  const s=students().find(s=>s.ID_MURID===S.stuSel);
+  $('#reportUlasan').value=s?s.ULASAN_GURU_KELAS||'':'';
+  editor.hidden=true; editor.closest('.ul').querySelector('.ul-text').hidden=false;
+  $('#reportUlStatus').textContent='';
+}
+async function saveReportUlasan(btn){
+  const field=$('#reportUlasan'); if(!field||!isAdmin()) return;
+  const id=S.stuSel, value=field.value.trim(), old=btn.innerHTML;
+  const controls=[...document.querySelectorAll('#view button,#view select,#nav button,#who select')];
+  const disabled=controls.map(el=>el.disabled); controls.forEach(el=>el.disabled=true); field.disabled=true;
+  btn.innerHTML='⏳ Menyimpan…'; $('#reportUlStatus').textContent='Sedang menyimpan ke Google Sheet…';
+  try{
+    const j=await api('saveUlasanKelas',{rows:[{ID_MURID:id,ULASAN_GURU_KELAS:value}]});
+    const saved=j.data&&j.data.murid.find(s=>String(s.ID_MURID)===String(id));
+    if(!saved||String(saved.ULASAN_GURU_KELAS||'')!==value) throw new Error('Simpanan belum dapat disahkan. Cuba simpan semula.');
+    render(); toast('Ulasan berjaya disimpan ke Google Sheet ✓');
+  }catch(e){
+    const status=$('#reportUlStatus'); if(status) status.textContent='Tidak berjaya disimpan: '+e.message;
+    toast(e.message,true);
+  }finally{
+    controls.forEach((el,i)=>el.disabled=disabled[i]); field.disabled=false; btn.innerHTML=old;
+  }
+}
 function stepStu(d){ const st=students(); const i=st.findIndex(s=>s.ID_MURID===S.stuSel); const n=st[(i+d+st.length)%st.length]; S.stuSel=n.ID_MURID; render(); }
 
 /* ---------- Sijil ---------- */

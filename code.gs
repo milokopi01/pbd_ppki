@@ -707,11 +707,18 @@ function saveMarkah_(sheetName, kod, rows) {
 function saveUlasanKelas_(sheetName, rows) {
   const sh = sheet_(sheetName); const hd = headers_(sh);
   const cId = hd.indexOf('ID_MURID'), cU = hd.indexOf('ULASAN_GURU_KELAS');
+  if (cId < 0 || cU < 0) throw new Error('Lajur ID_MURID atau ULASAN_GURU_KELAS tiada dalam Google Sheet.');
+  if (!Array.isArray(rows) || !rows.length) throw new Error('Tiada ulasan untuk disimpan.');
   const vals = sh.getDataRange().getValues();
-  (rows || []).forEach(r => {
-    for (let i = 1; i < vals.length; i++) if (String(vals[i][cId]) === String(r.ID_MURID)) { sh.getRange(i + 1, cU + 1).setValue(r.ULASAN_GURU_KELAS || ''); break; }
+  const updates = rows.map(r => {
+    if (!r || !String(r.ID_MURID || '').trim() || typeof r.ULASAN_GURU_KELAS !== 'string') throw new Error('Maklumat ulasan tidak sah.');
+    const matches = vals.slice(1).map((line, i) => String(line[cId]) === String(r.ID_MURID) ? i + 2 : 0).filter(Boolean);
+    if (matches.length !== 1) throw new Error('Rekod murid tidak dijumpai atau bertindih. Muat semula sebelum menyimpan.');
+    return { row: matches[0], value: r.ULASAN_GURU_KELAS };
   });
-  return true;
+  updates.forEach(u => sh.getRange(u.row, cU + 1).setValue(u.value.startsWith('=') ? "'" + u.value : u.value));
+  SpreadsheetApp.flush();
+  return updates.length;
 }
 
 function saveTafsiran_(d, kod, tahap) {
