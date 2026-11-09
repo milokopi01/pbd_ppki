@@ -473,6 +473,27 @@ function updateKelas_(id, data, kod) { // simpan tetapan khusus kelas
   Object.keys(KELAS_KEYS).forEach(key => { const c = hd.indexOf(KELAS_KEYS[key]); if (data[key] !== undefined && c > -1) sh.getRange(k._row, c + 1).setValue(data[key]); });
 }
 
+/* Kemaskini maklumat kelas (sesi, tahun, tahap, nama kelas, guru kelas) — mana-mana guru berdaftar sekolah ini */
+function editKelas_(id, d, kod) {
+  const k = kelas_(id, kod);
+  const nama = String(d.NAMA_KELAS != null ? d.NAMA_KELAS : k.NAMA_KELAS).trim().toUpperCase();
+  const sesi = String(d.SESI != null ? d.SESI : k.SESI).trim();
+  if (!sesi || !nama) throw new Error('Sesi dan nama kelas wajib diisi.');
+  updateKelas_(id, { SESI: sesi, TAHUN: String(d.TAHUN != null ? d.TAHUN : k.TAHUN).trim(), KELAS: nama,
+    NAMA_GURU_KELAS: String(d.NAMA_GURU_KELAS != null ? d.NAMA_GURU_KELAS : k.NAMA_GURU_KELAS).trim().toUpperCase(), TAHAP: d.TAHAP }, kod);
+  return id;
+}
+/* Padam kelas: buang baris dalam 00_KELAS serta sheet MURID & MARKAH kelas itu (tidak boleh dibatalkan) */
+function padamKelas_(id, kod) {
+  const sh = kelasSheet_(); const k = kelas_(id, kod); const ss = ss_();
+  [k.SHEET_MURID, k.SHEET_MARKAH].forEach(n => {
+    if (!n || n === SH.MURID || n === SH.MARKAH) return; // sheet templat asal tidak dipadam
+    const s = ss.getSheetByName(n); if (s && ss.getSheets().length > 1) ss.deleteSheet(s);
+  });
+  sh.deleteRow(k._row);
+  return id;
+}
+
 function getAll_(kelasId, guru) {
   const kod = guru.KOD_SEKOLAH;
   const k = kelas_(kelasId, kod, true);
@@ -503,7 +524,31 @@ function getAll_(kelasId, guru) {
 }
 
 /* ---------- POST (semua tindakan edit memerlukan kata laluan) ---------- */
+/* ====================== KEHADIRAN SERENTAK (v9) ======================
+ * Setiap pelayar menghantar "hadir" setiap ~20 saat dengan halaman & kelas yang sedang dibuka.
+ * Disimpan dalam CacheService (bukan Sheet) supaya pantas dan tidak mengunci data.
+ * Pelayar menerima senarai guru lain yang sedang membuka halaman yang SAMA. */
+const HADIR_TTL = 60; // saat — dianggap sudah keluar jika tiada isyarat
+function hadir_(guru, body) {
+  const kod = String(guru.KOD_SEKOLAH).toUpperCase(), c = CacheService.getScriptCache(), key = 'HADIR_' + kod;
+  const sid = String(body.sid || '').slice(0, 40); if (!sid) return [];
+  const page = String(body.page || '').slice(0, 120), now = Date.now();
+  const lk = LockService.getScriptLock(); let ada = false; try { ada = lk.tryLock(3000); } catch (e) {}
+  try {
+    let m = {}; try { m = JSON.parse(c.get(key) || '{}'); } catch (e) {}
+    Object.keys(m).forEach(s => { if (now - m[s].t > HADIR_TTL * 1000) delete m[s]; });
+    if (page) m[sid] = { n: String(guru.NAMA_GURU || guru.EMEL || 'Guru'), e: String(guru.EMEL || ''), p: page, t: now };
+    else delete m[sid];
+    try { c.put(key, JSON.stringify(m), 600); } catch (e) {}
+    return Object.keys(m).filter(s => s !== sid && page && m[s].p === page).map(s => ({ nama: m[s].n, sejak: m[s].t }));
+  } finally { if (ada) lk.releaseLock(); }
+}
+
 function doPost(e) {
+  try { // isyarat kehadiran: tanpa kunci utama supaya tidak melambatkan guru lain yang sedang menyimpan
+    const b0 = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    if (b0.action === 'hadir') { const g0 = sahGuru_(b0.emel, b0.token, b0.sekolah); return out_({ ok: true, lain: hadir_(g0, b0) }); }
+  } catch (err) { return out_({ ok: false, error: String(err && err.message || err) }); }
   const lock = LockService.getScriptLock();
   try {
     lock.waitLock(20000);
@@ -523,6 +568,8 @@ function doPost(e) {
     switch (a) {
       case 'createKelas':   res = kid = createKelas_(body.data, kod); break;
       case 'arkibKelas':    res = setStatusKelas_(body.id, body.status || 'ARKIB', kod); break;
+      case 'editKelas':     res = editKelas_(body.id, body.data || {}, kod); break;
+      case 'padamKelas':    res = padamKelas_(body.id, kod); if (String(kid) === String(body.id)) kid = ''; break;
       case 'saveTetapan': {
         const d = Object.assign({}, body.data || {});
         if (!guru._master && String(d.ADMIN_PASSWORD || '').trim()) tokenBaru = tukarKataLaluan_(guru, String(d.ADMIN_PASSWORD).trim());
