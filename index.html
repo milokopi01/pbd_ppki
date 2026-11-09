@@ -109,29 +109,72 @@ select.tpsel{padding:6px;border-radius:8px;border:1px solid var(--line);font-wei
 .sig .ln{border-top:1px solid #000;padding-top:4px}
 .legend{margin-top:16px;width:60%!important}
 .legend td,.legend th{text-align:center;font-size:10.5px}
-/* ---------- Sijil ---------- */
-.cert{width:297mm;height:210mm;background:#fffdf6;margin:0 auto 20px;position:relative;box-shadow:var(--shadow);color:#1b2b2c;overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif}
-.cert .fr{position:absolute;inset:9mm;border:2.5px solid var(--brand);outline:1px solid var(--gold);outline-offset:-6px;border-radius:6px}
-.cert .corner{position:absolute;width:70mm;height:70mm;border-radius:50%;background:radial-gradient(circle,var(--gold-soft),transparent 70%)}
-.cert .in{position:absolute;inset:16mm 22mm;text-align:center;display:flex;flex-direction:column;align-items:center}
-.cert .sch{font-weight:800;letter-spacing:.18em;font-size:13px;color:var(--brand)}
-.cert .ttl{font-family:Fraunces;font-weight:900;font-size:34px;color:var(--brand);margin:6px 0 0}
-.cert .sub{font-size:13px;letter-spacing:.3em;color:var(--gold);font-weight:700}
-.cert .nm{font-family:'Great Vibes',cursive;font-size:40px;max-width:230mm;color:#1b2b2c;margin:4px 0 0;line-height:1.1}
-.cert .txt{font-size:13px;max-width:200mm;line-height:1.55}
-.cert table{border-collapse:collapse;margin:8px auto 0;font-size:11px}
-.cert td{border:1px solid #cfc5ad;padding:3px 8px;text-align:left}
-.cert td.c{text-align:center;font-weight:800;color:var(--brand)}
-.cert .sigs{position:absolute;left:30mm;right:30mm;bottom:20mm;display:flex;justify-content:space-between;font-size:11px}
-.cert .sigs div{width:70mm;border-top:1px solid #1b2b2c;padding-top:4px;text-align:center}
-.cert .seal{position:absolute;right:26mm;top:22mm;width:30mm;height:30mm;border-radius:50%;background:var(--gold);color:#fff;display:grid;place-items:center;font-family:Fraunces;font-weight:900;font-size:13px;text-align:center;box-shadow:0 0 0 4px #fff,0 0 0 6px var(--gold)}
-.cert .logo-img{position:absolute;left:26mm;top:22mm;width:28mm;height:28mm;object-fit:contain}
+/* ---------- Sijil (premium) ---------- */
+.cert{width:297mm;height:210mm;background:#fffcf3;margin:0 auto 20px;position:relative;box-shadow:var(--shadow);color:#13292b;overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif}
+.cert .bgpat{position:absolute;inset:0;width:100%;height:100%;opacity:.55}
+.cert .band{position:absolute;inset:0;border:7mm solid #0b3d40;background:linear-gradient(#0000,#0000)}
+.cert .band:after{content:"";position:absolute;inset:1.6mm;border:1.2px solid #d8b25a}
+.cert .fr{position:absolute;inset:11mm;border:2px solid #b8892a;border-radius:2px}
+.cert .fr:after{content:"";position:absolute;inset:2mm;border:.6px solid #b8892a}
+.cert .orn{position:absolute;width:26mm;height:26mm}
+.cert .wm{position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);width:120mm;height:120mm;opacity:.06;object-fit:contain;filter:grayscale(1)}
+.cert .in{position:absolute;inset:19mm 44mm 40mm;text-align:center;display:flex;flex-direction:column;align-items:center}
+.cert .logo-img{width:24mm;height:24mm;object-fit:contain;margin-bottom:2mm}
+.cert .sch{font-weight:800;letter-spacing:.22em;font-size:13px;color:#0b3d40;text-transform:uppercase}
+.cert .addr{font-size:10px;color:#6b7f80;letter-spacing:.08em}
+.cert .ttl{font-family:Fraunces;font-weight:900;font-size:32px;letter-spacing:.02em;margin:3mm 0 0;background:linear-gradient(180deg,#0b3d40,#147a72);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.05}
+.cert .sub{display:flex;align-items:center;gap:4mm;font-size:11.5px;letter-spacing:.32em;color:#a87a1f;font-weight:800;margin-top:2mm}
+.cert .sub:before,.cert .sub:after{content:"";width:22mm;height:1px;background:linear-gradient(90deg,transparent,#b8892a,transparent)}
+.cert .txt{font-size:12.5px;max-width:205mm;line-height:1.6;color:#33494b}
+.cert .nm{font-family:'Great Vibes',cursive;font-size:48px;max-width:235mm;color:#0b3d40;margin:0;line-height:1.15;padding:0 8mm 1mm;border-bottom:1px solid #d8b25a}
+.cert .award{display:inline-block;margin:0 2px;padding:1px 10px;border-radius:99px;background:linear-gradient(135deg,#f6dc8e,#c9962b 55%,#8a6414);color:#fff;font-weight:900;letter-spacing:.12em;font-size:11px;text-shadow:0 1px 0 rgba(0,0,0,.2)}
+.cert table{border-collapse:separate;border-spacing:0;margin:6mm auto 0;font-size:12px;width:230mm;border:1px solid #d9c9a0;border-radius:6px;overflow:hidden;background:rgba(255,255,255,.7)}
+.cert td{padding:6px 10px;text-align:left;border-bottom:1px solid #eee3c8}
+.cert tr:nth-child(odd) td{background:rgba(247,236,210,.45)}
+.cert td.c{text-align:center;font-weight:900;color:#fff;width:13mm}
+.cert td.c span{display:inline-block;min-width:11mm;border-radius:4px;padding:1px 0;background:#0b3d40}
+.cert td.gap{width:4mm;background:#fff!important;border:0}
+.cert .seal{position:absolute;right:24mm;top:20mm;width:32mm;height:32mm}
+.cert .sigs{position:absolute;left:32mm;right:32mm;bottom:19mm;display:flex;justify-content:space-between;align-items:flex-end;font-size:10.5px}
+.cert .sigs .s{width:66mm;border-top:1px solid #13292b;padding-top:4px;text-align:center;letter-spacing:.04em}
+.cert .sigs .mid{text-align:center;color:#6b7f80;font-size:9.5px;letter-spacing:.1em}
+.cert .sigs .mid b{display:block;color:#0b3d40;font-size:11px;letter-spacing:.04em}
+.cert .serial{position:absolute;left:0;right:0;text-align:center;bottom:14mm;font-size:7.5px;letter-spacing:.2em;color:#9aa9aa}
+/* ---------- Profil prestasi (spider) ---------- */
+.prof{width:297mm;height:210mm;margin:0 auto 20px;position:relative;overflow:hidden;box-shadow:var(--shadow);color:#e9f6f4;font-family:'Plus Jakarta Sans',sans-serif;
+ background:radial-gradient(120mm 90mm at 15% 10%,rgba(20,122,114,.55),transparent 70%),radial-gradient(110mm 90mm at 95% 100%,rgba(201,150,43,.35),transparent 70%),linear-gradient(135deg,#061f22,#0b3236 55%,#071a1c)}
+.prof .grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:8mm 8mm}
+.prof .hd{position:absolute;left:16mm;right:16mm;top:12mm;display:flex;align-items:center;gap:5mm;border-bottom:1px solid rgba(216,178,90,.35);padding-bottom:4mm}
+.prof .hd img{width:15mm;height:15mm;object-fit:contain;background:#fff;border-radius:3mm;padding:1mm}
+.prof .hd .t{font-family:Fraunces;font-weight:900;font-size:24px;letter-spacing:.01em}
+.prof .hd .k{font-size:9.5px;letter-spacing:.28em;color:#d8b25a;font-weight:800}
+.prof .hd .r{margin-left:auto;text-align:right;font-size:10px;color:#a9c6c3;line-height:1.5}
+.prof .hd .r b{color:#fff;font-size:13px}
+.prof .chart{position:absolute;left:10mm;top:34mm;width:160mm;height:160mm}
+.prof .pside{position:absolute;right:16mm;top:36mm;width:108mm;display:flex;flex-direction:column;gap:4mm}
+.prof .glass{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:4mm;padding:4mm 5mm;backdrop-filter:blur(6px)}
+.prof .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}
+.prof .kpi .v{font-family:Fraunces;font-weight:900;font-size:24px;color:#fff;line-height:1}
+.prof .kpi .l{font-size:8.5px;letter-spacing:.18em;color:#a9c6c3;margin-top:1.5mm;font-weight:700}
+.prof .kpi.g .v{color:#f0cf7a}
+.prof .bars .b{display:grid;grid-template-columns:1fr 46mm 9mm;align-items:center;gap:2.5mm;font-size:9px;margin:1.6mm 0;color:#d4e7e5}
+.prof .bars .b .nmx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prof .bars .tr{height:2.4mm;border-radius:2mm;background:rgba(255,255,255,.1);overflow:hidden}
+.prof .bars .fl{height:100%;border-radius:2mm;background:linear-gradient(90deg,#1fb5a3,#f0cf7a)}
+.prof .bars .n{font-weight:900;color:#fff;text-align:right}
+.prof .ttlx{font-size:9px;letter-spacing:.24em;color:#d8b25a;font-weight:800;margin-bottom:2mm}
+.prof .ins{font-size:9.5px;line-height:1.55;color:#d4e7e5}
+.prof .ins b{color:#f0cf7a}
+.prof .ft{position:absolute;left:16mm;right:16mm;bottom:8mm;display:flex;justify-content:space-between;font-size:8px;letter-spacing:.2em;color:#7fa09d}
+.logo-up{display:flex;gap:14px;align-items:center;border:1.5px dashed var(--line);border-radius:12px;padding:12px;background:#fff}
+.logo-up .pv{width:72px;height:72px;border-radius:10px;background:#f4f1ea;display:grid;place-items:center;overflow:hidden;font-size:11px;color:var(--muted);text-align:center}
+.logo-up .pv img{width:100%;height:100%;object-fit:contain}
 #printArea{display:none}
 @media print{
   body{background:#fff}
   .app,.toast,.modal,.loader{display:none!important}
   #printArea{display:block}
-  .sheet,.cert{box-shadow:none;margin:0;page-break-after:always;break-after:page}
+  .sheet,.cert,.prof{box-shadow:none;margin:0;page-break-after:always;break-after:page}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 @media (max-width:980px){
@@ -402,36 +445,101 @@ V.laporan = () => {
 function stepStu(d){ const st=students(); const i=st.findIndex(s=>s.ID_MURID===S.stuSel); const n=st[(i+d+st.length)%st.length]; S.stuSel=n.ID_MURID; render(); }
 
 /* ---------- Sijil ---------- */
-function certHTML(s){
-  const t=T(); const rows=reportRows(s); const avg=rows.length?rows.reduce((a,r)=>a+tpNum(r.rec.TP_KESELURUHAN),0)/rows.length:0;
+const titleCase = v => String(v||"").toLowerCase().replace(/\s+/g," ").trim().replace(/(^|[\s\/(\-])([a-z])/g,(m,a,b)=>a+b.toUpperCase());
+function certStats(s){
+  const rows=reportRows(s); const tps=rows.map(r=>tpNum(r.rec.TP_KESELURUHAN));
+  const avg=tps.length?tps.reduce((a,b)=>a+b,0)/tps.length:0;
   const award = avg>=5?'CEMERLANG':avg>=4?'KEPUJIAN':avg>=3?'BAIK':'PENGHARGAAN';
-  return `<div class="cert"><div class="corner" style="left:-20mm;top:-20mm"></div><div class="corner" style="right:-20mm;bottom:-20mm"></div><div class="fr"></div>
-   ${t.LOGO_URL?`<img class="logo-img" src="${esc(t.LOGO_URL)}">`:''}<div class="seal">PBD<br>${esc(t.SESI||'')}</div>
+  return {rows,tps,avg,award};
+}
+const ORN = (rot,pos) => `<svg class="orn" style="${pos};transform:rotate(${rot}deg)" viewBox="0 0 100 100"><g fill="none" stroke="#b8892a" stroke-width="1.6"><path d="M4 60V4h56"/><path d="M12 44V12h32"/><path d="M4 4l20 20"/><circle cx="24" cy="24" r="5" fill="#d8b25a" stroke="none"/><path d="M30 12c10 0 18 8 18 18M12 30c0 10 8 18 18 18" stroke-width="1"/></g></svg>`;
+const GUILLOCHE = (()=>{ let p=''; for(let i=0;i<36;i++){ const a=i*10; p+=`<ellipse cx="0" cy="0" rx="62" ry="22" transform="rotate(${a})"/>`; }
+  return `<svg class="bgpat" viewBox="0 0 297 210" preserveAspectRatio="xMidYMid slice"><defs><pattern id="gp" width="14" height="14" patternUnits="userSpaceOnUse"><path d="M0 7Q3.5 0 7 7T14 7" fill="none" stroke="#e9dcb8" stroke-width=".35"/></pattern></defs><rect width="297" height="210" fill="url(#gp)"/><g transform="translate(148.5 112)" fill="none" stroke="#e6d5a6" stroke-width=".25" opacity=".9">${p}</g></svg>`; })();
+function sealSVG(t,award){
+  let teeth=''; for(let i=0;i<48;i++){const a=i*7.5*Math.PI/180, r=i%2?47:50; teeth+=`${50+r*Math.cos(a)},${50+r*Math.sin(a)} `;}
+  return `<svg class="seal" viewBox="0 0 100 100"><defs><linearGradient id="gf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f8e3a0"/><stop offset=".45" stop-color="#c9962b"/><stop offset="1" stop-color="#7d5a12"/></linearGradient>
+   <path id="arc" d="M50 50m-33 0a33 33 0 1 1 66 0a33 33 0 1 1 -66 0"/></defs>
+   <polygon points="${teeth}" fill="url(#gf)"/><circle cx="50" cy="50" r="40" fill="#0b3d40" stroke="#f3d78a" stroke-width="1.4"/><circle cx="50" cy="50" r="27" fill="none" stroke="#f3d78a" stroke-width=".6" stroke-dasharray="1 1.6"/>
+   <text font-size="6.2" font-weight="800" letter-spacing="2.4" fill="#f3d78a" font-family="Plus Jakarta Sans"><textPath href="#arc" startOffset="0">★ PENTAKSIRAN BILIK DARJAH ★ ${esc(t.SESI||'')} </textPath></text>
+   <text x="50" y="47" text-anchor="middle" font-family="Fraunces" font-weight="900" font-size="14" fill="#fff">PBD</text>
+   <text x="50" y="58" text-anchor="middle" font-size="5.6" font-weight="800" letter-spacing="1" fill="#f3d78a" font-family="Plus Jakarta Sans">${award}</text></svg>`;
+}
+function certHTML(s){
+  const t=T(); const {rows,award}=certStats(s); const half=Math.ceil(rows.length/2);
+  const cell=r=>r?`<td>${esc(titleCase(r.mp.NAMA_MATA_PELAJARAN))}</td><td class="c"><span>TP ${tpNum(r.rec.TP_KESELURUHAN)}</span></td>`:'<td></td><td></td>';
+  return `<div class="cert">${GUILLOCHE}<div class="band"></div><div class="fr"></div>
+   ${ORN(0,'left:13mm;top:13mm')}${ORN(90,'right:13mm;top:13mm')}${ORN(180,'right:13mm;bottom:13mm')}${ORN(270,'left:13mm;bottom:13mm')}
+   ${t.LOGO_URL?`<img class="wm" src="${esc(t.LOGO_URL)}">`:''}${sealSVG(t,award)}
    <div class="in">
-    <div class="sch">${esc(t.NAMA_SEKOLAH)}</div><div class="lock" style="font-size:11px">${esc(t.ALAMAT_SEKOLAH)}</div>
+    ${t.LOGO_URL?`<img class="logo-img" src="${esc(t.LOGO_URL)}">`:''}
+    <div class="sch">${esc(t.NAMA_SEKOLAH)}</div><div class="addr">${esc(t.ALAMAT_SEKOLAH)}</div>
     <div class="ttl">${esc(t.TAJUK_SIJIL||'SIJIL PENTAKSIRAN BILIK DARJAH')}</div>
     <div class="sub">${esc(t.PELAPORAN)} • ${esc(t.SESI||'')}</div>
-    <div class="txt" style="margin-top:10px">Dengan ini disahkan bahawa</div>
-    <div class="nm">${esc(String(s.NAMA_MURID||"").toLowerCase().replace(/\s+/g," ").replace(/(^|\s)\S/g,c=>c.toUpperCase()))}</div>
-    <div class="txt">No. MyKid: <b>${esc(s.NO_MYKID)}</b> • Kelas: <b>${esc(t.TAHUN?('Tahun '+t.TAHUN+' '):'')}${esc(t.KELAS)}</b><br>telah mengikuti Pentaksiran Bilik Darjah dan mencapai tahap penguasaan berikut dengan pengiktirafan <b style="color:var(--gold)">${award}</b>.</div>
-    <table>${Array.from({length:Math.ceil(rows.length/2)},(_,i)=>{const a=rows[i],b=rows[i+Math.ceil(rows.length/2)];
-      return `<tr><td>${esc(a.mp.NAMA_MATA_PELAJARAN)}</td><td class="c">TP ${tpNum(a.rec.TP_KESELURUHAN)}</td>${b?`<td>${esc(b.mp.NAMA_MATA_PELAJARAN)}</td><td class="c">TP ${tpNum(b.rec.TP_KESELURUHAN)}</td>`:'<td></td><td></td>'}</tr>`}).join('')}</table>
+    <div class="txt" style="margin-top:3mm;font-style:italic">Dengan ini disahkan bahawa</div>
+    <div class="nm" style="font-size:${String(s.NAMA_MURID||"").length>40?40:48}px;white-space:nowrap;max-width:none">${esc(titleCase(s.NAMA_MURID))}</div>
+    <div class="txt" style="margin-top:2mm">No. MyKid: <b>${esc(s.NO_MYKID)}</b> &nbsp;•&nbsp; Kelas: <b>${esc(t.TAHUN?('Tahun '+t.TAHUN+' '):'')}${esc(t.KELAS)}</b><br>telah mengikuti Pentaksiran Bilik Darjah dan mencapai tahap penguasaan berikut dengan pengiktirafan <span class="award">${award}</span></div>
+    <table>${Array.from({length:half},(_,i)=>`<tr>${cell(rows[i])}<td class="gap"></td>${cell(rows[i+half])}</tr>`).join('')}</table>
    </div>
-   <div class="sigs"><div><b>${esc(t.NAMA_GURU_BESAR)}</b><br>${esc(t.JAWATAN_PENTADBIR||'GURU BESAR')}</div><div style="border:0;padding-top:20px">Tarikh: ${fmtDate(t.TARIKH_PELAPORAN)}</div><div><b>${esc(t.NAMA_GURU_KELAS)}</b><br>GURU KELAS</div></div>
+   <div class="sigs"><div class="s"><b>${esc(t.NAMA_GURU_BESAR)}</b><br>${esc(t.JAWATAN_PENTADBIR||'GURU BESAR')}</div><div class="mid">TARIKH<b>${fmtDate(t.TARIKH_PELAPORAN)}</b></div><div class="s"><b>${esc(t.NAMA_GURU_KELAS)}</b><br>GURU KELAS</div></div>
+   <div class="serial">NO. SIJIL: PBD-${esc(t.SESI||'')}-${esc(String(s.ID_MURID||'').toUpperCase())}</div>
+  </div>`;
+}
+function radarSVG(rows){
+  const n=rows.length, cx=300, cy=300, R=200, max=6;
+  if(n<3) return `<svg viewBox="0 0 600 600"><text x="300" y="300" text-anchor="middle" fill="#a9c6c3" font-size="18">Perlu sekurang-kurangnya 3 mata pelajaran ber-TP untuk carta labah-labah.</text></svg>`;
+  const pt=(i,v)=>{const a=-Math.PI/2+i*2*Math.PI/n; return [cx+R*v/max*Math.cos(a), cy+R*v/max*Math.sin(a)];};
+  let g='';
+  for(let l=max;l>=1;l--){ g+=`<polygon points="${rows.map((_,i)=>pt(i,l).join(',')).join(' ')}" fill="${l%2?'rgba(255,255,255,.035)':'rgba(255,255,255,.015)'}" stroke="rgba(255,255,255,${l===max?.35:.12})" stroke-width="${l===max?1.4:1}"/>`;
+    const [x,y]=pt(0,l); g+=`<text x="${x+6}" y="${y+4}" font-size="11" fill="#7fa09d" font-weight="700">${l}</text>`; }
+  rows.forEach((_,i)=>{const [x,y]=pt(i,max); g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="rgba(255,255,255,.12)"/>`;});
+  const vals=rows.map(r=>tpNum(r.rec.TP_KESELURUHAN));
+  const poly=vals.map((v,i)=>pt(i,v).join(',')).join(' ');
+  const avgc=vals.reduce((a,b)=>a+b,0)/n; const ref=rows.map((_,i)=>pt(i,avgc).join(',')).join(' ');
+  g+=`<polygon points="${ref}" fill="none" stroke="#f0cf7a" stroke-width="1.2" stroke-dasharray="5 5" opacity=".7"/>`;
+  g+=`<polygon points="${poly}" fill="url(#rf)" stroke="#3fe0c8" stroke-width="2.6" filter="url(#gl)" stroke-linejoin="round"/>`;
+  vals.forEach((v,i)=>{const [x,y]=pt(i,v); g+=`<circle cx="${x}" cy="${y}" r="7" fill="#062022" stroke="#3fe0c8" stroke-width="2.4"/><circle cx="${x}" cy="${y}" r="2.6" fill="#f0cf7a"/>`;});
+  rows.forEach((r,i)=>{const a=-Math.PI/2+i*2*Math.PI/n; const x=cx+(R+30)*Math.cos(a), y=cy+(R+30)*Math.sin(a);
+    const anc=Math.abs(Math.cos(a))<.25?'middle':Math.cos(a)>0?'start':'end';
+    const words=titleCase(r.mp.NAMA_MATA_PELAJARAN).replace(/^Asas 3m - /i,'').replace(/^Pendidikan Seni Kesejahteraan \(/i,'(').split(' ');
+    const lines=[]; let cur=''; words.forEach(w=>{ if((cur+' '+w).trim().length>18){ if(cur) lines.push(cur); cur=w; } else cur=(cur+' '+w).trim(); }); if(cur) lines.push(cur);
+    const ls=lines.slice(0,4); const y0=y-(ls.length-1)*7+(Math.sin(a)>.5?8:Math.sin(a)<-.5?-8:0);
+    g+=`<text text-anchor="${anc}" font-size="12.5" font-weight="700" fill="#e9f6f4">${ls.map((l,k)=>`<tspan x="${x}" y="${y0+k*14}">${esc(l)}</tspan>`).join('')}<tspan x="${x}" y="${y0+ls.length*14+2}" fill="#f0cf7a" font-weight="900">TP ${vals[i]}</tspan></text>`;});
+  return `<svg viewBox="-40 -10 680 620" width="100%" height="100%"><defs><radialGradient id="rf"><stop offset="0" stop-color="#3fe0c8" stop-opacity=".15"/><stop offset="1" stop-color="#3fe0c8" stop-opacity=".55"/></radialGradient>
+   <filter id="gl" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${g}</svg>`;
+}
+function profileHTML(s){
+  const t=T(); const {rows,tps,avg,award}=certStats(s);
+  const sorted=rows.map((r,i)=>({r,v:tps[i]})).sort((a,b)=>b.v-a.v);
+  const best=sorted.filter(x=>x.v===(sorted[0]||{}).v).map(x=>titleCase(x.r.mp.NAMA_MATA_PELAJARAN));
+  const low=sorted.length?sorted[sorted.length-1].v:0; const weak=sorted.filter(x=>x.v===low&&low<sorted[0].v).map(x=>titleCase(x.r.mp.NAMA_MATA_PELAJARAN));
+  const mastery=tps.filter(v=>v>=4).length;
+  return `<div class="prof"><div class="grid-bg"></div>
+   <div class="hd">${t.LOGO_URL?`<img src="${esc(t.LOGO_URL)}">`:''}<div><div class="k">PROFIL PRESTASI MURID • ${esc(t.PELAPORAN)}</div><div class="t">${esc(titleCase(s.NAMA_MURID))}</div></div>
+    <div class="r">${esc(t.NAMA_SEKOLAH)}<br><b>${esc(t.TAHUN?('Tahun '+t.TAHUN+' '):'')}${esc(t.KELAS)}</b> • MyKid ${esc(s.NO_MYKID)}</div></div>
+   <div class="chart">${radarSVG(rows)}</div>
+   <div class="pside">
+    <div class="kpis"><div class="glass kpi"><div class="v">${avg.toFixed(2)}</div><div class="l">PURATA TP</div></div><div class="glass kpi"><div class="v">${mastery}/${rows.length}</div><div class="l">MP TP4 KE ATAS</div></div><div class="glass kpi g"><div class="v" style="font-size:15px;padding:2mm 0 1.3mm">${award}</div><div class="l">PENGIKTIRAFAN</div></div></div>
+    <div class="glass bars"><div class="ttlx">TAHAP PENGUASAAN MENGIKUT MATA PELAJARAN</div>
+     ${sorted.map(x=>`<div class="b"><div class="nmx">${esc(titleCase(x.r.mp.NAMA_MATA_PELAJARAN))}</div><div class="tr"><div class="fl" style="width:${x.v/6*100}%"></div></div><div class="n">TP${x.v}</div></div>`).join('')}</div>
+    <div class="glass ins"><div class="ttlx">ANALISIS RINGKAS</div>
+     Kekuatan utama: <b>${esc(best.join(', ')||'-')}</b>.<br>${weak.length?`Fokus penambahbaikan: <b>${esc(weak.join(', '))}</b>.`:'Prestasi seimbang merentas semua mata pelajaran.'}<br>
+     <span style="color:#7fa09d">Garis putus emas = purata TP murid (${avg.toFixed(1)}). Skala 1–6.</span></div>
+   </div>
+   <div class="ft"><span>e-PBD • PENTAKSIRAN BILIK DARJAH ${esc(t.SESI||'')}</span><span>DIJANA ${fmtDate(new Date())}</span></div>
   </div>`;
 }
 V.sijil = () => {
   const st=students(); if(!S.stuSel||!st.find(s=>s.ID_MURID===S.stuSel)) S.stuSel=(st[0]||{}).ID_MURID; const s=st.find(x=>x.ID_MURID===S.stuSel);
   $('#view').innerHTML = head('Sijil PBD','Sijil penghargaan berdasarkan TP keseluruhan murid (A4 melintang).',
-   `<button class="btn" onclick="printDocs('cert',[S.stuSel])">🖨 Cetak sijil ini</button><button class="btn gold" onclick="printDocs('cert',students().map(s=>s.ID_MURID))">🏅 Cetak SEMUA sijil</button>`)+
+   `<button class="btn" onclick="printDocs('cert',[S.stuSel])">🖨 Cetak sijil ini</button><button class="btn gold" onclick="printDocs('cert',students().map(s=>s.ID_MURID))">🏅 Cetak SEMUA sijil</button><label class="chip" style="cursor:pointer"><input type="checkbox" id="withProf" ${S.withProf!==false?'checked':''} onchange="S.withProf=this.checked"> + Profil spider</label>`)+
   `<div class="card" style="margin-bottom:16px"><div class="row"><button class="btn sm" onclick="stepStu(-1)">◀</button><select class="f" style="flex:1" onchange="S.stuSel=this.value;render()">
    ${st.map((x,i)=>`<option value="${x.ID_MURID}" ${x.ID_MURID===S.stuSel?'selected':''}>${i+1}. ${esc(x.NAMA_MURID)}</option>`).join('')}</select><button class="btn sm" onclick="stepStu(1)">▶</button></div>
-   <p class="lock" style="margin:10px 0 0">Pengiktirafan: purata TP ≥5 Cemerlang • ≥4 Kepujian • ≥3 Baik • lain-lain Penghargaan.</p></div>
-  <div style="overflow:auto"><div class="preview-scale" style="transform-origin:top left">${s?certHTML(s):''}</div></div>`;
+   <div class="row" style="margin-top:10px"><button class="btn sm ${S.certPage!=='prof'?'pri':''}" onclick="S.certPage='cert';render()">🏅 Sijil</button><button class="btn sm ${S.certPage==='prof'?'pri':''}" onclick="S.certPage='prof';render()">🕸 Profil Prestasi (Spider Chart)</button></div><p class="lock" style="margin:10px 0 0">Pengiktirafan: purata TP ≥5 Cemerlang • ≥4 Kepujian • ≥3 Baik • lain-lain Penghargaan.</p></div>
+  <div style="overflow:auto"><div class="preview-scale" style="transform-origin:top left">${s?(S.certPage==='prof'?profileHTML(s):certHTML(s)):''}</div></div>`;
 };
 function printDocs(kind, ids){
   const list=ids.map(id=>students().find(s=>s.ID_MURID===id)).filter(Boolean);
-  $('#printArea').innerHTML = list.map(s=>kind==='cert'?certHTML(s):reportHTML(s)).join('');
+  $('#printArea').innerHTML = list.map(s=>kind==='cert'?certHTML(s)+(S.withProf!==false?profileHTML(s):''):reportHTML(s)).join('');
   let ps=document.getElementById('pageStyle'); if(!ps){ps=document.createElement('style');ps.id='pageStyle';document.head.appendChild(ps);}
   ps.textContent = kind==='cert' ? '@page{size:A4 landscape;margin:0}' : '@page{size:A4 portrait;margin:0}';
   toast(`Menyediakan ${list.length} dokumen untuk dicetak…`);
@@ -525,10 +633,23 @@ V.tetapan = () => {
    ${F('TARIKH_PELAPORAN','Tarikh pelaporan','date')}
    <div><label class="l">Jenis sekolah</label><select class="f" id="s_JENIS_SEKOLAH" ${dis}>${['SEK KEB (SK)','SEK JENIS KEB (SJK)','PENDIDIKAN KHAS','INKLUSIF'].map(o=>`<option ${t.JENIS_SEKOLAH===o?'selected':''}>${o}</option>`).join('')}</select></div>
    <div><label class="l">Bahasa laporan</label><select class="f" id="s_BAHASA_LAPORAN" ${dis}>${['SK','SJKC','SJKT'].map(o=>`<option ${lang()===o?'selected':''}>${o}</option>`).join('')}</select></div>
-   ${F('TAHUN','Tahun')}${F('SESI','Sesi')}${F('TAJUK_SIJIL','Tajuk sijil')}${F('LOGO_URL','Pautan logo sekolah (pilihan)')}
+   ${F('TAHUN','Tahun')}${F('SESI','Sesi')}${F('TAJUK_SIJIL','Tajuk sijil')}<div><label class="l">Logo sekolah (dipaparkan pada sijil)</label><input type="hidden" id="s_LOGO_URL" value="${esc(t.LOGO_URL)}">
+    <div class="logo-up"><div class="pv" id="logoPv">${t.LOGO_URL?`<img src="${esc(t.LOGO_URL)}">`:'Tiada logo'}</div><div style="flex:1">
+    ${isAdmin()?`<input type="file" accept="image/*" id="logoFile" onchange="pickLogo(this)" style="display:none"><button class="btn sm pri" type="button" onclick="$('#logoFile').click()">⬆ Muat naik logo</button> <button class="btn sm" type="button" onclick="setLogo('')">✕ Buang</button><div class="hint" style="font-size:12px;margin-top:6px">PNG/JPG. Logo diperkecil automatik. Tekan <b>Simpan Tetapan</b> selepas muat naik.</div>`:'<div class="hint">Log masuk admin untuk muat naik logo.</div>'}</div></div></div>
    ${isAdmin()?`<div><label class="l">Kata laluan admin baharu (kosong = kekal)</label><input class="f" type="password" id="s_ADMIN_PASSWORD"></div>`:''}
   </div></div>`;
 };
+function setLogo(url){ $('#s_LOGO_URL').value=url; $('#logoPv').innerHTML=url?`<img src="${url}">`:'Tiada logo'; }
+function pickLogo(inp){
+  const f=inp.files[0]; if(!f) return;
+  const rd=new FileReader(); rd.onload=()=>{ const im=new Image(); im.onload=()=>{
+    let size=360, out='';
+    for(let k=0;k<8;k++){ const sc=Math.min(1,size/Math.max(im.width,im.height)); const c=document.createElement('canvas'); c.width=Math.round(im.width*sc); c.height=Math.round(im.height*sc);
+      c.getContext('2d').drawImage(im,0,0,c.width,c.height); out=c.toDataURL('image/png'); if(out.length>45000) out=c.toDataURL('image/webp',.85); if(out.length<=45000) break; size=Math.round(size*.8); }
+    if(out.length>48000){ toast('Logo terlalu besar, cuba imej lain',true); return; }
+    setLogo(out); toast('Logo dimuat naik — tekan Simpan Tetapan ✓');
+  }; im.src=rd.result; }; rd.readAsDataURL(f);
+}
 function saveSet(btn){
   const keys=['NAMA_SEKOLAH','ALAMAT_SEKOLAH','NAMA_GURU_KELAS','KELAS','NAMA_GURU_BESAR','JAWATAN_PENTADBIR','PELAPORAN','TARIKH_PELAPORAN','JENIS_SEKOLAH','BAHASA_LAPORAN','TAHUN','SESI','TAJUK_SIJIL','LOGO_URL','ADMIN_PASSWORD'];
   const d={}; keys.forEach(k=>{const el=$('#s_'+k); if(el) d[k]=el.value.trim();});
