@@ -5,7 +5,7 @@
 /* ===== URL WEB APP GOOGLE APPS SCRIPT =====
    Tampal URL Web App (berakhir dengan /exec) DI ANTARA tanda petikan " " di bawah.
    Boleh tampal URL biasa (https://script.google.com/...) — TIDAK perlu atob / tukar kod. */
-var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJw9IWZ84X0hhG7_RI2cYALsRGsgkiE1d-EuPGgfWJpxHwiA2mmRBpaBjqrF6arXa1/exec";
+var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwpZoCLm3RrjK62lAi2YY4hQJev9ZGfVecEBu2Zus2UGmREWgnZmS_8tcS1-OTpg_L8/exec";
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -135,7 +135,13 @@ select.tpsel.auto{animation:tpflash .75s ease-out}
 .sheet .ul-tools{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .sheet .ul-editor{width:100%;box-sizing:border-box;resize:vertical;font:inherit;line-height:1.55;min-height:85px}
 .sheet .ul-actions{display:flex;gap:8px;margin-top:8px}
-@media print{.sheet .ul-tools button,.sheet .ul-editor,.sheet .ul-actions{display:none!important}}
+.sheet .py{position:relative;padding-right:30px}
+.sheet .py-text{white-space:normal}
+.sheet .py-btn{position:absolute;top:-2px;right:-4px;padding:2px 7px}
+.sheet .py-editor textarea{width:100%;box-sizing:border-box;resize:vertical;font:inherit;font-size:11px;line-height:1.5;min-height:90px}
+.sheet .py-status{font-size:10px;color:#9b2c2c;margin-top:4px}
+.sheet .py [hidden]{display:none!important}
+@media print{.sheet .ul-tools button,.sheet .ul-editor,.sheet .ul-actions,.sheet .py-btn,.sheet .py-editor{display:none!important}.sheet .py{padding-right:0}}
 .sig{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:22px;font-size:10.5px}
 .sig div{padding-top:34px}
 .sig .ln{border-top:1px solid #1a2b2c;padding-top:4px}
@@ -816,11 +822,19 @@ const tahapAktif = () => String(S.data.tahap||T().TAHAP||'1');
 const tahapChip = () => `<span class="chip gold">Tahap ${tahapAktif()} • ikut kelas ${esc(T().TAHUN?T().TAHUN+' ':'')}${esc(T().KELAS||'')}</span>`;
 const tahapDariTahun = t => { const n=parseInt(String(t||''),10); return n>=4&&n<=6?'2':'1'; };
 function fmtDate(d){ if(!d) return ''; const x=new Date(d); if(isNaN(x)) return d; return `${x.getDate()}/${x.getMonth()+1}/${x.getFullYear()}`; }
+/* Penyataan laporan: jika guru sudah isi / jana ulasan (AI atau manual), ulasan itu SAHAJA dipaparkan
+   supaya laporan sama seperti yang guru tulis. Jika tiada ulasan, ayat tafsiran TP rasmi digunakan.
+   Tukar kepada false untuk kembali ke format lama (tafsiran TP + ulasan). */
+const PENYATAAN_ULASAN_SAHAJA = true;
+function tafsiranAyat(stu, mp, rec){
+  const n = tpNum(rec&&rec.TP_KESELURUHAN); const tf = tafsiranFor(mp.KOD_MP);
+  return (n && tf && tf['TP'+n]) ? `${stu.NAMA_RINGKAS||''} ${tf['TP'+n]}`.trim() : '';
+}
 function penyataan(stu, mp, rec){
-  const n = tpNum(rec&&rec.TP_KESELURUHAN); const tf = tafsiranFor(mp.KOD_MP); const parts=[];
-  if(n && tf && tf['TP'+n]) parts.push(`${stu.NAMA_RINGKAS||''} ${tf['TP'+n]}`.trim());
-  if(rec && rec.ULASAN_GURU_MP) parts.push(rec.ULASAN_GURU_MP);
-  return parts.join('\n') || (n?'':'Tidak Berkenaan');
+  const n = tpNum(rec&&rec.TP_KESELURUHAN); const ul = String((rec&&rec.ULASAN_GURU_MP)||'').trim();
+  const tf = tafsiranAyat(stu, mp, rec);
+  if(PENYATAAN_ULASAN_SAHAJA && ul) return ul;
+  return [tf, ul].filter(Boolean).join('\n') || (n?'':'Tidak Berkenaan');
 }
 function reportRows(stu){ // seperti makro asal: sembunyi mata pelajaran tanpa TP
   return subjects().map(mp=>({mp,rec:mk(stu.ID_MURID,mp.KOD_MP)})).filter(x=>x.rec&&tpNum(x.rec.TP_KESELURUHAN));
@@ -1049,7 +1063,7 @@ V.markah = () => {
    <div><label class="l">Guru mata pelajaran</label><b>${esc(mp&&mp.NAMA_GURU_MP||'—')}</b></div>
    ${isAdmin()?`<div><label class="l">&nbsp;</label><button class="btn" onclick="autoTP()">↺ Guna purata semua bidang</button> <button class="btn" onclick="aiUlSemua(this)">✨ AI ulasan semua</button></div>
    <div><label class="l" for="aiHad">Maks. patah perkataan</label><input class="f" id="aiHad" type="number" min="10" max="80" step="5" value="${hadAI()}" style="width:110px" onchange="setHadAI(this.value)" title="Bilangan maksimum patah perkataan untuk setiap ulasan AI (10–80)"></div>`:''}</div></div>
-  ${mp?`<div class="card"><div class="tw"><table class="t" id="tbK"><thead><tr><th>Bil</th><th style="min-width:220px">Nama Murid</th>${cs.map((c,i)=>`<th title="${esc(c)}" style="min-width:80px">${esc(c)}</th>`).join('')}<th style="background:var(--gold)">TP KESELURUHAN</th><th style="min-width:280px">Ulasan Guru MP (jika perlu)</th></tr></thead><tbody>
+  ${mp?`<div class="card"><div class="tw"><table class="t" id="tbK"><thead><tr><th>Bil</th><th style="min-width:220px">Nama Murid</th>${cs.map((c,i)=>`<th title="${esc(c)}" style="min-width:80px">${esc(c)}</th>`).join('')}<th style="background:var(--gold)">TP KESELURUHAN</th><th style="min-width:280px">Ulasan Guru MP (dipapar sebagai Penyataan laporan)</th></tr></thead><tbody>
   ${st.map((s,i)=>{const r=mk(s.ID_MURID,mp.KOD_MP)||{}; return `<tr data-id="${s.ID_MURID}"><td>${i+1}</td><td><b>${esc(s.NAMA_MURID)}</b><br><span class="lock">${esc(s.NO_MYKID)} • ${esc(s.JANTINA)}</span></td>
    ${cs.map((c,j)=>`<td><select class="tpsel" data-k="K${j+1}" ${dis}>${opt(r['K'+(j+1)])}</select></td>`).join('')}
    <td class="tpk"><select class="tpsel" data-k="TP_KESELURUHAN" style="border-color:var(--gold)" ${dis}>${opt(r.TP_KESELURUHAN)}</select><div class="tpx" data-tpx></div></td>
@@ -1275,7 +1289,7 @@ function reportHTML(s, editable=false){
     <div><b>${esc(label('PELAPORAN')).replace(/:/,'')}</b><span>${esc(t.PELAPORAN)}</span></div><div><b>${esc(label('SEKOLAH')).replace(/:/,'')}</b><span>${esc(t.NAMA_SEKOLAH)}</span></div>
    </div>
    <table class="rt"><thead><tr><th>${esc(label('MATA_PELAJARAN'))}</th><th>${esc(label('TAHAP_PENGUASAAN'))}</th><th>${esc(label('PENYATAAN'))}</th></tr></thead><tbody>
-   ${rows.length?rows.map(({mp,rec})=>`<tr><td class="mp">${esc(mp.NAMA_MATA_PELAJARAN)}</td><td class="tpc"><i>TP ${tpNum(rec.TP_KESELURUHAN)}</i></td><td>${esc(penyataan(s,mp,rec)).replace(/\n/g,'<br>')}</td></tr>`).join('')
+   ${rows.length?rows.map(({mp,rec})=>`<tr><td class="mp">${esc(mp.NAMA_MATA_PELAJARAN)}</td><td class="tpc"><i>TP ${tpNum(rec.TP_KESELURUHAN)}</i></td><td>${editable&&isAdmin()?`<div class="py" data-kod="${esc(mp.KOD_MP)}"><div class="py-text">${esc(penyataan(s,mp,rec)).replace(/\n/g,'<br>')}</div><button class="btn sm py-btn" aria-label="Edit penyataan" title="Edit penyataan ${esc(mp.NAMA_MATA_PELAJARAN)}" onclick="editPy(this)">✎</button><div class="py-editor" hidden><textarea class="f" rows="5" aria-label="Penyataan ${esc(mp.NAMA_MATA_PELAJARAN)}">${esc(penyataan(s,mp,rec))}</textarea><div class="ul-actions"><button class="btn pri" onclick="savePy(this)">💾 Simpan</button><button class="btn" onclick="cancelPy(this)">Batal</button></div><div class="py-status" role="status" aria-live="polite"></div></div></div>`:esc(penyataan(s,mp,rec)).replace(/\n/g,'<br>')}</td></tr>`).join('')
      :`<tr><td colspan="3" style="text-align:center;padding:20px">Tiada rekod Tahap Penguasaan.</td></tr>`}
    </tbody></table>
    <div class="ul"><div class="ul-tools"><b>${esc(label('ULASAN_GURU_KELAS'))}</b>${editable&&isAdmin()?`<button class="btn sm" aria-label="Edit ulasan guru" title="Edit ulasan guru" onclick="editReportUlasan()">✎</button>`:''}</div><div class="ul-text">${esc(s.ULASAN_GURU_KELAS)}</div>
@@ -1325,6 +1339,38 @@ async function saveReportUlasan(btn){
     toast(e.message,true);
   }finally{
     controls.forEach((el,i)=>el.disabled=disabled[i]); field.disabled=false; btn.innerHTML=old;
+  }
+}
+/* Edit penyataan setiap mata pelajaran terus dalam Laporan Murid (sebelum cetak / simpan PDF).
+   Teks disimpan sebagai Ulasan Guru MP murid ini, jadi Rekod Prestasi & laporan sentiasa sama. */
+function pyBox(el){ return el.closest('.py'); }
+function editPy(btn){
+  if(!isAdmin()) return askLogin(); const b=pyBox(btn);
+  b.querySelector('.py-text').hidden=true; b.querySelector('.py-btn').hidden=true; b.querySelector('.py-editor').hidden=false;
+  const ta=b.querySelector('textarea'); ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length);
+}
+function cancelPy(btn){
+  const b=pyBox(btn); const s=students().find(x=>x.ID_MURID===S.stuSel); const mp=S.data.mp.find(m=>m.KOD_MP===b.dataset.kod);
+  b.querySelector('textarea').value = s&&mp ? penyataan(s,mp,mk(s.ID_MURID,mp.KOD_MP)) : '';
+  b.querySelector('.py-editor').hidden=true; b.querySelector('.py-text').hidden=false; b.querySelector('.py-btn').hidden=false; b.querySelector('.py-status').textContent='';
+}
+async function savePy(btn){
+  if(!isAdmin()) return askLogin();
+  const b=pyBox(btn), kod=b.dataset.kod, id=S.stuSel, field=b.querySelector('textarea'), status=b.querySelector('.py-status');
+  const rec=mk(id,kod); if(!rec){ toast('Rekod prestasi murid ini tidak dijumpai. Tekan ⟳ Muat semula.',true); return; }
+  const value=field.value.trim(); const old=btn.innerHTML;
+  const row=Object.assign({},rec); delete row._row; row.ID_MURID=id; row.ULASAN_GURU_MP=value; // kekalkan semua TP & lajur lain
+  const controls=[...document.querySelectorAll('#view button,#view select,#view textarea,#nav button,#who select')];
+  const disabled=controls.map(el=>el.disabled); controls.forEach(el=>el.disabled=true);
+  btn.innerHTML='⏳ Menyimpan…'; status.textContent='Sedang menyimpan ke Google Sheet…';
+  try{
+    const j=await api('saveMarkah',{kod,rows:[row]});
+    const saved=j.data&&(j.data.markah||[]).find(x=>String(x.ID_MURID)===String(id)&&String(x.KOD_MP)===String(kod));
+    if(!saved||String(saved.ULASAN_GURU_MP||'').trim()!==value) throw new Error('Simpanan belum dapat disahkan. Cuba simpan semula.');
+    render(); toast('Penyataan berjaya disimpan ✓');
+  }catch(e){
+    controls.forEach((el,i)=>el.disabled=disabled[i]); btn.innerHTML=old;
+    status.textContent='Tidak berjaya disimpan: '+e.message; toast(e.message,true);
   }
 }
 function stepStu(d){ const st=students(); const i=st.findIndex(s=>s.ID_MURID===S.stuSel); const n=st[(i+d+st.length)%st.length]; S.stuSel=n.ID_MURID; render(); }
