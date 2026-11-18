@@ -742,7 +742,7 @@ function saveTafsiran_(d, kod, tahap) {
 /* Jalankan sekali dari editor untuk menguji sambungan */
 function testSambungan() { migrasiSKBenut(); Logger.log(JSON.stringify(getAll_('', { KOD_SEKOLAH: KOD_ASAL, NAMA_GURU: 'UJIAN', EMEL: '' })).slice(0, 1500)); }
 
-const VERSI_AI_ = 'ai-v3'; // index.html semak nilai ini untuk pastikan kod Apps Script sudah dikemas kini
+const VERSI_AI_ = 'ai-v4'; // index.html semak nilai ini untuk pastikan kod Apps Script sudah dikemas kini
 /* ===================== ULASAN AI (Groq) =====================
  * Sheet "apikey": A1 = kunci API, B1 = nama model bahasa.
  * Hanya nama singkatan murid + TP dihantar ke AI (tiada MyKid / nama penuh). */
@@ -763,9 +763,9 @@ function aiUlasan_(b) {
   // Ingat cadangan terdahulu (sekolah + mata pelajaran yang sama) supaya murid lain tidak dapat cadangan serupa.
   const kunciIngat = 'AIUL_' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, String(b.sekolah || '') + '|' + mp));
   let lalu = []; try { lalu = JSON.parse(CacheService.getScriptCache().get(kunciIngat) || '[]'); } catch (e) {}
-  const SUASANA = ['semasa memasak atau mengemas di dapur', 'semasa membeli-belah di kedai', 'melalui permainan ringkas', 'melalui lagu, gambar atau video pendek',
-    'semasa rutin harian seperti berpakaian atau makan', 'menggunakan barang terpakai di rumah', 'semasa berjalan-jalan di luar rumah', 'bersama adik-beradik',
-    'menggunakan kad bergambar atau buku cerita', 'semasa menolong kerja rumah yang mudah'];
+  const SUASANA = ['buku teks atau buku latihan sekolah', 'kad huruf, suku kata atau perkataan yang ditulis sendiri di atas kertas', 'kertas dan pensel untuk menyurih atau menulis',
+    'buku cerita bergambar', 'barang sebenar di rumah seperti sudu, butang atau biji kacang untuk mengira dan mengasing', 'label dan tulisan pada barang di rumah',
+    'kalendar atau jam di dinding', 'gambar dalam buku atau surat khabar lama', 'lembaran kerja ringkas yang ditulis sendiri oleh ibu bapa'];
   const suasana = SUASANA[Math.floor(Math.random() * SUASANA.length)];
   const tahap = String(b.tahap || '').replace(/\.0+$/, '') === '2' ? '2' : '1';
   const tpN = Number(b.tp) || (senarai.length ? Math.round(senarai.reduce((x, y) => x + (y.tp || 0), 0) / senarai.length) : 0);
@@ -780,7 +780,7 @@ function aiUlasan_(b) {
     (tafsiranRasmi ? '\nTafsiran rasmi TP' + tpN + ' bagi mata pelajaran ini: ' + tafsiranRasmi : '') +
     '\n\nFOKUS INTERVENSI: ' + fokus.teks +
     '\nCara bantuan ikut tahap: ' + fokus.cara +
-    '\nIdea suasana (guna jika logik; jika tidak, pilih cara lain): ' + suasana + '.' +
+    '\nIdea bahan di rumah (guna jika sesuai dengan bidang; jika tidak, pilih bahan lain yang mudah didapati): ' + suasana + '.' +
     (lalu.length ? '\nCadangan ini SUDAH diberi kepada murid lain, JANGAN ulang aktiviti serupa:\n' + lalu.map(x => '- ' + x).join('\n') : '') +
     '\n\nTulis ulasan seperti seorang GURU CEMERLANG PENDIDIKAN KHAS menulis dalam laporan murid untuk ibu bapa: ayat biasa yang semula jadi, mesra, jujur dan padat, bunyi macam manusia sebenar, bukan iklan atau robot. ' +
     bilAyat + ', JUMLAH MAKSIMUM ' + had + ' PATAH PERKATAAN. Kira perkataan sebelum menjawab; jika lebih, pendekkan. ' +
@@ -789,10 +789,14 @@ function aiUlasan_(b) {
       : 'TP' + tpN + ' ialah tahap TINGGI: iktiraf pencapaian dengan sewajarnya tanpa berlebihan; jangan kata murid lemah atau perlu bimbingan penuh. ') +
     (had <= 15 ? 'Jika masih ada ruang dalam had, tambah cadangan ringkas untuk ibu bapa dalam ayat yang sama. '
       : 'Ayat seterusnya: SATU aktiviti khusus yang ibu bapa boleh buat di rumah untuk bidang dalam FOKUS INTERVENSI (apa dan bagaimana), bukan nasihat umum. ') +
+    'SYARAT CADANGAN: WAJIB berunsur AKADEMIK, iaitu melatih terus kemahiran pelajaran dalam bidang fokus (contoh membaca, menulis, menyebut, mengenal huruf atau nombor, mengira, mengasing, menyusun langkah). ' +
+    'Mesti MUDAH dibuat oleh ibu bapa di rumah dalam 5 hingga 10 minit, menggunakan bahan yang sudah ada seperti buku, kertas, pensel atau barang sebenar. Sesuai dengan tahap murid berkeperluan khas. ' +
+    'DILARANG cadangan mengarut atau tidak berkaitan pelajaran: mainan, permainan, telefon, tablet, video, televisyen, lagu atau tarian (kecuali mata pelajaran Muzik), keluar ke kedai, pasar atau taman, haiwan peliharaan, atau aktiviti yang perlu membeli barang. ' +
     'GAYA: jangan guna tanda seru, tanda petik, sempang panjang, titik bertindih, koma bertitik atau emoji. Jangan mula dengan "memang". Jangan guna "jom". ' +
     'DILARANG: "berlatih setiap hari", "luangkan masa", "teruskan usaha", "untuk meningkatkan lagi kemahiran". Jangan ulang nama mata pelajaran. ' +
-    '\nContoh gaya (jangan tiru bulat-bulat): "Ammar masih memerlukan bimbingan penuh untuk menyebut perkataan mudah. Di rumah, sebut nama barang yang dia pegang dan minta dia ulang perlahan-lahan." / ' +
-    '"Aina sudah boleh membaca ayat pendek sendiri. Minta dia baca label makanan semasa ke kedai dan terangkan maksudnya." ' +
+    '\nContoh gaya (jangan tiru bulat-bulat): "Ammar masih memerlukan bimbingan penuh untuk menyebut suku kata mudah. Di rumah, tulis tiga suku kata di atas kertas dan minta dia sebut serta surih semula." / ' +
+    '"Aina sudah boleh membaca ayat pendek sendiri. Minta dia baca satu petikan dalam buku cerita dan tulis dua ayat tentang isinya." / ' +
+    '"Danish masih perlukan bimbingan untuk mengira hingga lima. Di rumah, minta dia kira sudu di atas meja sambil menyentuh satu demi satu." ' +
     'Jawab dengan ulasan sahaja tanpa tajuk atau tanda petik.';
   // Tetapan khas ikut jenis model: model "berfikir" (gpt-oss, qwen3, deepseek) perlu ruang token lebih
   // dan pemikirannya disembunyikan, jika tidak jawapan kosong (AI-03).
@@ -802,7 +806,7 @@ function aiUlasan_(b) {
     method: 'post', contentType: 'application/json', muteHttpExceptions: true,
     headers: { Authorization: 'Bearer ' + key },
     payload: JSON.stringify(Object.assign({ model: m, temperature: 0.6, max_tokens: 1500, messages: [
-      { role: 'system', content: 'Anda Guru Cemerlang Pendidikan Khas (Program Pendidikan Khas Integrasi, PPKI) di Malaysia yang berpengalaman dan pakar Pentaksiran Bilik Darjah KSSRPK. Skala Tahap Penguasaan: TP1 paling rendah (perlu bimbingan penuh) hingga TP6 paling tinggi (cemerlang). Ulasan anda jujur ikut TP sebenar murid, empati terhadap murid berkeperluan khas, positif tanpa berlebihan, padat (patuhi had patah perkataan), dengan satu cadangan intervensi praktikal untuk ibu bapa. Jawab terus dengan ulasan sahaja.' },
+      { role: 'system', content: 'Anda Guru Cemerlang Pendidikan Khas (Program Pendidikan Khas Integrasi, PPKI) di Malaysia yang berpengalaman dan pakar Pentaksiran Bilik Darjah KSSRPK. Skala Tahap Penguasaan: TP1 paling rendah (perlu bimbingan penuh) hingga TP6 paling tinggi (cemerlang). Ulasan anda jujur ikut TP sebenar murid, empati terhadap murid berkeperluan khas, positif tanpa berlebihan, padat (patuhi had patah perkataan), dengan satu cadangan aktiviti akademik yang mudah dibuat ibu bapa di rumah (bukan mainan, gajet atau aktiviti di luar). Jawab terus dengan ulasan sahaja.' },
       { role: 'user', content: prompt }] }, tambahan))
   }); } catch (e) { console.error(e); throw new Error(/permission|kebenaran/i.test(String(e)) ? 'AI bermasalah. Kod: AI-04' : 'AI bermasalah. Kod: AI-05'); }
     let j = {}; try { j = JSON.parse(r.getContentText()); } catch (e) {}
@@ -824,11 +828,12 @@ function aiUlasan_(b) {
     const calon = modelGroqSenarai_(key).filter(id => id !== model).slice(0, 4);
     for (const m of calon) { const x = cuba(m); if (x.t) { res = x; guna = m; break; } if (BERHENTI(x.code)) { res = x; break; } }
   }
-  if (res.t && !sesuaiTP_(manusiakan_(res.t), tpN)) { // AI tersalah nada (cth. TP1 dipuji "cemerlang") — cuba sekali lagi dengan model yang berjaya
-    const ulang = cuba(guna); if (ulang.t && sesuaiTP_(manusiakan_(ulang.t), tpN)) res = ulang;
+  const lulus = t => sesuaiTP_(manusiakan_(t), tpN) && akademik_(manusiakan_(t), mp);
+  if (res.t && !lulus(res.t)) { // AI tersalah nada (cth. TP1 dipuji "cemerlang") atau cadangan tidak akademik — cuba sekali lagi
+    const ulang = cuba(guna); if (ulang.t && lulus(ulang.t)) res = ulang;
   }
   if (res.t) {
-    res.t = kemasUlasan_(res.t, nama, tpN, had);
+    res.t = kemasUlasan_(res.t, nama, tpN, had, mp);
     try { // simpan ayat cadangan (ayat ke-2) untuk 6 jam; maksimum 8 cadangan terkini
       const ay = res.t.match(/[^.!?]+[.!?]+/g) || [res.t];
       lalu = [String(ay[ay.length - 1] || '').trim().slice(0, 200)].concat(lalu).slice(0, 8);
@@ -892,16 +897,45 @@ const AYAT_TP_ = { // ayat ganti yang ringkas & bunyi macam guru sebenar, ikut T
   4: n => n + ' sudah boleh melakukannya sendiri dengan baik.',
   5: n => n + ' berdikari dan konsisten, pencapaiannya sangat baik.',
   6: n => n + ' cemerlang dan boleh membantu rakan lain.' };
-const CADANGAN_TP_ = {
-  rendah: n => 'Di rumah, tunjuk cara dahulu dan bimbing ' + n + ' langkah demi langkah dengan barang sebenar.',
-  tinggi: n => 'Di rumah, beri cabaran baharu dan minta ' + n + ' tunjuk cara kepada ahli keluarga.' };
+/* Cadangan untuk ibu bapa MESTI berunsur akademik & mudah dibuat di rumah (buku, kertas, pensel, barang sebenar).
+   Aktiviti yang tidak berkaitan pelajaran (mainan, video, gajet, keluar ke kedai/taman...) ditolak. */
+const LARANGAN_AKTIVITI_ = ['mainan', 'permainan', 'bermain', 'main', 'video', 'youtube', 'tiktok', 'telefon', 'tablet', 'gajet', 'gadget', 'televisyen', 'tv', 'kartun',
+  'lagu', 'menyanyi', 'nyanyi', 'menari', 'tarian', 'kedai', 'pasar', 'pasaraya', 'membeli-belah', 'taman', 'berjalan-jalan', 'bersiar-siar', 'cakap-cakap', 'kucing', 'haiwan peliharaan'];
+const IZIN_MP_ = [[/muzik/i, ['lagu', 'menyanyi', 'nyanyi']], [/jasmani|kesihatan|sukan/i, ['bermain', 'permainan', 'main', 'taman', 'berjalan-jalan']],
+  [/kemahiran hidup|pengurusan|urus diri|vokasional|masakan|perniagaan/i, ['kedai', 'pasar', 'pasaraya', 'membeli-belah']]];
+function akademik_(t, mp) {
+  mp = String(mp || ''); const izin = [];
+  IZIN_MP_.forEach(x => { if (x[0].test(mp)) izin.push.apply(izin, x[1]); });
+  const kata = LARANGAN_AKTIVITI_.filter(k => izin.indexOf(k) < 0).map(k => k.replace(/[-\s]/g, '[-\\s]?'));
+  return !new RegExp('(^|[^a-z])(' + kata.join('|') + ')([^a-z]|$)', 'i').test(String(t || ''));
+}
+function cadanganAkademik_(n, mp, tp) {
+  mp = String(mp || ''); const r = (Number(tp) || 3) <= 3;
+  if (/matematik/i.test(mp)) return r ? 'Di rumah, minta ' + n + ' mengira lima biji sudu atau butang sambil menyentuh satu demi satu.'
+    : 'Di rumah, beri ' + n + ' tiga soalan tambah dan tolak mudah menggunakan barang sebenar.';
+  if (/inggeris|english/i.test(mp)) return r ? 'Di rumah, tunjuk gambar dalam buku dan minta ' + n + ' sebut nama benda itu dalam bahasa Inggeris.'
+    : 'Di rumah, minta ' + n + ' baca dua ayat pendek dalam bahasa Inggeris dan terangkan maksudnya.';
+  if (/bahasa|komunikasi|literasi/i.test(mp)) return r ? 'Di rumah, tulis tiga suku kata di atas kertas dan minta ' + n + ' sebut serta surih semula.'
+    : 'Di rumah, minta ' + n + ' baca satu petikan pendek dan tulis dua ayat tentangnya.';
+  if (/sains/i.test(mp)) return r ? 'Di rumah, tunjuk tiga objek sebenar dan minta ' + n + ' sebut nama serta warnanya.'
+    : 'Di rumah, minta ' + n + ' asingkan barang ikut ciri yang sama dan terangkan sebabnya.';
+  if (/islam|agama|al-?quran|jawi/i.test(mp)) return r ? 'Di rumah, ulang bacaan doa harian bersama ' + n + ' satu baris demi satu baris.'
+    : 'Di rumah, minta ' + n + ' baca doa harian sendiri dan terangkan maksudnya secara ringkas.';
+  if (/moral|sivik/i.test(mp)) return 'Di rumah, baca satu cerita pendek bersama ' + n + ' dan tanya perbuatan yang betul dalam cerita itu.';
+  if (/kemahiran hidup|pengurusan|urus diri|vokasional|masakan/i.test(mp)) return r ? 'Di rumah, tunjuk cara satu tugasan mudah langkah demi langkah dan minta ' + n + ' ulang setiap langkah.'
+    : 'Di rumah, minta ' + n + ' sebut langkah kerja dahulu sebelum melakukan satu tugasan rumah sendiri.';
+  return r ? 'Di rumah, ulang latihan dalam buku sekolah selama 10 minit dan bimbing ' + n + ' langkah demi langkah.'
+    : 'Di rumah, minta ' + n + ' terangkan semula apa yang dipelajari dan selesaikan satu latihan dalam buku.';
+}
 function pecahAyat_(t) { return (String(t).match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [String(t)]).map(a => a.trim()).filter(Boolean); }
-function betulkanNada_(t, nama, tp) {
-  tp = Number(tp) || 0; if (!tp || sesuaiTP_(t, tp)) return t;
+function betulkanNada_(t, nama, tp, mp) {
+  tp = Number(tp) || 0;
+  const okTP = a => !tp || sesuaiTP_(a, tp), ok = a => okTP(a) && akademik_(a, mp);
+  if (ok(t)) return t;
   const ayat = pecahAyat_(t);
-  const cadangan = ayat.slice(1).filter(a => sesuaiTP_(a, tp));
-  const a2 = cadangan.length ? cadangan.join(' ') : CADANGAN_TP_[tp <= 3 ? 'rendah' : 'tinggi'](nama);
-  return AYAT_TP_[tp](nama) + ' ' + a2;
+  const a1 = ok(ayat[0]) ? ayat[0] : AYAT_TP_[tp || 3](nama);
+  const cadangan = ayat.slice(1).filter(ok);
+  return a1 + ' ' + (cadangan.length ? cadangan.join(' ') : cadanganAkademik_(nama, mp, tp));
 }
 function ringkas_(t, had) {
   had = Math.min(80, Math.max(10, parseInt(had, 10) || HAD_PERKATAAN_));
@@ -928,7 +962,7 @@ function ringkas_(t, had) {
     if (n(ambil) >= 5) hasil.push(ambil.replace(/[.!?]?$/, '.')); else hasil.push(potong(akhir, ruang)); }
   return hasil.join(' ');
 }
-function kemasUlasan_(t, nama, tp, had) { return ringkas_(betulkanNada_(manusiakan_(t), nama, tp), had); }
+function kemasUlasan_(t, nama, tp, had, mp) { return ringkas_(betulkanNada_(manusiakan_(t), nama, tp, mp), had); }
 /* ===== tamat KEMAS ULASAN AI ===== */
 /* Tentukan bidang yang paling perlu dibantu dan cara bantuan yang sesuai dengan tahap TP murid. */
 function fokusIntervensi_(senarai, tpAll) {
