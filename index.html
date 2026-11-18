@@ -5,7 +5,7 @@
 /* ===== URL WEB APP GOOGLE APPS SCRIPT =====
    Tampal URL Web App (berakhir dengan /exec) DI ANTARA tanda petikan " " di bawah.
    Boleh tampal URL biasa (https://script.google.com/...) — TIDAK perlu atob / tukar kod. */
-var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzcEpR9lCJTcgyWYNksIzqftUupzFCXlt7m1hvzbdr9Uji6GeNQ7ScoDyP9y0iHgnG1/exec";
+var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwpZoCLm3RrjK62lAi2YY4hQJev9ZGfVecEBu2Zus2UGmREWgnZmS_8tcS1-OTpg_L8/exec";
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -1099,6 +1099,78 @@ function tpAuto(tr){ tr.dataset.tpManual='0'; syncTP(tr,true); }
 
 /* ---- Ulasan AI ---- */
 const hadAI = () => { const n=parseInt(localStorage.getItem('epbd_ai_had')||'30',10); return Math.min(80,Math.max(10,isNaN(n)?30:n)); };
+/* ===== KEMAS ULASAN AI (kod yang SAMA dalam code.gs & index.html) =====
+ * Skala TP: TP1 paling rendah -> TP6 paling tinggi. Semakin tinggi TP semakin bagus.
+ * 1) manusiakan_  : buang gaya "robot" (sempang panjang, tanda seru, tanda petik, koma bertitik)
+ * 2) betulkanNada_: TP1-3 tidak boleh dipuji (cemerlang/bagus...), TP4-6 tidak boleh dikata lemah
+ * 3) ringkas_     : tidak melebihi had patah perkataan yang dipilih guru */
+const NADA_TP_ = { 1: 'masih di peringkat awal, perlu bimbingan penuh', 2: 'sedang membina asas, perlu banyak bimbingan',
+  3: 'semakin maju, perlu bimbingan minimum', 4: 'baik, boleh berdikari', 5: 'sangat baik, berdikari dan konsisten', 6: 'cemerlang, boleh menjadi contoh rakan' };
+const PUJIAN_TINGGI_ = /cemerlang|hebat|sangat baik|amat baik|menguasai|mantap|luar biasa|terbaik|bagus|tahniah|syabas|membanggakan|sangat memuaskan|berdikari sepenuhnya|pencapaian (yang )?baik/i;
+const RENDAH_ = /bimbingan penuh|peringkat awal|masih lemah|\blemah\b|baru mula/i;
+const HAD_PERKATAAN_ = 30;
+function sesuaiTP_(t, tp) {
+  t = String(t || ''); tp = Number(tp) || 0; if (!tp) return true;
+  if (tp <= 3 && PUJIAN_TINGGI_.test(t)) return false;
+  if (tp >= 4 && RENDAH_.test(t)) return false;
+  const disebut = (t.match(/TP\s*(\d)/gi) || []).map(x => Number(x.replace(/\D/g, '')));
+  return !disebut.length || disebut.indexOf(tp) > -1;
+}
+function manusiakan_(t) {
+  return String(t || '')
+    .replace(/[“”"«»]/g, '').replace(/[‘’]/g, "'").replace(/'([^']{1,40})'/g, '$1')
+    .replace(/\s*[–—]\s*/g, ', ').replace(/(\w)‑(\w)/g, '$1-$2')
+    .replace(/\s*;\s*/g, ', ').replace(/!+/g, '.').replace(/\s*:\s+/g, ', ')
+    .replace(/\s+([,.])/g, '$1').replace(/,\s*,/g, ',').replace(/\.\s*\./g, '.')
+    .replace(/\s+/g, ' ').trim()
+    .replace(/(^|[.?]\s+)([a-z])/g, (m, a, b) => a + b.toUpperCase());
+}
+const AYAT_TP_ = { // ayat ganti yang ringkas & bunyi macam guru sebenar, ikut TP
+  1: n => n + ' masih memerlukan bimbingan penuh guru.',
+  2: n => n + ' sudah mula mencuba tetapi masih perlukan banyak bimbingan.',
+  3: n => n + ' semakin maju dan boleh melakukannya dengan sedikit bimbingan.',
+  4: n => n + ' sudah boleh melakukannya sendiri dengan baik.',
+  5: n => n + ' berdikari dan konsisten, pencapaiannya sangat baik.',
+  6: n => n + ' cemerlang dan boleh membantu rakan lain.' };
+const CADANGAN_TP_ = {
+  rendah: n => 'Di rumah, tunjuk cara dahulu dan bimbing ' + n + ' langkah demi langkah dengan barang sebenar.',
+  tinggi: n => 'Di rumah, beri cabaran baharu dan minta ' + n + ' tunjuk cara kepada ahli keluarga.' };
+function pecahAyat_(t) { return (String(t).match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [String(t)]).map(a => a.trim()).filter(Boolean); }
+function betulkanNada_(t, nama, tp) {
+  tp = Number(tp) || 0; if (!tp || sesuaiTP_(t, tp)) return t;
+  const ayat = pecahAyat_(t);
+  const cadangan = ayat.slice(1).filter(a => sesuaiTP_(a, tp));
+  const a2 = cadangan.length ? cadangan.join(' ') : CADANGAN_TP_[tp <= 3 ? 'rendah' : 'tinggi'](nama);
+  return AYAT_TP_[tp](nama) + ' ' + a2;
+}
+function ringkas_(t, had) {
+  had = Math.min(80, Math.max(10, parseInt(had, 10) || HAD_PERKATAAN_));
+  t = String(t || '').replace(/\s+/g, ' ').trim();
+  const n = x => x.split(' ').filter(Boolean).length;
+  const potong = (x, h) => { const w = x.split(' ').slice(0, h); // elak berakhir dengan kata sendi tergantung
+    while (w.length > 5 && /^(pada|di|dan|untuk|dengan|ke|yang|semasa|kepada|atau|serta|hujung|bersama|dalam|dari|daripada|tetapi|masih|sambil|bila|apabila|setiap)[,;:.]?$/i.test(w[w.length - 1])) w.pop();
+    return w.join(' ').replace(/[,;:\-–]+$/, '').replace(/[.!?]?$/, '.'); };
+  if (n(t) <= had) return t;
+  const ayat = pecahAyat_(t);
+  let a1 = ayat[0];
+  if (n(a1) > had) { const p = a1.split(/,\s*/)[0].trim(); a1 = n(p) >= 4 && n(p) <= had ? p.replace(/[.!?]?$/, '.') : potong(a1, had); }
+  if (ayat.length < 2) return a1;
+  const baki = ayat.slice(1), akhir = baki[baki.length - 1];
+  const hasil = [a1]; let guna = n(a1);
+  for (const x of baki.slice(0, -1)) { if (guna + n(x) + n(akhir) <= had) { hasil.push(x); guna += n(x); } }
+  const ruang = had - guna;
+  if (n(akhir) <= ruang) { if (n(akhir) >= 4) hasil.push(akhir); }
+  else if (ruang >= 6) { // ambil klausa (dipisah koma) sebanyak yang muat supaya ayat tidak tergantung
+    const kl = akhir.replace(/[.!?]$/, '').split(/,\s*/); let ambil = '';
+    const ambilK = []; for (const k of kl) { if (n(ambilK.concat(k).join(', ')) <= ruang) ambilK.push(k); else break; }
+    while (ambilK.length > 1 && /^(tiap|setiap|apabila|bila|sambil|semasa|kerana|supaya|jika|kalau|lalu|kemudian)\b/i.test(ambilK[ambilK.length - 1])) ambilK.pop(); // klausa tergantung
+    ambil = ambilK.join(', ');
+    if (n(ambil) >= 5) hasil.push(ambil.replace(/[.!?]?$/, '.')); else hasil.push(potong(akhir, ruang)); }
+  return hasil.join(' ');
+}
+function kemasUlasan_(t, nama, tp, had) { return ringkas_(betulkanNada_(manusiakan_(t), nama, tp), had); }
+/* ===== tamat KEMAS ULASAN AI ===== */
+
 function setHadAI(v){ const n=Math.min(80,Math.max(10,parseInt(v,10)||30)); localStorage.setItem('epbd_ai_had',String(n)); const el=document.getElementById('aiHad'); if(el) el.value=n; toast(`Ulasan AI kini maksimum ${n} patah perkataan`); }
 function namaPendek(n){
   let w=String(n||'').trim().split(/\s+/); const i=w.findIndex(x=>/^(BIN|BINTI|BT|A\/L|A\/P|ANAK)$/i.test(x)); if(i>0) w=w.slice(0,i);
@@ -1116,7 +1188,8 @@ async function aiUlRow(tr){
   const j=await post({action:'aiUlasan',emel:S.emel,token:S.token,sekolah:S.sekolah,nama:namaPendek(s.NAMA_MURID),mp:mp?mp.NAMA_MATA_PELAJARAN:'',bidang,tp,
     tahap:tahapAktif(),had:hadAI(),tafsiran:tf&&tpU?String(tf['TP'+tpU]||'').slice(0,300):''});
   if(!j.ok) throw new Error(j.error);
-  tr.querySelector('[data-k="ULASAN_GURU_MP"]').value=j.ulasan;
+  if(j.versi!=='ai-v3' && !S._amaranAI){ S._amaranAI=1; toast('⚠ Kod Apps Script masih versi lama — tampal code.gs baharu & Deploy > New version. Had perkataan tetap dikuatkuasakan di sini.'); }
+  tr.querySelector('[data-k="ULASAN_GURU_MP"]').value=kemasUlasan_(j.ulasan, namaPendek(s.NAMA_MURID), tpU, hadAI());
 }
 async function aiUl(btn){
   const tr=btn.closest('tr'); const t=btn.textContent; btn.disabled=true; btn.textContent='⏳ Menjana…';

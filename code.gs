@@ -552,7 +552,7 @@ function doPost(e) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return out_({ ok: true, sah: false, ada: false });
       return out_({ ok: true, sah: true, ada: !!cariGuru_(em) });
     }
-    if (b0.action === 'aiUlasan') { sahGuru_(b0.emel, b0.token, b0.sekolah); try { return out_({ ok: true, ulasan: aiUlasan_(b0) }); } catch (er) { const m = String(er && er.message || er); return out_({ ok: false, error: /^AI bermasalah/.test(m) ? m : 'AI bermasalah. Kod: AI-99' }); } }
+    if (b0.action === 'aiUlasan') { sahGuru_(b0.emel, b0.token, b0.sekolah); try { return out_({ ok: true, ulasan: aiUlasan_(b0), versi: VERSI_AI_ }); } catch (er) { const m = String(er && er.message || er); return out_({ ok: false, error: /^AI bermasalah/.test(m) ? m : 'AI bermasalah. Kod: AI-99' }); } }
     if (b0.action === 'hadir') { const g0 = sahGuru_(b0.emel, b0.token, b0.sekolah); return out_({ ok: true, lain: hadir_(g0, b0) }); }
   } catch (err) { return out_({ ok: false, error: String(err && err.message || err) }); }
   const lock = LockService.getScriptLock();
@@ -742,6 +742,7 @@ function saveTafsiran_(d, kod, tahap) {
 /* Jalankan sekali dari editor untuk menguji sambungan */
 function testSambungan() { migrasiSKBenut(); Logger.log(JSON.stringify(getAll_('', { KOD_SEKOLAH: KOD_ASAL, NAMA_GURU: 'UJIAN', EMEL: '' })).slice(0, 1500)); }
 
+const VERSI_AI_ = 'ai-v3'; // index.html semak nilai ini untuk pastikan kod Apps Script sudah dikemas kini
 /* ===================== ULASAN AI (Groq) =====================
  * Sheet "apikey": A1 = kunci API, B1 = nama model bahasa.
  * Hanya nama singkatan murid + TP dihantar ke AI (tiada MyKid / nama penuh). */
@@ -770,7 +771,7 @@ function aiUlasan_(b) {
   const tpN = Number(b.tp) || (senarai.length ? Math.round(senarai.reduce((x, y) => x + (y.tp || 0), 0) / senarai.length) : 0);
   const skala = SKALA_TP_[tahap];
   const had = Math.min(80, Math.max(10, parseInt(b.had, 10) || 30));
-  const bilAyat = had <= 30 ? 'Tepat 2 ayat pendek' : had <= 50 ? '2 hingga 3 ayat' : '3 hingga 4 ayat';
+  const bilAyat = had <= 15 ? 'SATU ayat sahaja' : had <= 30 ? '2 ayat pendek' : had <= 50 ? '2 hingga 3 ayat' : '3 hingga 4 ayat';
   const tafsiranRasmi = String(b.tafsiran || '').replace(/\s+/g, ' ').trim().slice(0, 300);
   const prompt = 'Murid: ' + nama + '\nMata pelajaran: ' + mp + '\nTahap kelas: KSSRPK Tahap ' + tahap + (tahap === '2' ? ' (Tahun 4-6)' : ' (Tahun 1-3)') +
     '\nTP keseluruhan: TP' + tp + '\nTP setiap bidang:\n' + (bid || '- (tiada butiran bidang)') +
@@ -781,14 +782,17 @@ function aiUlasan_(b) {
     '\nCara bantuan ikut tahap: ' + fokus.cara +
     '\nIdea suasana (guna jika logik; jika tidak, pilih cara lain): ' + suasana + '.' +
     (lalu.length ? '\nCadangan ini SUDAH diberi kepada murid lain, JANGAN ulang aktiviti serupa:\n' + lalu.map(x => '- ' + x).join('\n') : '') +
-    '\n\nTulis ulasan seperti seorang GURU CEMERLANG PENDIDIKAN KHAS kepada ibu bapa: Bahasa Melayu baku tetapi mesra, profesional, positif, jujur dan padat. ' +
-    bilAyat + ', JUMLAH MAKSIMUM ' + had + ' PATAH PERKATAAN (jangan lebih). ' +
-    'Ayat 1: nyatakan ' + nama + ' berada pada TP' + tpN + ' dan maksud tahap itu dengan JUJUR ikut SKALA TP di atas dan nada TP' + tpN + ' (' + NADA_TP_[tpN || 1] + '). ' +
-    (tpN && tpN <= 3 ? 'TP' + tpN + ' ialah tahap RENDAH/AWAL: WAJIB sebut murid masih memerlukan bimbingan. DILARANG perkataan pujian prestasi seperti cemerlang, hebat, sangat baik, menguasai, mantap, luar biasa. Boleh puji usaha atau minat sahaja. '
-      : 'TP' + tpN + ' ialah tahap TINGGI: puji pencapaian dengan sewajarnya; jangan kata murid lemah atau perlu bimbingan penuh. ') +
-    (had <= 30 ? 'Ayat 2: SATU aktiviti khusus yang ibu bapa boleh buat di rumah untuk bidang dalam FOKUS INTERVENSI (apa dan bagaimana), bukan nasihat umum. '
-      : 'Ayat seterusnya: sebut bidang yang perlu diberi perhatian, kemudian SATU aktiviti khusus di rumah untuk bidang dalam FOKUS INTERVENSI (apa, guna bahan apa, bagaimana), bukan nasihat umum. ') +
+    '\n\nTulis ulasan seperti seorang GURU CEMERLANG PENDIDIKAN KHAS menulis dalam laporan murid untuk ibu bapa: ayat biasa yang semula jadi, mesra, jujur dan padat, bunyi macam manusia sebenar, bukan iklan atau robot. ' +
+    bilAyat + ', JUMLAH MAKSIMUM ' + had + ' PATAH PERKATAAN. Kira perkataan sebelum menjawab; jika lebih, pendekkan. ' +
+    'Ayat pertama: gambarkan tahap ' + nama + ' dengan JUJUR ikut SKALA TP dan nada TP' + tpN + ' (' + NADA_TP_[tpN || 1] + '). Tidak perlu sebut perkataan "TP"; huraikan apa yang murid sudah atau belum boleh buat. ' +
+    (tpN && tpN <= 3 ? 'TP' + tpN + ' ialah tahap RENDAH, BUKAN pencapaian yang bagus. WAJIB nyatakan murid masih memerlukan bimbingan. DILARANG perkataan pujian seperti cemerlang, bagus, hebat, tahniah, syabas, sangat baik, menguasai. Hanya boleh sebut usaha atau minat murid secara ringkas. '
+      : 'TP' + tpN + ' ialah tahap TINGGI: iktiraf pencapaian dengan sewajarnya tanpa berlebihan; jangan kata murid lemah atau perlu bimbingan penuh. ') +
+    (had <= 15 ? 'Jika masih ada ruang dalam had, tambah cadangan ringkas untuk ibu bapa dalam ayat yang sama. '
+      : 'Ayat seterusnya: SATU aktiviti khusus yang ibu bapa boleh buat di rumah untuk bidang dalam FOKUS INTERVENSI (apa dan bagaimana), bukan nasihat umum. ') +
+    'GAYA: jangan guna tanda seru, tanda petik, sempang panjang, titik bertindih, koma bertitik atau emoji. Jangan mula dengan "memang". Jangan guna "jom". ' +
     'DILARANG: "berlatih setiap hari", "luangkan masa", "teruskan usaha", "untuk meningkatkan lagi kemahiran". Jangan ulang nama mata pelajaran. ' +
+    '\nContoh gaya (jangan tiru bulat-bulat): "Ammar masih memerlukan bimbingan penuh untuk menyebut perkataan mudah. Di rumah, sebut nama barang yang dia pegang dan minta dia ulang perlahan-lahan." / ' +
+    '"Aina sudah boleh membaca ayat pendek sendiri. Minta dia baca label makanan semasa ke kedai dan terangkan maksudnya." ' +
     'Jawab dengan ulasan sahaja tanpa tajuk atau tanda petik.';
   // Tetapan khas ikut jenis model: model "berfikir" (gpt-oss, qwen3, deepseek) perlu ruang token lebih
   // dan pemikirannya disembunyikan, jika tidak jawapan kosong (AI-03).
@@ -820,12 +824,11 @@ function aiUlasan_(b) {
     const calon = modelGroqSenarai_(key).filter(id => id !== model).slice(0, 4);
     for (const m of calon) { const x = cuba(m); if (x.t) { res = x; guna = m; break; } if (BERHENTI(x.code)) { res = x; break; } }
   }
-  if (res.t && !sesuaiTP_(res.t, tpN)) { // AI tersalah nada (cth. TP1 dipuji "cemerlang") — cuba sekali lagi dengan model yang berjaya
-    const ulang = cuba(guna); if (ulang.t && sesuaiTP_(ulang.t, tpN)) res = ulang;
+  if (res.t && !sesuaiTP_(manusiakan_(res.t), tpN)) { // AI tersalah nada (cth. TP1 dipuji "cemerlang") — cuba sekali lagi dengan model yang berjaya
+    const ulang = cuba(guna); if (ulang.t && sesuaiTP_(manusiakan_(ulang.t), tpN)) res = ulang;
   }
   if (res.t) {
-    res.t = betulkanNada_(res.t, nama, tpN, tahap);
-    res.t = ringkas_(res.t, had);
+    res.t = kemasUlasan_(res.t, nama, tpN, had);
     try { // simpan ayat cadangan (ayat ke-2) untuk 6 jam; maksimum 8 cadangan terkini
       const ay = res.t.match(/[^.!?]+[.!?]+/g) || [res.t];
       lalu = [String(ay[ay.length - 1] || '').trim().slice(0, 200)].concat(lalu).slice(0, 8);
@@ -856,52 +859,77 @@ const SKALA_TP_ = {
     'boleh menghasilkan projek atau produk ringkas dan mengaplikasikannya dalam situasi sebenar',
     'mengaplikasi kemahiran dalam kehidupan sebenar secara konsisten dan boleh membimbing rakan']
 };
+/* ===== KEMAS ULASAN AI (kod yang SAMA dalam code.gs & index.html) =====
+ * Skala TP: TP1 paling rendah -> TP6 paling tinggi. Semakin tinggi TP semakin bagus.
+ * 1) manusiakan_  : buang gaya "robot" (sempang panjang, tanda seru, tanda petik, koma bertitik)
+ * 2) betulkanNada_: TP1-3 tidak boleh dipuji (cemerlang/bagus...), TP4-6 tidak boleh dikata lemah
+ * 3) ringkas_     : tidak melebihi had patah perkataan yang dipilih guru */
 const NADA_TP_ = { 1: 'masih di peringkat awal, perlu bimbingan penuh', 2: 'sedang membina asas, perlu banyak bimbingan',
   3: 'semakin maju, perlu bimbingan minimum', 4: 'baik, boleh berdikari', 5: 'sangat baik, berdikari dan konsisten', 6: 'cemerlang, boleh menjadi contoh rakan' };
-const PUJIAN_TINGGI_ = /cemerlang|hebat|sangat baik|amat baik|menguasai|mantap|luar biasa|terbaik|sangat bagus|memang bagus|sangat memuaskan|berdikari sepenuhnya/i;
+const PUJIAN_TINGGI_ = /cemerlang|hebat|sangat baik|amat baik|menguasai|mantap|luar biasa|terbaik|bagus|tahniah|syabas|membanggakan|sangat memuaskan|berdikari sepenuhnya|pencapaian (yang )?baik/i;
 const RENDAH_ = /bimbingan penuh|peringkat awal|masih lemah|\blemah\b|baru mula/i;
-/* Semak nada ulasan sepadan dengan TP: TP1-3 tidak boleh dipuji cemerlang; TP4-6 tidak boleh dikata lemah. */
+const HAD_PERKATAAN_ = 30;
 function sesuaiTP_(t, tp) {
-  t = String(t || ''); if (!tp) return true;
+  t = String(t || ''); tp = Number(tp) || 0; if (!tp) return true;
   if (tp <= 3 && PUJIAN_TINGGI_.test(t)) return false;
   if (tp >= 4 && RENDAH_.test(t)) return false;
   const disebut = (t.match(/TP\s*(\d)/gi) || []).map(x => Number(x.replace(/\D/g, '')));
   return !disebut.length || disebut.indexOf(tp) > -1;
 }
-/* Jika ayat 1 masih tersalah nada, ganti dengan ayat tahap yang tepat; kekalkan ayat cadangan (ayat 2) jika sesuai. */
-function betulkanNada_(t, nama, tp, tahap) {
-  if (!tp || sesuaiTP_(t, tp)) return t;
-  const ayat = (String(t).replace(/\s+/g, ' ').trim().match(/[^.!?]+[.!?]+/g) || [t]).map(a => a.trim());
-  const a1 = nama + ' berada pada TP' + tp + ', ' + NADA_TP_[tp] + '.';
-  const a2 = ayat.length > 1 && sesuaiTP_(ayat[ayat.length - 1], tp) ? ayat[ayat.length - 1]
-    : (tp <= 3 ? 'Mak ayah boleh bantu dengan menunjukkan cara langkah demi langkah menggunakan objek sebenar di rumah.'
-               : 'Mak ayah boleh beri cabaran baharu dan minta ' + nama + ' tunjuk cara kepada ahli keluarga.');
-  return a1 + ' ' + a2;
+function manusiakan_(t) {
+  return String(t || '')
+    .replace(/[“”"«»]/g, '').replace(/[‘’]/g, "'").replace(/'([^']{1,40})'/g, '$1')
+    .replace(/\s*[–—]\s*/g, ', ').replace(/(\w)‑(\w)/g, '$1-$2')
+    .replace(/\s*;\s*/g, ', ').replace(/!+/g, '.').replace(/\s*:\s+/g, ', ')
+    .replace(/\s+([,.])/g, '$1').replace(/,\s*,/g, ',').replace(/\.\s*\./g, '.')
+    .replace(/\s+/g, ' ').trim()
+    .replace(/(^|[.?]\s+)([a-z])/g, (m, a, b) => a + b.toUpperCase());
 }
-/* Pastikan ulasan ringkas dan padat: tidak melebihi had patah perkataan yang dipilih guru (lalai 30). */
-const HAD_PERKATAAN_ = 30;
+const AYAT_TP_ = { // ayat ganti yang ringkas & bunyi macam guru sebenar, ikut TP
+  1: n => n + ' masih memerlukan bimbingan penuh guru.',
+  2: n => n + ' sudah mula mencuba tetapi masih perlukan banyak bimbingan.',
+  3: n => n + ' semakin maju dan boleh melakukannya dengan sedikit bimbingan.',
+  4: n => n + ' sudah boleh melakukannya sendiri dengan baik.',
+  5: n => n + ' berdikari dan konsisten, pencapaiannya sangat baik.',
+  6: n => n + ' cemerlang dan boleh membantu rakan lain.' };
+const CADANGAN_TP_ = {
+  rendah: n => 'Di rumah, tunjuk cara dahulu dan bimbing ' + n + ' langkah demi langkah dengan barang sebenar.',
+  tinggi: n => 'Di rumah, beri cabaran baharu dan minta ' + n + ' tunjuk cara kepada ahli keluarga.' };
+function pecahAyat_(t) { return (String(t).match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [String(t)]).map(a => a.trim()).filter(Boolean); }
+function betulkanNada_(t, nama, tp) {
+  tp = Number(tp) || 0; if (!tp || sesuaiTP_(t, tp)) return t;
+  const ayat = pecahAyat_(t);
+  const cadangan = ayat.slice(1).filter(a => sesuaiTP_(a, tp));
+  const a2 = cadangan.length ? cadangan.join(' ') : CADANGAN_TP_[tp <= 3 ? 'rendah' : 'tinggi'](nama);
+  return AYAT_TP_[tp](nama) + ' ' + a2;
+}
 function ringkas_(t, had) {
   had = Math.min(80, Math.max(10, parseInt(had, 10) || HAD_PERKATAAN_));
   t = String(t || '').replace(/\s+/g, ' ').trim();
   const n = x => x.split(' ').filter(Boolean).length;
   const potong = (x, h) => { const w = x.split(' ').slice(0, h); // elak berakhir dengan kata sendi tergantung
-    while (w.length > 6 && /^(pada|di|dan|untuk|dengan|ke|yang|semasa|kepada|atau|serta|hujung|bersama|dalam|dari|daripada)[,;:.]?$/i.test(w[w.length - 1])) w.pop();
+    while (w.length > 5 && /^(pada|di|dan|untuk|dengan|ke|yang|semasa|kepada|atau|serta|hujung|bersama|dalam|dari|daripada|tetapi|masih|sambil|bila|apabila|setiap)[,;:.]?$/i.test(w[w.length - 1])) w.pop();
     return w.join(' ').replace(/[,;:\-–]+$/, '').replace(/[.!?]?$/, '.'); };
   if (n(t) <= had) return t;
-  const ayat = (t.match(/[^.!?]+[.!?]+/g) || [t]).map(a => a.trim());
+  const ayat = pecahAyat_(t);
   let a1 = ayat[0];
-  if (n(a1) > had * 0.55 && ayat.length > 1) { const p = a1.split(/[;]|, (?:dan|tetapi|namun)/)[0].trim(); if (n(p) >= 6) a1 = p.replace(/[.!?]?$/, '.'); }
-  if (n(a1) >= had || ayat.length < 2) return potong(a1, had);
-  // Ayat 1 (tahap TP) dikekalkan; tambah ayat seterusnya selagi muat. Ayat cadangan (terakhir) diutamakan.
+  if (n(a1) > had) { const p = a1.split(/,\s*/)[0].trim(); a1 = n(p) >= 4 && n(p) <= had ? p.replace(/[.!?]?$/, '.') : potong(a1, had); }
+  if (ayat.length < 2) return a1;
   const baki = ayat.slice(1), akhir = baki[baki.length - 1];
-  let hasil = [a1], guna = n(a1);
+  const hasil = [a1]; let guna = n(a1);
   for (const x of baki.slice(0, -1)) { if (guna + n(x) + n(akhir) <= had) { hasil.push(x); guna += n(x); } }
   const ruang = had - guna;
-  if (n(akhir) <= ruang) hasil.push(akhir);
-  else if (ruang < 7) { /* had terlalu kecil untuk ayat cadangan yang lengkap — kekalkan ayat yang lengkap sahaja */ }
-  else { const p = akhir.split(/[,;]/)[0].trim(); hasil.push(n(p) >= 5 && n(p) <= ruang ? p.replace(/[.!?]?$/, '.') : potong(akhir, ruang)); }
+  if (n(akhir) <= ruang) { if (n(akhir) >= 4) hasil.push(akhir); }
+  else if (ruang >= 6) { // ambil klausa (dipisah koma) sebanyak yang muat supaya ayat tidak tergantung
+    const kl = akhir.replace(/[.!?]$/, '').split(/,\s*/); let ambil = '';
+    const ambilK = []; for (const k of kl) { if (n(ambilK.concat(k).join(', ')) <= ruang) ambilK.push(k); else break; }
+    while (ambilK.length > 1 && /^(tiap|setiap|apabila|bila|sambil|semasa|kerana|supaya|jika|kalau|lalu|kemudian)\b/i.test(ambilK[ambilK.length - 1])) ambilK.pop(); // klausa tergantung
+    ambil = ambilK.join(', ');
+    if (n(ambil) >= 5) hasil.push(ambil.replace(/[.!?]?$/, '.')); else hasil.push(potong(akhir, ruang)); }
   return hasil.join(' ');
 }
+function kemasUlasan_(t, nama, tp, had) { return ringkas_(betulkanNada_(manusiakan_(t), nama, tp), had); }
+/* ===== tamat KEMAS ULASAN AI ===== */
 /* Tentukan bidang yang paling perlu dibantu dan cara bantuan yang sesuai dengan tahap TP murid. */
 function fokusIntervensi_(senarai, tpAll) {
   const ada = senarai.filter(x => x.tp > 0);
