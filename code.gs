@@ -769,6 +769,8 @@ function aiUlasan_(b) {
   const tahap = String(b.tahap || '').replace(/\.0+$/, '') === '2' ? '2' : '1';
   const tpN = Number(b.tp) || (senarai.length ? Math.round(senarai.reduce((x, y) => x + (y.tp || 0), 0) / senarai.length) : 0);
   const skala = SKALA_TP_[tahap];
+  const had = Math.min(80, Math.max(10, parseInt(b.had, 10) || 30));
+  const bilAyat = had <= 30 ? 'Tepat 2 ayat pendek' : had <= 50 ? '2 hingga 3 ayat' : '3 hingga 4 ayat';
   const tafsiranRasmi = String(b.tafsiran || '').replace(/\s+/g, ' ').trim().slice(0, 300);
   const prompt = 'Murid: ' + nama + '\nMata pelajaran: ' + mp + '\nTahap kelas: KSSRPK Tahap ' + tahap + (tahap === '2' ? ' (Tahun 4-6)' : ' (Tahun 1-3)') +
     '\nTP keseluruhan: TP' + tp + '\nTP setiap bidang:\n' + (bid || '- (tiada butiran bidang)') +
@@ -779,12 +781,13 @@ function aiUlasan_(b) {
     '\nCara bantuan ikut tahap: ' + fokus.cara +
     '\nIdea suasana (guna jika logik; jika tidak, pilih cara lain): ' + suasana + '.' +
     (lalu.length ? '\nCadangan ini SUDAH diberi kepada murid lain, JANGAN ulang aktiviti serupa:\n' + lalu.map(x => '- ' + x).join('\n') : '') +
-    '\n\nTulis ulasan guru untuk ibu bapa dalam Bahasa Melayu yang mesra, RINGKAS DAN PADAT. ' +
-    'Tepat 2 ayat pendek, JUMLAH MAKSIMUM 30 PATAH PERKATAAN. ' +
+    '\n\nTulis ulasan seperti seorang GURU CEMERLANG PENDIDIKAN KHAS kepada ibu bapa: Bahasa Melayu baku tetapi mesra, profesional, positif, jujur dan padat. ' +
+    bilAyat + ', JUMLAH MAKSIMUM ' + had + ' PATAH PERKATAAN (jangan lebih). ' +
     'Ayat 1: nyatakan ' + nama + ' berada pada TP' + tpN + ' dan maksud tahap itu dengan JUJUR ikut SKALA TP di atas dan nada TP' + tpN + ' (' + NADA_TP_[tpN || 1] + '). ' +
     (tpN && tpN <= 3 ? 'TP' + tpN + ' ialah tahap RENDAH/AWAL: WAJIB sebut murid masih memerlukan bimbingan. DILARANG perkataan pujian prestasi seperti cemerlang, hebat, sangat baik, menguasai, mantap, luar biasa. Boleh puji usaha atau minat sahaja. '
       : 'TP' + tpN + ' ialah tahap TINGGI: puji pencapaian dengan sewajarnya; jangan kata murid lemah atau perlu bimbingan penuh. ') +
-    'Ayat 2: SATU aktiviti khusus yang ibu bapa boleh buat di rumah untuk bidang dalam FOKUS INTERVENSI (apa dan bagaimana), bukan nasihat umum. ' +
+    (had <= 30 ? 'Ayat 2: SATU aktiviti khusus yang ibu bapa boleh buat di rumah untuk bidang dalam FOKUS INTERVENSI (apa dan bagaimana), bukan nasihat umum. '
+      : 'Ayat seterusnya: sebut bidang yang perlu diberi perhatian, kemudian SATU aktiviti khusus di rumah untuk bidang dalam FOKUS INTERVENSI (apa, guna bahan apa, bagaimana), bukan nasihat umum. ') +
     'DILARANG: "berlatih setiap hari", "luangkan masa", "teruskan usaha", "untuk meningkatkan lagi kemahiran". Jangan ulang nama mata pelajaran. ' +
     'Jawab dengan ulasan sahaja tanpa tajuk atau tanda petik.';
   // Tetapan khas ikut jenis model: model "berfikir" (gpt-oss, qwen3, deepseek) perlu ruang token lebih
@@ -795,7 +798,7 @@ function aiUlasan_(b) {
     method: 'post', contentType: 'application/json', muteHttpExceptions: true,
     headers: { Authorization: 'Bearer ' + key },
     payload: JSON.stringify(Object.assign({ model: m, temperature: 0.6, max_tokens: 1500, messages: [
-      { role: 'system', content: 'Anda guru Program Pendidikan Khas Integrasi (PPKI) di Malaysia yang memahami Pentaksiran Bilik Darjah KSSRPK. Skala Tahap Penguasaan: TP1 paling rendah (perlu bimbingan penuh) hingga TP6 paling tinggi (cemerlang). Ulasan anda mesti jujur ikut TP sebenar murid, ringkas (maksimum 30 patah perkataan), mesra, dengan satu cadangan praktikal untuk ibu bapa. Jawab terus dengan ulasan sahaja.' },
+      { role: 'system', content: 'Anda Guru Cemerlang Pendidikan Khas (Program Pendidikan Khas Integrasi, PPKI) di Malaysia yang berpengalaman dan pakar Pentaksiran Bilik Darjah KSSRPK. Skala Tahap Penguasaan: TP1 paling rendah (perlu bimbingan penuh) hingga TP6 paling tinggi (cemerlang). Ulasan anda jujur ikut TP sebenar murid, empati terhadap murid berkeperluan khas, positif tanpa berlebihan, padat (patuhi had patah perkataan), dengan satu cadangan intervensi praktikal untuk ibu bapa. Jawab terus dengan ulasan sahaja.' },
       { role: 'user', content: prompt }] }, tambahan))
   }); } catch (e) { console.error(e); throw new Error(/permission|kebenaran/i.test(String(e)) ? 'AI bermasalah. Kod: AI-04' : 'AI bermasalah. Kod: AI-05'); }
     let j = {}; try { j = JSON.parse(r.getContentText()); } catch (e) {}
@@ -822,7 +825,7 @@ function aiUlasan_(b) {
   }
   if (res.t) {
     res.t = betulkanNada_(res.t, nama, tpN, tahap);
-    res.t = ringkas_(res.t);
+    res.t = ringkas_(res.t, had);
     try { // simpan ayat cadangan (ayat ke-2) untuk 6 jam; maksimum 8 cadangan terkini
       const ay = res.t.match(/[^.!?]+[.!?]+/g) || [res.t];
       lalu = [String(ay[ay.length - 1] || '').trim().slice(0, 200)].concat(lalu).slice(0, 8);
@@ -875,22 +878,29 @@ function betulkanNada_(t, nama, tp, tahap) {
                : 'Mak ayah boleh beri cabaran baharu dan minta ' + nama + ' tunjuk cara kepada ahli keluarga.');
   return a1 + ' ' + a2;
 }
-/* Pastikan ulasan ringkas dan padat: maksimum 30 patah perkataan. */
+/* Pastikan ulasan ringkas dan padat: tidak melebihi had patah perkataan yang dipilih guru (lalai 30). */
 const HAD_PERKATAAN_ = 30;
-function ringkas_(t) {
+function ringkas_(t, had) {
+  had = Math.min(80, Math.max(10, parseInt(had, 10) || HAD_PERKATAAN_));
   t = String(t || '').replace(/\s+/g, ' ').trim();
   const n = x => x.split(' ').filter(Boolean).length;
-  const potong = x => { const w = x.split(' ').slice(0, HAD_PERKATAAN_); // elak berakhir dengan kata sendi tergantung
-    while (w.length > 8 && /^(pada|di|dan|untuk|dengan|ke|yang|semasa|kepada|atau|serta|hujung|bersama|dalam|dari|daripada)[,;:.]?$/i.test(w[w.length - 1])) w.pop();
+  const potong = (x, h) => { const w = x.split(' ').slice(0, h); // elak berakhir dengan kata sendi tergantung
+    while (w.length > 6 && /^(pada|di|dan|untuk|dengan|ke|yang|semasa|kepada|atau|serta|hujung|bersama|dalam|dari|daripada)[,;:.]?$/i.test(w[w.length - 1])) w.pop();
     return w.join(' ').replace(/[,;:\-–]+$/, '').replace(/[.!?]?$/, '.'); };
-  if (n(t) <= HAD_PERKATAAN_) return t;
+  if (n(t) <= had) return t;
   const ayat = (t.match(/[^.!?]+[.!?]+/g) || [t]).map(a => a.trim());
-  if (ayat.length < 2) return potong(t);
-  let a1 = ayat[0], a2 = ayat[1];
-  // Ayat 1 (tahap TP) dikekalkan; pendekkan ayat cadangan dahulu.
-  if (n(a1) + n(a2) > HAD_PERKATAAN_) { const p = a2.split(/[,;]/)[0].trim(); if (n(p) >= 5) a2 = p.replace(/[.!?]?$/, '.'); }
-  if (n(a1) > 16) { const p = a1.split(/[;]|, (?:dan|tetapi|namun)/)[0].trim(); if (n(p) >= 6) a1 = p.replace(/[.!?]?$/, '.'); }
-  return potong(a1 + ' ' + a2);
+  let a1 = ayat[0];
+  if (n(a1) > had * 0.55 && ayat.length > 1) { const p = a1.split(/[;]|, (?:dan|tetapi|namun)/)[0].trim(); if (n(p) >= 6) a1 = p.replace(/[.!?]?$/, '.'); }
+  if (n(a1) >= had || ayat.length < 2) return potong(a1, had);
+  // Ayat 1 (tahap TP) dikekalkan; tambah ayat seterusnya selagi muat. Ayat cadangan (terakhir) diutamakan.
+  const baki = ayat.slice(1), akhir = baki[baki.length - 1];
+  let hasil = [a1], guna = n(a1);
+  for (const x of baki.slice(0, -1)) { if (guna + n(x) + n(akhir) <= had) { hasil.push(x); guna += n(x); } }
+  const ruang = had - guna;
+  if (n(akhir) <= ruang) hasil.push(akhir);
+  else if (ruang < 7) { /* had terlalu kecil untuk ayat cadangan yang lengkap — kekalkan ayat yang lengkap sahaja */ }
+  else { const p = akhir.split(/[,;]/)[0].trim(); hasil.push(n(p) >= 5 && n(p) <= ruang ? p.replace(/[.!?]?$/, '.') : potong(akhir, ruang)); }
+  return hasil.join(' ');
 }
 /* Tentukan bidang yang paling perlu dibantu dan cara bantuan yang sesuai dengan tahap TP murid. */
 function fokusIntervensi_(senarai, tpAll) {
