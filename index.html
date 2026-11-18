@@ -5,7 +5,7 @@
 /* ===== URL WEB APP GOOGLE APPS SCRIPT =====
    Tampal URL Web App (berakhir dengan /exec) DI ANTARA tanda petikan " " di bawah.
    Boleh tampal URL biasa (https://script.google.com/...) — TIDAK perlu atob / tukar kod. */
-var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJw9IWZ84X0hhG7_RI2cYALsRGsgkiE1d-EuPGgfWJpxHwiA2mmRBpaBjqrF6arXa1/exec";
+var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwpZoCLm3RrjK62lAi2YY4hQJev9ZGfVecEBu2Zus2UGmREWgnZmS_8tcS1-OTpg_L8/exec";
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -570,7 +570,7 @@ const S = { data:null, view:'dash', emel:localStorage.getItem('pbd_emel')||'', t
 try{ sessionStorage.removeItem('pbd_pw'); localStorage.removeItem('pbd_cache'); }catch(e){} // bersihkan data versi lama
 const NAV = [
   ['dash','◎','Papan Pemuka'],['akaun','🛡','Akaun Pengguna'],['kelas','🗓','Kelas & Tahun'],['murid','👥','Senarai Murid'],['markah','✎','Rekod Prestasi'],
-  ['ulasan','💬','Ulasan Guru Kelas'],['laporan','📄','Laporan Murid'],['sijil','🏅','Sijil PBD'],
+  ['ulasan','💬','Ulasan Guru Kelas'],['laporan','📄','Laporan Murid'],
   ['analisis','📊','Analisis & Graf'],['mp','📚','Mata Pelajaran'],['tafsiran','🗂','Tafsiran TP'],
   ['panduan','📘','Panduan'],['tetapan','⚙','Tetapan']
 ];
@@ -1303,13 +1303,21 @@ function reportHTML(s, editable=false){
    <div class="ft"><span>Dijana oleh e-PBD PPKI • Pentaksiran Bilik Darjah</span><span>Dokumen sulit untuk ibu bapa / penjaga</span></div>
   </div>`;
 }
+/* Laporan Murid = satu pakej bagi setiap murid: Laporan PBD (A4 menegak) + Profil Prestasi / Spider Chart
+   (A4 melintang) + Sijil PBD (A4 melintang). Dicetak bersama mengikut susunan ini. */
+const lapInc = () => S.lapInc || (S.lapInc = {prof:true, cert:true});
 V.laporan = () => {
   const st=students(); if(!S.stuSel||!st.find(s=>s.ID_MURID===S.stuSel)) S.stuSel=(st[0]||{}).ID_MURID; const s=st.find(x=>x.ID_MURID===S.stuSel);
-  $('#view').innerHTML = head('Laporan Murid','Pelaporan automatik setiap murid. Mata pelajaran tanpa TP disembunyikan (seperti templat asal).',
-   `<button class="btn" onclick="printDocs('report',[S.stuSel])">🖨 Cetak murid ini</button><button class="btn pri" onclick="printDocs('report',students().map(s=>s.ID_MURID))">🖨 Cetak SEMUA (${st.length})</button>`)+
+  const pg=['report','prof','cert'].includes(S.lapPage)?S.lapPage:'report'; const inc=lapInc();
+  const tab=(k,l)=>`<button class="btn sm ${pg===k?'pri':''}" onclick="S.lapPage='${k}';render()">${l}</button>`;
+  const chk=(k,l)=>`<label class="chip" style="cursor:pointer"><input type="checkbox" ${inc[k]?'checked':''} onchange="lapInc().${k}=this.checked"> ${l}</label>`;
+  $('#view').innerHTML = head('Laporan Murid','Setiap murid mempunyai Laporan PBD, Profil Prestasi (Spider Chart) dan Sijil PBD — dicetak bersama dalam satu PDF. Mata pelajaran tanpa TP disembunyikan.',
+   `<button class="btn" onclick="printDocs('pakej',[S.stuSel])">🖨 Cetak murid ini</button><button class="btn pri" onclick="printDocs('pakej',students().map(s=>s.ID_MURID))">🖨 Cetak SEMUA (${st.length})</button>${chk('prof','+ Spider Chart')}${chk('cert','+ Sijil')}`)+
   `<div class="card" style="margin-bottom:16px"><div class="row"><button class="btn sm" onclick="stepStu(-1)">◀</button><select class="f" style="flex:1" onchange="S.stuSel=this.value;render()">
-   ${st.map((x,i)=>`<option value="${x.ID_MURID}" ${x.ID_MURID===S.stuSel?'selected':''}>${i+1}. ${esc(x.NAMA_MURID)}</option>`).join('')}</select><button class="btn sm" onclick="stepStu(1)">▶</button></div></div>
-  <div style="overflow:auto"><div class="preview-scale">${s?reportHTML(s,true):'<div class="card empty">Tiada murid</div>'}</div></div>`;
+   ${st.map((x,i)=>`<option value="${x.ID_MURID}" ${x.ID_MURID===S.stuSel?'selected':''}>${i+1}. ${esc(x.NAMA_MURID)}</option>`).join('')}</select><button class="btn sm" onclick="stepStu(1)">▶</button></div>
+   <div class="row" style="margin-top:10px">${tab('report','📄 Laporan PBD')}${tab('prof','🕸 Spider Chart')}${tab('cert','🏅 Sijil PBD')}</div>
+   <p class="lock" style="margin:10px 0 0">${pg==='report'?'Tekan ✎ pada Penyataan atau Ulasan Guru Kelas untuk edit sebelum cetak / simpan PDF.':'Pengiktirafan sijil: purata TP ≥5 Cemerlang • ≥4 Kepujian • ≥3 Baik • lain-lain Penghargaan.'}</p></div>
+  <div style="overflow:auto"><div class="preview-scale"${pg==='report'?'':' style="transform-origin:top left"'}>${s?(pg==='prof'?profileHTML(s):pg==='cert'?certHTML(s):reportHTML(s,true)):'<div class="card empty">Tiada murid</div>'}</div></div>`;
 };
 function editReportUlasan(){
   const editor=$('#reportUlEditor'); if(!editor||!isAdmin()) return;
@@ -1487,20 +1495,16 @@ function profileHTML(s){
    <div class="ft"><span>e-PBD PPKI • PENTAKSIRAN BILIK DARJAH ${esc(t.SESI||'')}</span><span>DIJANA ${fmtDate(new Date())}</span></div>
   </div>`;
 }
-V.sijil = () => {
-  const st=students(); if(!S.stuSel||!st.find(s=>s.ID_MURID===S.stuSel)) S.stuSel=(st[0]||{}).ID_MURID; const s=st.find(x=>x.ID_MURID===S.stuSel);
-  $('#view').innerHTML = head('Sijil PBD','Sijil penghargaan berdasarkan TP keseluruhan murid (A4 melintang).',
-   `<button class="btn" onclick="printDocs('cert',[S.stuSel])">🖨 Cetak sijil ini</button><button class="btn gold" onclick="printDocs('cert',students().map(s=>s.ID_MURID))">🏅 Cetak SEMUA sijil</button><label class="chip" style="cursor:pointer"><input type="checkbox" id="withProf" ${S.withProf!==false?'checked':''} onchange="S.withProf=this.checked"> + Profil spider</label>`)+
-  `<div class="card" style="margin-bottom:16px"><div class="row"><button class="btn sm" onclick="stepStu(-1)">◀</button><select class="f" style="flex:1" onchange="S.stuSel=this.value;render()">
-   ${st.map((x,i)=>`<option value="${x.ID_MURID}" ${x.ID_MURID===S.stuSel?'selected':''}>${i+1}. ${esc(x.NAMA_MURID)}</option>`).join('')}</select><button class="btn sm" onclick="stepStu(1)">▶</button></div>
-   <div class="row" style="margin-top:10px"><button class="btn sm ${S.certPage!=='prof'?'pri':''}" onclick="S.certPage='cert';render()">🏅 Sijil</button><button class="btn sm ${S.certPage==='prof'?'pri':''}" onclick="S.certPage='prof';render()">🕸 Profil Prestasi (Spider Chart)</button></div><p class="lock" style="margin:10px 0 0">Pengiktirafan: purata TP ≥5 Cemerlang • ≥4 Kepujian • ≥3 Baik • lain-lain Penghargaan.</p></div>
-  <div style="overflow:auto"><div class="preview-scale" style="transform-origin:top left">${s?(S.certPage==='prof'?profileHTML(s):certHTML(s)):''}</div></div>`;
-};
+V.sijil = () => { S.view='laporan'; S.lapPage='cert'; V.laporan(); }; // Sijil kini dalam Laporan Murid
 function printDocs(kind, ids){
   const list=ids.map(id=>students().find(s=>s.ID_MURID===id)).filter(Boolean);
-  $('#printArea').innerHTML = list.map(s=>kind==='cert'?certHTML(s)+(S.withProf!==false?profileHTML(s):''):reportHTML(s)).join('');
+  const inc=lapInc();
+  $('#printArea').innerHTML = list.map(s=>kind==='pakej'?reportHTML(s)+(inc.prof?profileHTML(s):'')+(inc.cert?certHTML(s):'')
+    :kind==='cert'?certHTML(s)+(S.withProf!==false?profileHTML(s):''):reportHTML(s)).join('');
   let ps=document.getElementById('pageStyle'); if(!ps){ps=document.createElement('style');ps.id='pageStyle';document.head.appendChild(ps);}
-  ps.textContent = kind==='cert' ? '@page{size:A4 landscape;margin:0}' : '@page{size:A4 portrait;margin:0}';
+  // pakej: laporan A4 menegak, spider chart & sijil A4 melintang dalam PDF yang sama
+  ps.textContent = kind==='pakej' ? '@page{size:A4 portrait;margin:0}@page land{size:A4 landscape;margin:0}#printArea .cert,#printArea .prof{page:land}'
+    : kind==='cert' ? '@page{size:A4 landscape;margin:0}' : '@page{size:A4 portrait;margin:0}';
   toast(`Menyediakan ${list.length} dokumen untuk dicetak…`);
   setTimeout(()=>window.print(),400);
 }
@@ -1591,7 +1595,7 @@ V.panduan = () => {
   <div class="card" style="margin-top:16px"><h3 style="margin-top:0">Cara guna aplikasi ini</h3><ol style="line-height:1.8">
    <li>Daftar akaun guru (nama, emel, kata laluan, no telefon & kod sekolah). Setiap guru menggunakan aplikasi mengikut <b>kod sekolah</b> masing-masing.</li><li>Log masuk menggunakan <b>emel</b> dan <b>kata laluan</b> yang didaftarkan.</li><li>Lengkapkan <b>Tetapan</b> (sekolah, guru, pelaporan, tarikh).</li>
    <li>Tambah/kemaskini <b>Senarai Murid</b> dan <b>Mata Pelajaran</b>.</li><li>Isi <b>Rekod Prestasi</b> setiap mata pelajaran dan <b>Ulasan Guru Kelas</b>.</li>
-   <li>Cetak <b>Laporan Murid</b> dan <b>Sijil PBD</b> (satu murid atau semua sekali). Pilih "Save as PDF" untuk simpan PDF.</li><li><b>Tafsiran TP</b> diselaraskan oleh Master Admin sahaja.</li></ol>
+   <li>Cetak <b>Laporan Murid</b> — setiap murid mendapat Laporan PBD, Spider Chart dan Sijil PBD sekali gus (satu murid atau semua sekali). Pilih "Save as PDF" untuk simpan PDF.</li><li><b>Tafsiran TP</b> diselaraskan oleh Master Admin sahaja.</li></ol>
    <div class="hint">Lupa kata laluan atau ada sebarang pertanyaan? <span style="display:inline-block;margin-top:6px">${helpWA()}</span></div></div>`;
 };
 
