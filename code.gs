@@ -766,17 +766,26 @@ function aiUlasan_(b) {
     'semasa rutin harian seperti berpakaian atau makan', 'menggunakan barang terpakai di rumah', 'semasa berjalan-jalan di luar rumah', 'bersama adik-beradik',
     'menggunakan kad bergambar atau buku cerita', 'semasa menolong kerja rumah yang mudah'];
   const suasana = SUASANA[Math.floor(Math.random() * SUASANA.length)];
-  const prompt = 'Murid: ' + nama + '\nMata pelajaran: ' + mp + '\nTP keseluruhan: TP' + tp + '\nTP setiap bidang:\n' + (bid || '- (tiada butiran bidang)') +
+  const tahap = String(b.tahap || '').replace(/\.0+$/, '') === '2' ? '2' : '1';
+  const tpN = Number(b.tp) || (senarai.length ? Math.round(senarai.reduce((x, y) => x + (y.tp || 0), 0) / senarai.length) : 0);
+  const skala = SKALA_TP_[tahap];
+  const tafsiranRasmi = String(b.tafsiran || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+  const prompt = 'Murid: ' + nama + '\nMata pelajaran: ' + mp + '\nTahap kelas: KSSRPK Tahap ' + tahap + (tahap === '2' ? ' (Tahun 4-6)' : ' (Tahun 1-3)') +
+    '\nTP keseluruhan: TP' + tp + '\nTP setiap bidang:\n' + (bid || '- (tiada butiran bidang)') +
+    '\n\nSKALA TP (TP1 PALING RENDAH, TP6 PALING TINGGI — semakin tinggi TP semakin bagus):\n' +
+    skala.map((d, i) => 'TP' + (i + 1) + ': ' + d + ' [nada: ' + NADA_TP_[i + 1] + ']').join('\n') +
+    (tafsiranRasmi ? '\nTafsiran rasmi TP' + tpN + ' bagi mata pelajaran ini: ' + tafsiranRasmi : '') +
     '\n\nFOKUS INTERVENSI: ' + fokus.teks +
     '\nCara bantuan ikut tahap: ' + fokus.cara +
-    '\nIdea suasana (guna jika logik untuk bidang ini; jika tidak, pilih cara lain yang lebih sesuai): ' + suasana + '.' +
-    (lalu.length ? '\nCadangan ini SUDAH diberi kepada murid lain, jadi JANGAN ulang atau guna aktiviti yang serupa:\n' + lalu.map(x => '- ' + x).join('\n') : '') +
-    '\n\nTulis ulasan untuk ibu bapa dalam Bahasa Melayu yang SANTAI, mesra dan mudah difahami, macam cikgu bercakap dengan mak ayah. ' +
-    'Tepat 2 ayat pendek, maksimum 40 patah perkataan. ' +
-    'Ayat 1: puji kekuatan ' + nama + ' secara ikhlas dan sebut tahap TP dengan ringkas. ' +
-    'Ayat 2: SATU intervensi yang khusus, logik dan boleh terus dibuat untuk bidang dalam FOKUS INTERVENSI — sebut aktiviti sebenar yang berkait dengan kemahiran bidang itu (apa, guna apa, bagaimana), bukan nasihat umum. ' +
-    'DILARANG: cadangan umum seperti "berlatih setiap hari", "luangkan masa", "15 minit sehari", "teruskan usaha", "untuk meningkatkan lagi kemahiran", "menunjukkan pencapaian". ' +
-    'Jangan ulang nama mata pelajaran. Boleh guna sapaan seperti "mak ayah boleh cuba..." atau "jom...". ' +
+    '\nIdea suasana (guna jika logik; jika tidak, pilih cara lain): ' + suasana + '.' +
+    (lalu.length ? '\nCadangan ini SUDAH diberi kepada murid lain, JANGAN ulang aktiviti serupa:\n' + lalu.map(x => '- ' + x).join('\n') : '') +
+    '\n\nTulis ulasan guru untuk ibu bapa dalam Bahasa Melayu yang mesra, RINGKAS DAN PADAT. ' +
+    'Tepat 2 ayat pendek, JUMLAH MAKSIMUM 30 PATAH PERKATAAN. ' +
+    'Ayat 1: nyatakan ' + nama + ' berada pada TP' + tpN + ' dan maksud tahap itu dengan JUJUR ikut SKALA TP di atas dan nada TP' + tpN + ' (' + NADA_TP_[tpN || 1] + '). ' +
+    (tpN && tpN <= 3 ? 'TP' + tpN + ' ialah tahap RENDAH/AWAL: WAJIB sebut murid masih memerlukan bimbingan. DILARANG perkataan pujian prestasi seperti cemerlang, hebat, sangat baik, menguasai, mantap, luar biasa. Boleh puji usaha atau minat sahaja. '
+      : 'TP' + tpN + ' ialah tahap TINGGI: puji pencapaian dengan sewajarnya; jangan kata murid lemah atau perlu bimbingan penuh. ') +
+    'Ayat 2: SATU aktiviti khusus yang ibu bapa boleh buat di rumah untuk bidang dalam FOKUS INTERVENSI (apa dan bagaimana), bukan nasihat umum. ' +
+    'DILARANG: "berlatih setiap hari", "luangkan masa", "teruskan usaha", "untuk meningkatkan lagi kemahiran". Jangan ulang nama mata pelajaran. ' +
     'Jawab dengan ulasan sahaja tanpa tajuk atau tanda petik.';
   // Tetapan khas ikut jenis model: model "berfikir" (gpt-oss, qwen3, deepseek) perlu ruang token lebih
   // dan pemikirannya disembunyikan, jika tidak jawapan kosong (AI-03).
@@ -785,8 +794,8 @@ function aiUlasan_(b) {
   const fetchAI = (m, tambahan) => { let r; try { r = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'post', contentType: 'application/json', muteHttpExceptions: true,
     headers: { Authorization: 'Bearer ' + key },
-    payload: JSON.stringify(Object.assign({ model: m, temperature: 0.85, max_tokens: 1500, messages: [
-      { role: 'system', content: 'Anda guru Program Pendidikan Khas Integrasi (PPKI) di Malaysia yang mesra dan berpengalaman. Anda menulis ulasan Pentaksiran Bilik Darjah yang santai untuk ibu bapa, dengan cadangan intervensi yang praktikal, sesuai untuk murid berkeperluan khas, dan berbeza bagi setiap murid. Jawab terus dengan ulasan sahaja.' },
+    payload: JSON.stringify(Object.assign({ model: m, temperature: 0.6, max_tokens: 1500, messages: [
+      { role: 'system', content: 'Anda guru Program Pendidikan Khas Integrasi (PPKI) di Malaysia yang memahami Pentaksiran Bilik Darjah KSSRPK. Skala Tahap Penguasaan: TP1 paling rendah (perlu bimbingan penuh) hingga TP6 paling tinggi (cemerlang). Ulasan anda mesti jujur ikut TP sebenar murid, ringkas (maksimum 30 patah perkataan), mesra, dengan satu cadangan praktikal untuk ibu bapa. Jawab terus dengan ulasan sahaja.' },
       { role: 'user', content: prompt }] }, tambahan))
   }); } catch (e) { console.error(e); throw new Error(/permission|kebenaran/i.test(String(e)) ? 'AI bermasalah. Kod: AI-04' : 'AI bermasalah. Kod: AI-05'); }
     let j = {}; try { j = JSON.parse(r.getContentText()); } catch (e) {}
@@ -808,7 +817,11 @@ function aiUlasan_(b) {
     const calon = modelGroqSenarai_(key).filter(id => id !== model).slice(0, 4);
     for (const m of calon) { const x = cuba(m); if (x.t) { res = x; guna = m; break; } if (BERHENTI(x.code)) { res = x; break; } }
   }
+  if (res.t && !sesuaiTP_(res.t, tpN)) { // AI tersalah nada (cth. TP1 dipuji "cemerlang") — cuba sekali lagi dengan model yang berjaya
+    const ulang = cuba(guna); if (ulang.t && sesuaiTP_(ulang.t, tpN)) res = ulang;
+  }
   if (res.t) {
+    res.t = betulkanNada_(res.t, nama, tpN, tahap);
     res.t = ringkas_(res.t);
     try { // simpan ayat cadangan (ayat ke-2) untuk 6 jam; maksimum 8 cadangan terkini
       const ay = res.t.match(/[^.!?]+[.!?]+/g) || [res.t];
@@ -823,19 +836,61 @@ function aiUlasan_(b) {
   if (res.code !== 200) throw new Error('AI bermasalah. Kod: AI-' + res.code + (SEBAB[res.code] ? ' (' + SEBAB[res.code] + ')' : (res.code >= 500 ? ' (pelayan Groq sibuk — cuba sebentar lagi)' : '')));
   throw new Error('AI bermasalah. Kod: AI-03 (semua model AI tidak memberi jawapan — cuba sebentar lagi)');
 }
-/* Pastikan ulasan ringkas: maksimum 2 ayat, ~45 patah perkataan. Ayat cadangan (ke-2) dikekalkan sebab ia paling penting. */
+/* ===== Skala TP KSSRPK (TP1 paling rendah -> TP6 paling tinggi) ikut tahap ===== */
+const SKALA_TP_ = {
+  '1': [ // Tahap 1 (Tahun 1-3): kesediaan belajar & kemahiran asas
+    'baru mula mengenal kemahiran asas; perlu bimbingan penuh guru',
+    'boleh mengenal dan meniru dengan banyak bimbingan',
+    'boleh memberi respons dan melakukan kemahiran asas dengan bimbingan minimum',
+    'boleh melakukan rutin asas secara berdikari',
+    'berdikari dan konsisten melakukan kemahiran di dalam kelas',
+    'berdikari, konsisten dan boleh menjadi contoh kepada rakan'],
+  '2': [ // Tahap 2 (Tahun 4-6): kemahiran berfungsi & persediaan berdikari
+    'baru mula mengenal langkah kerja; perlu bimbingan penuh guru',
+    'boleh mengikut langkah kerja asas dengan banyak bimbingan',
+    'boleh mengaplikasi langkah kerja asas dan mematuhi peraturan keselamatan dengan bimbingan minimum',
+    'boleh menyelesaikan masalah mudah secara berdikari',
+    'boleh menghasilkan projek atau produk ringkas dan mengaplikasikannya dalam situasi sebenar',
+    'mengaplikasi kemahiran dalam kehidupan sebenar secara konsisten dan boleh membimbing rakan']
+};
+const NADA_TP_ = { 1: 'masih di peringkat awal, perlu bimbingan penuh', 2: 'sedang membina asas, perlu banyak bimbingan',
+  3: 'semakin maju, perlu bimbingan minimum', 4: 'baik, boleh berdikari', 5: 'sangat baik, berdikari dan konsisten', 6: 'cemerlang, boleh menjadi contoh rakan' };
+const PUJIAN_TINGGI_ = /cemerlang|hebat|sangat baik|amat baik|menguasai|mantap|luar biasa|terbaik|sangat bagus|memang bagus|sangat memuaskan|berdikari sepenuhnya/i;
+const RENDAH_ = /bimbingan penuh|peringkat awal|masih lemah|\blemah\b|baru mula/i;
+/* Semak nada ulasan sepadan dengan TP: TP1-3 tidak boleh dipuji cemerlang; TP4-6 tidak boleh dikata lemah. */
+function sesuaiTP_(t, tp) {
+  t = String(t || ''); if (!tp) return true;
+  if (tp <= 3 && PUJIAN_TINGGI_.test(t)) return false;
+  if (tp >= 4 && RENDAH_.test(t)) return false;
+  const disebut = (t.match(/TP\s*(\d)/gi) || []).map(x => Number(x.replace(/\D/g, '')));
+  return !disebut.length || disebut.indexOf(tp) > -1;
+}
+/* Jika ayat 1 masih tersalah nada, ganti dengan ayat tahap yang tepat; kekalkan ayat cadangan (ayat 2) jika sesuai. */
+function betulkanNada_(t, nama, tp, tahap) {
+  if (!tp || sesuaiTP_(t, tp)) return t;
+  const ayat = (String(t).replace(/\s+/g, ' ').trim().match(/[^.!?]+[.!?]+/g) || [t]).map(a => a.trim());
+  const a1 = nama + ' berada pada TP' + tp + ', ' + NADA_TP_[tp] + '.';
+  const a2 = ayat.length > 1 && sesuaiTP_(ayat[ayat.length - 1], tp) ? ayat[ayat.length - 1]
+    : (tp <= 3 ? 'Mak ayah boleh bantu dengan menunjukkan cara langkah demi langkah menggunakan objek sebenar di rumah.'
+               : 'Mak ayah boleh beri cabaran baharu dan minta ' + nama + ' tunjuk cara kepada ahli keluarga.');
+  return a1 + ' ' + a2;
+}
+/* Pastikan ulasan ringkas dan padat: maksimum 30 patah perkataan. */
+const HAD_PERKATAAN_ = 30;
 function ringkas_(t) {
   t = String(t || '').replace(/\s+/g, ' ').trim();
+  const n = x => x.split(' ').filter(Boolean).length;
+  const potong = x => { const w = x.split(' ').slice(0, HAD_PERKATAAN_); // elak berakhir dengan kata sendi tergantung
+    while (w.length > 8 && /^(pada|di|dan|untuk|dengan|ke|yang|semasa|kepada|atau|serta|hujung|bersama|dalam|dari|daripada)[,;:.]?$/i.test(w[w.length - 1])) w.pop();
+    return w.join(' ').replace(/[,;:\-–]+$/, '').replace(/[.!?]?$/, '.'); };
+  if (n(t) <= HAD_PERKATAAN_) return t;
   const ayat = (t.match(/[^.!?]+[.!?]+/g) || [t]).map(a => a.trim());
-  const n = x => x.split(' ').length;
-  if (ayat.length < 2) return n(t) > 45 ? t.split(' ').slice(0, 45).join(' ').replace(/[,;:]$/, '') + '.' : t;
+  if (ayat.length < 2) return potong(t);
   let a1 = ayat[0], a2 = ayat[1];
-  if (n(a1) + n(a2) > 45) { // pendekkan ayat 1 dahulu (potong pada koma), cadangan dikekalkan
-    const pendek = a1.split(/[,;]/)[0].trim();
-    if (pendek.length > 10) a1 = pendek.replace(/[.!?]?$/, '.');
-  }
-  if (n(a1) + n(a2) > 55) return a2;
-  return a1 + ' ' + a2;
+  // Ayat 1 (tahap TP) dikekalkan; pendekkan ayat cadangan dahulu.
+  if (n(a1) + n(a2) > HAD_PERKATAAN_) { const p = a2.split(/[,;]/)[0].trim(); if (n(p) >= 5) a2 = p.replace(/[.!?]?$/, '.'); }
+  if (n(a1) > 16) { const p = a1.split(/[;]|, (?:dan|tetapi|namun)/)[0].trim(); if (n(p) >= 6) a1 = p.replace(/[.!?]?$/, '.'); }
+  return potong(a1 + ' ' + a2);
 }
 /* Tentukan bidang yang paling perlu dibantu dan cara bantuan yang sesuai dengan tahap TP murid. */
 function fokusIntervensi_(senarai, tpAll) {
@@ -849,7 +904,9 @@ function fokusIntervensi_(senarai, tpAll) {
   const pilih = lemah[Math.floor(Math.random() * lemah.length)];
   const kuat = ada.filter(x => x.tp === max).map(x => x.nama).slice(0, 2).join(', ');
   if (min === max) return { teks: 'semua bidang sama tahap (TP' + min + '); pilih bidang "' + pilih.nama + '" untuk dikukuhkan.', cara: caraTP(min) };
-  return { teks: 'bidang "' + pilih.nama + '" (TP' + min + ') paling perlu dibantu. Bidang paling kuat: ' + kuat + ' (TP' + max + ') — boleh guna kekuatan ini untuk bantu bidang lemah.', cara: caraTP(min) };
+  return { teks: 'bidang "' + pilih.nama + '" (TP' + min + ') paling perlu dibantu. ' + (max >= 4
+    ? 'Bidang paling kuat: ' + kuat + ' (TP' + max + ') — boleh guna kekuatan ini untuk bantu bidang lemah.'
+    : 'Bidang paling maju: ' + kuat + ' (TP' + max + ', masih tahap rendah — jangan sebut sebagai kekuatan atau cemerlang).'), cara: caraTP(min) };
 }
 /* Senarai model sembang Groq yang masih aktif, disusun ikut keutamaan (model biasa dahulu, model "berfikir" kemudian).
    Diambil terus dari Groq dan disimpan dalam cache 6 jam. */
